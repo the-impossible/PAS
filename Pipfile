@@ -8,6 +8,7 @@ python-decouple = "*"
 pillow = "*"
 django = "*"
 argon2-cffi = "*"
+django-crispy-forms = "*"
 
 [dev-packages]
 
