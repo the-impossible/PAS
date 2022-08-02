@@ -56,6 +56,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'PAS.urls'
+AUTH_USER_MODEL = 'PAS_auth.User'
 
 TEMPLATES = [
     {
