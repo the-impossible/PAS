@@ -5,7 +5,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('PAS_auth.urls', namespace='auth')),
+    path('auth/', include('PAS_auth.urls', namespace='auth')),
+    path('', include('PAS_app.urls', namespace='app')),
 ]
 
 admin.site.site_header = "Project Allocation System"
