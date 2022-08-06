@@ -17,42 +17,7 @@
 
 	<!-- Navbar & Hero Start -->
 	<div class="container-xxl position-relative p-0">
-		<nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
-			<a href="" class="navbar-brand p-0">
-				<h1 class="m-0">
-					<img src="{% static 'img/kadlogo.png' %}" class="mr-2" alt="" />
-					PROJECT
-					<span class="fs-5">Manager</span>
-				</h1>
-				<!-- <img src="img/logo.png" alt="Logo"> -->
-			</a>
-			<button
-				class="navbar-toggler"
-				type="button"
-				data-bs-toggle="collapse"
-				data-bs-target="#navbarCollapse"
-			>
-				<span class="fa fa-bars"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarCollapse">
-				<div class="navbar-nav ms-auto py-0">
-					<a href="index.html" class="nav-item nav-link active">Home</a>
-				</div>
-				<button
-					type="button"
-					class="btn text-secondary ms-3"
-					data-bs-toggle="modal"
-					data-bs-target="#searchModal"
-				>
-					<i class="fa fa-search"></i>
-				</button>
-				<a
-					href="https://htmlcodex.com/startup-company-website-template"
-					class="btn btn-primary text-light rounded-pill py-2 px-4 ms-3"
-					>Login</a
-				>
-			</div>
-		</nav>
+		{% include "partials/nav.html" %}
 
 		<div class="container-xxl py-5 bg-primary hero-header mb-5">
 			<div class="container my-5 py-5 px-lg-5">
@@ -62,7 +27,7 @@
 							Student Project Allocation Management System
 						</h1>
 						<p class="text-white pb-3 animated zoomIn">
-							This Use the search bar below to search for existing project
+							Use the search bar below to search for existing project
 							topics, the use of keywords is recommended
 						</p>
 						<div class="position-relative w-100 mt-3 animated slideInLeft">
@@ -94,19 +59,11 @@
 		<div class="modal-dialog modal-fullscreen">
 			<div class="modal-content" style="background: rgba(29, 29, 39, 0.7)">
 				<div class="modal-header border-0">
-					<button
-						type="button"
-						class="btn bg-white btn-close"
-						data-bs-dismiss="modal"
-						aria-label="Close"
-					></button>
+					<button type="button" class="btn bg-white btn-close" data-bs-dismiss="modal" aria-label="Close"><button>
 				</div>
-				<div
-					class="modal-body d-flex align-items-center justify-content-center"
-				>
+				<div class="modal-body d-flex align-items-center justify-content-center">
 					<div class="input-group" style="max-width: 600px">
-						<input
-							type="text"
+						<input type="text"
 							class="form-control bg-transparent border-light p-3"
 							placeholder="Type search keyword"
 						/>
@@ -314,7 +271,7 @@
 						</div>
 						<h5 class="mb-3">Keyword Based Search</h5>
 						<p>
-							Advance search features.
+							Project Manager uses Advance search features to make usability positive.
 						</p>
 					</div>
 				</div>
@@ -463,22 +420,7 @@
 	<!-- Team End -->
 
 	<!-- Footer Start -->
-	<div
-		class="container-fluid bg-primary text-light footer mt-5 pt-5 wow fadeIn"
-		data-wow-delay="0.1s"
-	>
-		<div class="container px-lg-5">
-			<div class="copyright">
-				<div class="row">
-					<div class="col-md-12 text-center  mb-3 mb-md-0">
-						&copy; KPT Computer Science, All
-						Right Reserved. | Made with 💗
-					</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+	{% include "partials/footer.html" %}
 	<!-- Footer End -->
 
 	<!-- Back to Top -->
