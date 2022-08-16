@@ -1,0 +1,17 @@
+{% load static %}
+<script src="{% static 'lib/jquery-3.4.1.min.js' %}"></script>
+<script src="{% static 'auth/plugins/popper.min.js' %}"></script>
+<script src="{% static 'auth/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<!-- Charts JS -->
+<script src="{% static 'auth/plugins/chart.js/chart.min.js' %}"></script>
+<script src="{% static 'auth/js/index-charts.js' %}"></script>
+<!-- Page Specific JS -->
+<script src="{% static 'auth/js/app.js' %}"></script>
+<script src="{% static 'auth/js/htmx.min.js' %}"></script>
+<script>
+    window.setTimeout(function() {
+    $(".alert").fadeTo(500, 0).slideUp(500, function(){
+        $(this).remove();
+    });
+}, 2000);
+</script>
