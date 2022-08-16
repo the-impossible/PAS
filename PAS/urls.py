@@ -9,6 +9,9 @@ urlpatterns = [
     path('', include('PAS_app.urls', namespace='app')),
 ]
 
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 admin.site.site_header = "Project Allocation System"
 admin.site.site_title = "Project Allocation System"
 admin.site.index_title = "Welcome to Project Allocation System"

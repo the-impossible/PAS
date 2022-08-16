@@ -1,0 +1,49 @@
+{% if messages %}
+<tr id="remove">
+    <td colspan="6">
+    {% include "partials/messages.html" %}
+    </td>
+</tr>
+{% endif %}
+
+
+{% if object_list.count > 0 %}
+    {% for file in object_list  %}
+        <tr>
+            <td class="cell">{{ forloop.counter }}</td>
+            <td class="cell"><span class="truncate">{{ file.file|cut:'uploads/csv/' }}</span></td>
+            <td class="cell">{{ file.session }}</td>
+            <td class="cell">{{file.programme}}</td>
+            <td class="cell">
+                <a class="btn btn-sm btn-outline text-primary" href="{{ file.file.url}}" download><i class="fa fa-download"></i> Download</a>
+                <a class="btn btn-sm text-danger" hx-get="{% url 'auth:delete_stud_files' file.pk %}" hx-target="#deleteDialog"><i class="fa fa-trash"></i> Delete</a>
+            </td>
+        </tr>
+    {% endfor %}
+{% else %}
+<tr>
+    <td colspan="6">
+        <div class="jumbotron text-center p-5   ">
+            <!-- illustration can be used here too -->
+            <p style="font-size: 5em;">🚧</p> <br>
+            <p style="font-size: 2em; margin-top: -40px;">No Files Here!</p>
+        </div>
+    </td>
+</tr>
+{% endif %}
+
+
+
+<script>
+    window.setTimeout(function() {
+        $(".alert").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+
+        $("#remove").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+
+    }, 2000);
+</script>
+

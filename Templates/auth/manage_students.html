@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Dashboard
+{% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">ALL Students</h1>
+				    </div>
+				    <div class="col-auto">
+					     <div class="page-utilities">
+						    <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
+							    <div class="col-auto">
+								    <a class="btn app-btn-primary" style="cursor: pointer;"  hx-get="{% url 'auth:stud-upload-form' %}" hx-target="#uploadDialog">
+									    <i class="fa fa-plus"></i>
+									    Add Student
+									</a>
+							    </div>
+						    </div><!--//row-->
+					    </div><!--//table-utilities-->
+				    </div><!--//col-auto-->
+			    </div><!--//row-->
+
+				<!-- TABS NAVBAR -->
+				<nav id="orders-table-tab" class="orders-table-tab app-nav-tabs nav shadow-sm flex-column flex-sm-row mb-4">
+					<a class="flex-sm-fill text-sm-center nav-link active" id="nd-tab" data-bs-toggle="tab" href="#nd" role="tab" aria-controls="nd" aria-selected="true">ND Students</a>
+					<a class="flex-sm-fill text-sm-center nav-link"  id="hnd-tab" data-bs-toggle="tab" href="#hnd" role="tab" aria-controls="hnd" aria-selected="false">HND Students</a>
+				</nav>
+
+				<div class="tab-content" id="orders-table-tab-content">
+				<!-- ND -->
+			    <div class="tab-pane fade show active" id="nd" role="tabpanel" aria-labelledby="nd-tab">
+					  <div class="app-card app-card-orders-table shadow-sm pb-1 mb-5">
+							<div class="app-card-header p-3">
+								<div class="row justify-content-between align-items-center">
+									<div class="col-auto">
+										<h4 class="app-card-title">All ND Student</h4>
+									</div>
+								</div><!--//row-->
+							</div><!--//app-card-header-->
+						  <div class="app-card-body">
+							  <div class="table-responsive">
+									<table class="table app-table-hover mb-0 text-left">
+										<thead>
+											<tr>
+												<th class="cell">S/N</th>
+												<th class="cell">Student Name</th>
+												<th class="cell">Phone</th>
+												<th class="cell">Level</th>
+												<th class="cell"></th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>
+									</table>
+								</div><!--//table-responsive-->
+						  </div><!--//app-card-body-->
+							<nav class="app-pagination mt-5">
+								<ul class="pagination justify-content-center">
+									<li class="page-item disabled">
+										<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+										</li>
+									<li class="page-item active"><a class="page-link" href="#">1</a></li>
+									<li class="page-item">
+											<a class="page-link" href="#">Next</a>
+									</li>
+								</ul>
+							</nav><!--//app-pagination-->
+						</div><!--//app-card-->
+			    </div>
+				<!--ND SECTION ENDS-->
+
+				<!-- HND SECTION -->
+				<div class="tab-pane fade" id="hnd" role="tabpanel" aria-labelledby="hnd-tab">
+					<div class="app-card app-card-orders-table pb-1 shadow-sm mb-5">
+						<div class="app-card-header p-3">
+							<div class="row justify-content-between align-items-center">
+								<div class="col-auto">
+									<h4 class="app-card-title">All HND Students</h4>
+								</div>
+							</div><!--//row-->
+						</div><!--//app-card-header-->
+							<div class="app-card app-card-orders-table  m3-5">
+								<div class="app-card-body">
+									<div class="table-responsive">
+										<table class="table app-table-hover mb-0 text-left">
+											<thead>
+												<tr>
+													<th class="cell">S/N</th>
+													<th class="cell">First Name Name</th>
+													<th class="cell">Phone</th>
+													<th class="cell">Level</th>
+													<th class="cell"></th>
+													</tr>
+											</thead>
+											<tbody >
+											</tbody>
+										</table>
+									</div><!--//table-responsive-->
+								</div><!--//app-card-body-->
+								<nav class="app-pagination mt-5 mb-3">
+									<ul class="pagination justify-content-center">
+										<li class="page-item disabled">
+											<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+										</li>
+										<li class="page-item active"><a class="page-link" href="#">1</a></li>
+										<li class="page-item">
+												<a class="page-link" href="#">Next</a>
+										</li>
+									</ul>
+								</nav><!--//app-pagination-->
+							</div>
+						</div><!--//app-card-->
+				</div>
+				<!--HND SECTION ENDS-->
+				</div><!--//tab-content-->
+		    </div><!--//container-fluid-->
+	    </div><!--//app-content-->
+	    {% include 'partials/auth_footer.html' %}
+		{% include "partials/modal_logout.html" %}
+    </div><!--//app-wrapper-->
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+
+<div class="modal fade" id="uploadFileModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+
+
+	</div>
+</div>
+
+<div class="modal fade" id="deleteFileModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="deleteDialog" role="document" hx-target="this">
+
+
+	</div>
+</div>
+
+<script>
+	var modal = new bootstrap.Modal(document.getElementById('uploadFileModal'))
+
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'uploadDialog'){
+		modal.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'uploadDialog' && !e.detail.xhr.response){
+		  modal.hide();
+		}
+	})
+
+	var modal2 = new bootstrap.Modal(document.getElementById('deleteFileModal'))
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'deleteDialog'){
+		modal2.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'deleteDialog' && !e.detail.xhr.response){
+		modal2.hide();
+		}
+	})
+
+</script>
+{% endblock body %}
