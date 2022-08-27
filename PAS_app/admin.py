@@ -8,11 +8,13 @@ from PAS_app.models import (
     Files,
     SupervisorRank,
     SupervisorsFiles,
+    Department,
 )
 
 # Register your models here.
 admin.site.register(Session)
 admin.site.register(Programme)
+admin.site.register(Department)
 
 admin.site.register(StudentType)
 admin.site.register(SupervisorRank)

@@ -2,6 +2,7 @@
 from django.db import models
 import uuid, os
 from django.utils.deconstruct import deconstructible
+import uuid
 
 # My App imports
 
@@ -16,6 +17,19 @@ class Session(models.Model):
     class Meta:
         db_table = 'Session'
         verbose_name_plural = 'Sessions'
+
+class Department(models.Model):
+    dept_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
+    dept_title = models.CharField(max_length=30, unique=True)
+    dept_desc = models.CharField(max_length=100, blank=True, null=True)
+    dept_logo = models.ImageField(upload_to='uploads/department/', blank=True, null=True)
+
+    def __str__(self):
+        return self.dept_title
+
+    class Meta:
+        db_table = 'Department'
+        verbose_name_plural = 'Departments'
 
 class Programme(models.Model):
     programme_title = models.CharField(max_length=30, unique=True)
@@ -39,7 +53,6 @@ class StudentType(models.Model):
         db_table = 'StudentType'
         verbose_name_plural = 'Student Types'
 
-
 def path_and_rename(instance, filename):
     path = 'uploads/csv/'
     ext = filename.split('.')[-1]
@@ -50,7 +63,9 @@ class Files(models.Model):
     file = models.FileField(upload_to=path_and_rename)
     session = models.ForeignKey(to=Session, on_delete=models.CASCADE)
     programme = models.ForeignKey(to=Programme, on_delete=models.CASCADE)
+    dept = models.ForeignKey(to=Department, on_delete=models.CASCADE)
     student_type = models.ForeignKey(to=StudentType, on_delete=models.CASCADE)
+    used = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.file}'
@@ -64,7 +79,7 @@ class Files(models.Model):
         verbose_name_plural = 'Files'
 
 class SupervisorRank(models.Model):
-    rank_title = models.CharField(max_length=30, unique=True, blank=True, null=True)
+    rank_number = models.CharField(max_length=10, unique=True, blank=True, null=True)
     rank_description = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
@@ -81,6 +96,8 @@ def path_and_rename_super(instance, filename):
 
 class SupervisorsFiles(models.Model):
     file = models.FileField(upload_to=path_and_rename_super)
+    dept = models.ForeignKey(to=Department, on_delete=models.CASCADE)
+    used = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.file}'

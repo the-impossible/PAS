@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} List Departments {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">ALL Departments</h1>
+				    </div>
+				    <div class="col-auto">
+					     <div class="page-utilities">
+						    <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
+							    <div class="col-auto">
+								    <a class="btn app-btn-primary" style="cursor: pointer;">
+									    <i class="fa fa-plus"></i>
+									    Add Department
+									</a>
+							    </div>
+						    </div><!--//row-->
+					    </div><!--//table-utilities-->
+				    </div><!--//col-auto-->
+			    </div><!--//row-->
+				{% include 'partials/messages.html' %}
+				<div class="row gy-4">
+					{% for dept in object_list %}
+						<div class="col-12 col-md-6 col-lg-4 col-xl-4" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ dept.dept_title }}">
+							<div class="app-card app-card-account shadow-sm d-flex flex-column align-items-start">
+								<div class="app-card-header p-3 border-bottom-0">
+									<div class="row align-items-center gx-3">
+										<div class="col-auto">
+											<div class="app-icon-holder">
+												{% if dept.dept_logo.url != '' %}
+												<img width="100%" style="margin-top: -10px;" src="{{ dept.dept_logo.url }}" alt="">
+												{% else %}
+												<img width="100%" style="margin-top: -10px;" src="../../static/img/icon-shape-primary2.png" alt="">
+												{% endif %}
+											</div><!--//icon-holder-->
+										</div><!--//col-->
+										<div class="col-auto">
+											<h4 class="app-card-title">{{ dept.dept_title|truncatechars:20 }}</h4>
+										</div><!--//col-->
+									</div><!--//row-->
+								</div><!--//app-card-header-->
+								<a class="app-card-link-mask" href="{% url 'auth:department' dept.dept_id %}"></a>
+							</div><!--//app-card-->
+						</div>
+					{% endfor %}
+				</div><!--//row-->
+			</div>
+		</div>
+        {% include 'partials/auth_footer.html' %}
+	</div>
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+
+<div class="modal fade" id="uploadFileModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+	</div>
+</div>
+
+<div class="modal fade" id="deleteFileModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="deleteDialog" role="document" hx-target="this">
+	</div>
+</div>
+
+<script>
+	var modal = new bootstrap.Modal(document.getElementById('uploadFileModal'))
+
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'uploadDialog'){
+		modal.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'uploadDialog' && !e.detail.xhr.response){
+		  modal.hide();
+		}
+	})
+
+	var modal2 = new bootstrap.Modal(document.getElementById('deleteFileModal'))
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'deleteDialog'){
+		modal2.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'deleteDialog' && !e.detail.xhr.response){
+		modal2.hide();
+		}
+	})
+</script>
+{% endblock body %}
