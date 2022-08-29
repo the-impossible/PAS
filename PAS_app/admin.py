@@ -8,14 +8,21 @@ from PAS_app.models import (
     Files,
     SupervisorRank,
     SupervisorsFiles,
+    Department,
+)
+
+from PAS_auth.models import (
+    Allocate,
 )
 
 # Register your models here.
 admin.site.register(Session)
 admin.site.register(Programme)
+admin.site.register(Department)
 
 admin.site.register(StudentType)
 admin.site.register(SupervisorRank)
 
 admin.site.register(Files)
 admin.site.register(SupervisorsFiles)
+admin.site.register(Allocate)

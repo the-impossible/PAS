@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Administrators
+{% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">ALL Administrators</h1>
+				    </div>
+				    <div class="col-auto">
+					     <div class="page-utilities">
+						    <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
+							    <div class="col-auto">
+								    <a class="btn app-btn-primary" style="cursor: pointer;" hx-target="#uploadDialog">
+									    <i class="fa fa-plus"></i>
+									    Administrators
+									</a>
+							    </div>
+						    </div><!--//row-->
+					    </div><!--//table-utilities-->
+				    </div><!--//col-auto-->
+			    </div><!--//row-->
+
+
+					  <div class="app-card app-card-orders-table shadow-sm pb-1 mb-5">
+							<div class="app-card-header p-3">
+								<div class="row justify-content-between align-items-center">
+									<div class="col-auto">
+										<h4 class="app-card-title align-items-center">All Administrators</h4>
+									</div>
+								</div><!--//row-->
+							</div><!--//app-card-header-->
+						  <div class="app-card-body">
+							  <div class="table-responsive">
+									<table class="table app-table-hover mb-0 text-center">
+										<thead>
+											<tr>
+												<th class="cell">S/N</th>
+												<th class="cell">First name</th>
+												<th class="cell">Last name</th>
+												<th class="cell">Email</th>
+												<th class="cell">Phone</th>
+												<th class="cell"></th>
+											</tr>
+										</thead>
+										<tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>Jeremy</td>
+                                                <td>Jones</td>
+                                                <td>jeremyjones@gmail.com</td>
+                                                <td>0811412563</td>
+                                                <td><button class="btn btn-sm btn-info text-white">View</button></td>
+                                            </tr>
+										</tbody>
+									</table>
+								</div><!--//table-responsive-->
+						  </div><!--//app-card-body-->
+							<nav class="app-pagination mt-5">
+								<ul class="pagination justify-content-center">
+									<li class="page-item disabled">
+										<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+										</li>
+									<li class="page-item active"><a class="page-link" href="#">1</a></li>
+									<li class="page-item">
+											<a class="page-link" href="#">Next</a>
+									</li>
+								</ul>
+							</nav><!--//app-pagination-->
+				</div><!--//tab-content-->
+		    </div><!--//container-fluid-->
+	    </div><!--//app-content-->
+	    {% include 'partials/auth_footer.html' %}
+		{% include "partials/modal_logout.html" %}
+    </div><!--//app-wrapper-->
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+
+<div class="modal fade" id="uploadFileModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+
+
+	</div>
+</div>
+
+<div class="modal fade" id="deleteFileModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="deleteDialog" role="document" hx-target="this">
+
+
+	</div>
+</div>
+
+<script>
+	var modal = new bootstrap.Modal(document.getElementById('uploadFileModal'))
+
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'uploadDialog'){
+		modal.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'uploadDialog' && !e.detail.xhr.response){
+		  modal.hide();
+		}
+	})
+
+	var modal2 = new bootstrap.Modal(document.getElementById('deleteFileModal'))
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'deleteDialog'){
+		modal2.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'deleteDialog' && !e.detail.xhr.response){
+		modal2.hide();
+		}
+	})
+
+</script>
+{% endblock body %}

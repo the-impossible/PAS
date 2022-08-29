@@ -41,7 +41,7 @@
 										</div>
 										<!--//col-->
 										<div class="col-auto">
-											<h4 class="app-card-title">Profile</h4>
+											<h4 class="app-card-title">Profile - {{ user.username }}</h4>
 										</div>
 										<!--//col-->
 									</div>
@@ -58,15 +58,13 @@
 												<div class="item-data">
 													<img
 														class="profile-image"
-														src="assets/images/user.png"
+														src="../../static/img/team-2.jpg"
 														alt=""
 													/>
 												</div>
 											</div>
 											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Change</a>
-											</div>
+
 											<!--//col-->
 										</div>
 										<!--//row-->
@@ -74,15 +72,14 @@
 									<!--//item-->
 									<div class="item border-bottom py-3">
 										<div class="row justify-content-between align-items-center">
-											<div class="col-auto">
-												<div class="item-label"><strong>Name</strong></div>
-												<div class="item-data">James Doe</div>
+											<div class="col-6">
+												<div class="item-label"><strong>First Name</strong></div>
+												<div class="item-data">{{user.firstname}}</div>
 											</div>
-											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Change</a>
+											<div class="col-6">
+												<div class="item-label"><strong>Last Name</strong></div>
+												<div class="item-data">{{user.lastname}}</div>
 											</div>
-											<!--//col-->
 										</div>
 										<!--//row-->
 									</div>
@@ -91,58 +88,65 @@
 										<div class="row justify-content-between align-items-center">
 											<div class="col-auto">
 												<div class="item-label"><strong>Email</strong></div>
-												<div class="item-data">james.doe@website.com</div>
+												<div class="item-data">
+													{% if user.email %}
+														{{user.email}}
+													{% else %}
+														Email is not set
+													{% endif %}
+												</div>
 											</div>
-											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Change</a>
-											</div>
-											<!--//col-->
 										</div>
-										<!--//row-->
 									</div>
 									<!--//item-->
 									<div class="item border-bottom py-3">
 										<div class="row justify-content-between align-items-center">
 											<div class="col-auto">
-												<div class="item-label"><strong>Website</strong></div>
-												<div class="item-data">https://johndoewebsite.com</div>
+												<div class="item-label"><strong>Phone</strong></div>
+												<div class="item-data">
+													{% if user.email %}
+														{{user.phone}}
+													{% else %}
+														Phone is not set
+													{% endif %}
+												</div>
 											</div>
-											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Change</a>
-											</div>
-											<!--//col-->
 										</div>
-										<!--//row-->
 									</div>
-									<!--//item-->
-									<div class="item border-bottom py-3">
-										<div class="row justify-content-between align-items-center">
-											<div class="col-auto">
-												<div class="item-label"><strong>Location</strong></div>
-												<div class="item-data">New York</div>
-											</div>
-											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Change</a>
-											</div>
-											<!--//col-->
+
+									<div class="row mt-3">
+										<div class="col-auto">
+
+											{% if user.is_active == True %}
+												<span class="badge bg-success">Active</span>
+											{% else %}
+												<span class="badge bg-warnng">Inactive</span>
+											{% endif %}
+
 										</div>
-										<!--//row-->
+										<div class="col-auto">
+											{% if user.is_superuser == True %}
+												<span class="badge text-lg bg-secondary">🗝️ Super User</span>
+											{% endif %}
+										</div>
+										<div class="col-auto">
+											{% if user.is_staff == True %}
+												<span class="badge bg-secondary">⭐ Staff</span>
+											{% endif %}
+										</div>
 									</div>
 									<!--//item-->
 								</div>
 								<!--//app-card-body-->
 								<div class="app-card-footer p-4 mt-auto">
-									<a class="btn app-btn-secondary" href="#">Manage Profile</a>
+									<a class="btn app-btn-secondary" href="#">Edit Profile</a>
 								</div>
 								<!--//app-card-footer-->
 							</div>
 							<!--//app-card-->
 						</div>
 						<!--//col-->
-						
+
 						<div class="col-12 col-lg-6">
 							<div
 								class="app-card  shadow-sm d-flex flex-column align-items-start"
@@ -188,38 +192,16 @@
 												<div class="item-data">••••••••</div>
 											</div>
 											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Change</a>
-											</div>
+
 											<!--//col-->
 										</div>
 										<!--//row-->
 									</div>
-									<!--//item-->
-									<div class="item border-bottom py-3">
-										<div class="row justify-content-between align-items-center">
-											<div class="col-auto">
-												<div class="item-label">
-													<strong>Two-Factor Authentication</strong>
-												</div>
-												<div class="item-data">
-													You haven't set up two-factor authentication.
-												</div>
-											</div>
-											<!--//col-->
-											<div class="col text-end">
-												<a class="btn-sm app-btn-secondary" href="#">Set up</a>
-											</div>
-											<!--//col-->
-										</div>
-										<!--//row-->
-									</div>
-									<!--//item-->
 								</div>
 								<!--//app-card-body-->
 
 								<div class="app-card-footer p-4 mt-auto">
-									<a class="btn app-btn-secondary" href="#">Manage Security</a>
+									<a class="btn app-btn-secondary" href="#">Change Password</a>
 								</div>
 								<!--//app-card-footer-->
 							</div>

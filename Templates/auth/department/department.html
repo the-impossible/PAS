@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Department {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">
+                            <a href="{% url 'auth:list_department' %}" class="btn btn-secodary"><i class="fa mt-1 fa-arrow-left"></i></a>
+                            {{ dept }}
+                        </h1>
+				    </div>
+			    </div><!--//row-->
+				{% include 'partials/messages.html' %}
+
+				<div class="row g-4 mb-4">
+				    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-info">
+										    <i class="fa mt-1 fa-users text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Students</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">Lorem ipsum dolor sit amet, consec adipiscing elit. </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="{% url 'auth:manage_students' dept.pk %}"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+                    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-warning">
+										    <i class="fa mt-1 fa-user-tie text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Supervisors</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">Lorem ipsum dolor sit amet, consec adipiscing elit. </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="{% url 'auth:manage_supervisors' dept.dept_id %}"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+                    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-primary">
+										    <i class="fa mt-1 fa-file text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Files</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">This Page contents all uploaded CSV files </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="{% url 'auth:what_file' dept.dept_id %}"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+                    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-secondary">
+										    <i class="fa mt-1 fa-diagnoses text-white "></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Coordinators</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">Lorem ipsum dolor sit amet. </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="{% url 'auth:manage_coordinators' dept.dept_id %}"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+                    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-secondary">
+										    <i class="fa mt-1 fa-box  text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Projects</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">Lorem ipsum dolor sit amet. </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="#"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+                    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-danger">
+										    <i class="far mt-1 fa-comments  text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Seminars</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">Lorem ipsum dolor sit amet. </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="#"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+                    <div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-info">
+										    <i class="fa mt-1 fa-tasks  text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Allocate</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">Lorem ipsum dolor sit amet. </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="{% url 'auth:allocate' dept.dept_id %}"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+                </div>
+			</div>
+		</div>
+        {% include 'partials/auth_footer.html' %}
+	</div>
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+
+
+{% endblock body %}
