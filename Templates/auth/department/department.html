@@ -118,6 +118,7 @@
                             <a class="app-card-link-mask" href="{% url 'auth:manage_coordinators' dept.dept_id %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
+
                     <div class="col-12 col-md-6 col-lg-4">
 					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
 						    <div class="app-card-header p-3 border-bottom-0">
@@ -186,13 +187,14 @@
 						    <div class="app-card-footer p-2 mt-auto">
 							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
 						    </div><!--//app-card-footer-->
-                            <a class="app-card-link-mask" href="#"></a>
+                            <a class="app-card-link-mask" href="{% url 'auth:allocate' dept.dept_id %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
                 </div>
-
+			</div>
+		</div>
         {% include 'partials/auth_footer.html' %}
-    </>
+	</div>
     <!-- Javascript -->
 	{% include "partials/auth_script.html" %}
 </div>

@@ -12,12 +12,11 @@
     <div class="app-wrapper">
 	    <div class="app-content pt-3 p-md-3 p-lg-4">
 		    <div class="container-xl">
-
 			    <div class="row g-3 mb-4 align-items-center justify-content-between">
 				    <div class="col-auto">
 			            <h1 class="app-page-title mb-0">
                             <a href="{% url 'auth:department' dept.pk %}" class="btn btn-secodary"><i class="fa fa-arrow-left"></i></a>
-                            Computer Science Coordinators
+                            {{ dept }} Coordinators
                         </h1>
 				    </div>
 					<div class="col-auto">
@@ -40,7 +39,11 @@
 						        <div class="row align-items-center gx-3">
 							        <div class="col-auto">
 								        <div class="app-icon-holder icon-holder-mono">
-                                            <i class="fa fa-user-tie" style="margin-top: 3px;"></i>
+											{% if programme.programme_title == "ND" %}
+                                            	<i class="fa fa-user-tie text-success" style="margin-top: 3px;"></i>
+											{% else %}
+                                            	<i class="fa fa-user-tie" style="margin-top: 3px;"></i>
+											{% endif %}
 									    </div><!--//icon-holder-->
 							        </div><!--//col-->
 							        <div class="col-auto">
@@ -107,7 +110,11 @@
 						        <div class="row align-items-center gx-3">
 							        <div class="col-auto">
 								        <div class="app-icon-holder icon-holder-mono">
-                                            <i class="far fa-user" style="margin-top: 3px;"></i>
+                                            {% if programme.programme_title == "ND" %}
+                                            	<i class="far fa-user text-success" style="margin-top: 3px;"></i>
+											{% else %}
+                                            	<i class="far fa-user" style="margin-top: 3px;"></i>
+											{% endif %}
 									    </div><!--//icon-holder-->
 							        </div><!--//col-->
 							        <div class="col-auto">
@@ -167,7 +174,6 @@
 					</div><!--//col-->
 					{% endfor %}
 				</div><!--//row-->
-
             </div>
 
 			<div class="modal fade" id="changeC" style="display: none;" aria-hidden="true">

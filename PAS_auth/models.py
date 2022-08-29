@@ -151,3 +151,19 @@ class Coordinators(models.Model):
     class Meta:
         db_table = 'Coordinator Details'
         verbose_name_plural = 'Coordinators Details'
+
+class Allocate(models.Model):
+    allocate_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
+    group_num = models.CharField(max_length=500)
+    sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
+    prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
+    dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    stud_id = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    super_id = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.stud_id} is allocated to {self.super_id} with group number of {self.group_num}'
+
+    class Meta:
+        db_table = 'Allocation Details'
+        verbose_name_plural = 'Allocation Details'

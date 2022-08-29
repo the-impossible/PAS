@@ -29,6 +29,7 @@ from PAS_auth.views import (
 
     # Department
     DepartmentView,
+    AllocateView,
 
     ManageProfileView,
     SettingsView,
@@ -95,6 +96,9 @@ urlpatterns = [
     path('batch_create/<str:dept_id>/<int:file_id>', BatchCreateView.as_view(), name='batch_create'),
 
     # Manage Coordinators
-    path('manage_coordinators/<str:dept_id>', ManageCoordinatorsView.as_view(), name='manage_coordinators')
+    path('manage_coordinators/<str:dept_id>', ManageCoordinatorsView.as_view(), name='manage_coordinators'),
+
+    # Allocate Students
+    path('allocate/<str:dept_id>', AllocateView.as_view(), name='allocate')
 
 ]

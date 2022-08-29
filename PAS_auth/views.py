@@ -1,7 +1,7 @@
 # My Django imports
 from django.shortcuts import render, redirect, reverse
 from django.views import View
-import csv
+import csv, io, codecs
 from django.views.generic import ListView
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
@@ -40,6 +40,8 @@ from PAS_app.form import (
     MultipleStudentForm,
     MultipleSuperForm,
     CoordinatorsForm,
+    AllocationForm,
+    MAllocationForm,
 )
 from PAS_auth.form import (
     UserForm,
@@ -93,6 +95,7 @@ class StudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
     programmes = Programme.objects.all()
     dept = None
+
     def check_department(self, dept_id, request):
         try:
             self.dept = Department.objects.get(pk=dept_id)
@@ -116,12 +119,14 @@ class StudentFilesView(LoginRequiredMixin, View):
             return redirect('auth:list_department')
 
     def post(self, request, dept_id):
-        form = FilesForm(request.POST, request.FILES, dept_id=dept_id)
+        form = FilesForm(data=request.POST, files=request.FILES, dept_id=dept_id)
+
         self.check_department(dept_id, request)
         if self.dept != None:
             if form.is_valid():
                 data = form.save(commit=False)
                 data.dept = self.dept
+                data.file = request.FILES['file']
                 data.save()
                 messages.success(request, 'Student File has been added!')
                 return redirect('auth:files_stud', self.dept.dept_id)
@@ -222,8 +227,10 @@ class SupervisorFilesView(View):
         form = SuperFilesForm(request.POST, request.FILES, dept_id=dept_id)
         self.check_department(dept_id, request)
         if self.dept != None:
+
             if form.is_valid():
                 data = form.save(commit=False)
+                data.file = request.FILES['file']
                 data.dept = self.dept
                 data.save()
                 messages.success(request, 'Supervisors File has been added!')
@@ -234,7 +241,6 @@ class SupervisorFilesView(View):
         else:
             return redirect('auth:list_department')
 
-# MANAGE USERS START -------------------
 class ManageStudentsView(StudentFilesView):
     form1 = UserForm()
     form2 = StudentProfileForm()
@@ -286,25 +292,25 @@ class ManageStudentsView(StudentFilesView):
 
                 if form3.is_valid():
                     data = form3.cleaned_data
-                    with open(str(request.FILES['file']), 'r') as file:
-                        csv_obj = csv.reader(file)
-                        next(csv_obj)
 
-                        objs = []
-                        sub_objs = []
+                    csv_obj = csv.reader(codecs.iterdecode(request.FILES['file'], 'utf-8'))
+                    next(csv_obj)
 
-                        prog_id = Programme.objects.get(programme_title=data['programme'])
-                        session_id = Session.objects.get(session_title=data['session'])
-                        type_id = StudentType.objects.get(type_title=data['student_type'])
-                        dept = Department.objects.get(dept_id=dept_id)
+                    objs = []
+                    sub_objs = []
 
-                        for row in csv_obj:
-                            objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
-                        created_users = User.objects.bulk_create(objs)
+                    prog_id = Programme.objects.get(programme_title=data['programme'])
+                    session_id = Session.objects.get(session_title=data['session'])
+                    type_id = StudentType.objects.get(type_title=data['student_type'])
+                    dept = Department.objects.get(dept_id=dept_id)
 
-                        for user in created_users:
-                            sub_objs.append(StudentProfile(user_id=user, programme_id=prog_id, session_id=session_id, dept_id=dept, type_id=type_id))
-                        created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
+                    for row in csv_obj:
+                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                    created_users = User.objects.bulk_create(objs)
+
+                    for user in created_users:
+                        sub_objs.append(StudentProfile(user_id=user, programme_id=prog_id, session_id=session_id, dept_id=dept, type_id=type_id))
+                    created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
 
                     messages.success(request, 'Account Created Successfully!')
                     return redirect('auth:manage_students', dept_id)
@@ -378,31 +384,29 @@ class ManageSupervisorsView(View):
                 form3 = MultipleSuperForm(request.POST,request.FILES)
 
                 if form3.is_valid():
-                    data = form3.cleaned_data
+                    file = request.FILES['file']
 
-                    with open(str(request.FILES['file']), 'r') as file:
-                        csv_obj = csv.reader(file)
-                        next(csv_obj)
+                    csv_obj = csv.reader(codecs.iterdecode(file, 'utf-8'))
+                    next(csv_obj)
 
-                        objs = []
-                        sub_objs = []
-                        super_levels = []
+                    objs = []
+                    sub_objs = []
+                    super_levels = []
 
-                        dept = Department.objects.get(dept_id=dept_id)
+                    dept = Department.objects.get(dept_id=dept_id)
+                    for row in csv_obj:
+                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                        super_levels.append(row[3])
 
-                        for row in csv_obj:
-                            objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
-                            super_levels.append(row[3])
+                    created_users = User.objects.bulk_create(objs)
 
-                        created_users = User.objects.bulk_create(objs)
+                    for (user, level) in zip(created_users, super_levels):
+                        rank_id = SupervisorRank.objects.get(rank_number=level)
+                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id))
+                    created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
-                        for (user, level) in zip(created_users, super_levels):
-                            rank_id = SupervisorRank.objects.get(rank_number=level)
-                            sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id))
-                        created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
-
-                        messages.success(request, 'Account Created Successfully!')
-                        return redirect('auth:manage_supervisors', dept_id)
+                    messages.success(request, 'Account Created Successfully!')
+                    return redirect('auth:manage_supervisors', dept_id)
 
             messages.error(request, 'Error Creating Account from file Check form for more details!')
             return render(request, 'auth/manage_supervisors.html', context={'dept':dept, 'form1':form1, 'form2':form2, 'form3':form3})
@@ -586,5 +590,26 @@ class ManageCoordinatorsView(View):
 
 # Allocate
 class AllocateView(View):
-    def get(self, request):
-        return render(request, 'auth/allocate.html')
+    form = AllocationForm()
+    def get(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            form2 = MAllocationForm(dept)
+            return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+        except ObjectDoesNotExist:
+            return redirect('auth:list_department')
+
+    def post(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            form2 = MAllocationForm(dept)
+
+            if 'authA' in request.POST:
+                form = AllocationForm(request.POST)
+
+            if 'mAllocate' in request.POST:
+                form2 = MAllocationForm(request.POST, dept)
+
+            return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+        except ObjectDoesNotExist:
+            return redirect('auth:list_department')
