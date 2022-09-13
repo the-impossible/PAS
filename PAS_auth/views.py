@@ -1138,6 +1138,7 @@ class DisplayGroupMembersView(LoginRequiredMixin, View):
     def get(self, request, group_id):
         try:
             members = Allocate.objects.filter(group_id=Groups.objects.get(group_num=group_id), super_id=SupervisorProfile.objects.get(user_id=request.user.user_id), prog_id=Programme.objects.get(programme_title='ND'))
+            messages.success()
             return render(request, 'partials/group_members_modal.html', context={'members':members, 'group_id':group_id})
         except:
             messages.error(request, 'Unable to fetch group members')
