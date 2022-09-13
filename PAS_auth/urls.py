@@ -43,7 +43,6 @@ from PAS_auth.views import (
 
     ListSupervisorView,
     ManageCoordinatorsView,
-    StudentDashboardView,
 
     ReVerifyEmailView,
     ResendEmailVerificationView,
@@ -52,6 +51,7 @@ from PAS_auth.views import (
 
     AssignedStudentView,
     AssignedSupervisorView,
+    ViewProjectCoordinator,
     DisplayGroupMembersView,
 
 )
@@ -124,9 +124,7 @@ urlpatterns = [
     path('assigned_students', AssignedStudentView.as_view(), name='assigned_students'),
     path('assigned_supervisor', AssignedSupervisorView.as_view(), name='assigned_supervisors'),
     path('display_group_members/<str:group_id>', DisplayGroupMembersView.as_view(), name='display_group_members'),
+    path('view_project_coordinator', ViewProjectCoordinator.as_view(), name='view_project_coordinator'),
 
-    # Student Dashboard
-    # path may be 'dashboard/CST20HND1231'
-    path('student_dashboard', StudentDashboardView.as_view(), name='student_dashboard')
 
 ]

@@ -19,6 +19,7 @@
                          <span class="nav-link-text">Overview</span>
                     </a><!--//nav-link-->
                 </li><!--//nav-item-->
+                {% if request.user.is_staff %}
                 <li class="nav-item">
                     <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
                     <a class="nav-link" href="{% url 'auth:list_department' %}">
@@ -28,6 +29,8 @@
                         <span class="nav-link-text">Departments</span>
                     </a><!--//nav-link-->
                 </li><!--//nav-item-->
+                {% endif %}
+                {% if not request.user.is_superuser %}
                 <li class="nav-item has-submenu">
                     <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
                     <a class="nav-link submenu-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#submenu-4" aria-expanded="false" aria-controls="submenu-4">
@@ -51,9 +54,11 @@
                             {% else %}
                             <li class="submenu-item"><a class="submenu-link" href="{% url 'auth:assigned_supervisors' %}">View Supervisor</a></li>
                             {% endif %}
+                            <li class="submenu-item"><a class="submenu-link" href="{% url 'auth:view_project_coordinator' %}">View Project Coordinator</a></li>
                         </ul>
                     </div>
                 </li><!--//nav-item-->
+                {% endif %}
                 {% comment %}
                 <li class="nav-item has-submenu">
                     <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
@@ -140,7 +145,6 @@
                     </a><!--//nav-link-->
                 </li><!--//nav-item-->
                 {% endcomment %}
-
             </ul><!--//app-menu-->
         </nav><!--//app-nav-->
         <div class="app-sidepanel-footer">

@@ -11,10 +11,10 @@ from django.contrib import messages
 def is_staff(func):
     def wrapper_func(request, *args, **kwargs):
         if request.user.is_authenticated:
-            if request.user.is_super:
+            if request.user.is_staff:
                 return func(request, *args, **kwargs)
             else:
-                messages.warning(request, 'You are not authorized to view this page')
+                messages.warning(request, 'You are not authorized to view that page')
                 return redirect('auth:dashboard')
     return wrapper_func
 
