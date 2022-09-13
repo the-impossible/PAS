@@ -173,6 +173,9 @@ class DashboardView(LoginRequiredMixin, View):
     @method_decorator(has_updated)
     def get(self, request):
         return render(request, 'auth/dashboard.html')
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
 class StudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
     programmes = Programme.objects.all()
@@ -216,12 +219,7 @@ class StudentFilesView(LoginRequiredMixin, View):
             return render(request, 'auth/student_files.html', context={'programmes':self.programmes, 'dept':self.dept , 'form':form})
         else:
             return redirect('auth:list_department')
-class DisplayForm(LoginRequiredMixin, View):
-    login_url = 'auth:login'
 
-    def get(self, request):
-        form = FilesForm()
-        return render(request, 'partials/files/stud_file_form.html', context={'form':form})
 class DeleteStudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -274,7 +272,12 @@ class ListSupervisorFilesView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return SupervisorsFiles.objects.filter(dept=self.kwargs['dept_id']).order_by('-pk')
-class SupervisorFilesView(View):
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
+class SupervisorFilesView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
     dept = None
     def check_department(self, dept_id, request):
         dept = None
@@ -314,6 +317,9 @@ class SupervisorFilesView(View):
             return render(request, 'auth/supervisor_files.html', context={'dept':self.dept, 'form':form})
         else:
             return redirect('auth:list_department')
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
 class ManageStudentsView(StudentFilesView):
     form1 = UserForm()
     form2 = StudentProfileForm()
@@ -410,7 +416,12 @@ class DeleteUserAccountView(LoginRequiredMixin, View):
         except:
             messages.error(request, 'Failed to delete Account!')
             return HttpResponse(status=204, headers={'Hx-Trigger':'listChanged'})
-class ManageSupervisorsView(View):
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
+class ManageSupervisorsView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
     form1 = UserForm()
     form2 = SupervisorProfileForm()
     form3 = MultipleSuperForm()
@@ -443,6 +454,7 @@ class ManageSupervisorsView(View):
                     user_form.user_id = user
                     user_form.dept_id = dept
 
+                    user.is_super = True
                     user.save()
                     user_form.save()
                     messages.success(request, 'Account Created Successfully!')
@@ -466,7 +478,7 @@ class ManageSupervisorsView(View):
 
                     dept = Department.objects.get(dept_id=dept_id)
                     for row in csv_obj:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
                         super_levels.append(row[3])
 
                     created_users = User.objects.bulk_create(objs)
@@ -481,10 +493,13 @@ class ManageSupervisorsView(View):
 
             messages.error(request, 'Error Creating Account from file Check form for more details!')
             return render(request, 'auth/manage_supervisors.html', context={'dept':dept, 'form1':form1, 'form2':form2, 'form3':form3})
+
 class ManageAdministratorsView(View):
     def get(self, request):
         return render(request, 'auth/manage_administrators.html')
-class ManageProfileView(View):
+class ManageProfileView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
     def get(self, request, user_id):
         try:
             user = User.objects.get(user_id=user_id)
@@ -635,10 +650,12 @@ class EmailActivationView(View):
         except User.DoesNotExist:
             messages.warning(request, 'Oops User not found, hence email not verified!')
             return redirect('auth:manage_profile', request.user.user_id)
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
 class ListDepartmentView(LoginRequiredMixin, View):
     login_url = 'auth:login'
     form = DepartmentForm()
-
     def get(self, request):
         dept = Department.objects.all()
         return render(request, 'auth/list_department.html', context={'dept':dept, 'form':self.form})
@@ -655,6 +672,8 @@ class ListDepartmentView(LoginRequiredMixin, View):
         dept = Department.objects.all()
 
         return render(request, 'auth/list_department.html', context={'dept':dept, 'form':form})
+
+@method_decorator(is_staff, name='get')
 class DepartmentView(View):
     def get(self, request, dept_id):
         try:
@@ -665,6 +684,8 @@ class DepartmentView(View):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
+
+@method_decorator(is_staff, name="get")
 class WhatFileView(View):
     def get(self, request, dept_id):
         try:
@@ -675,6 +696,8 @@ class WhatFileView(View):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
+
+@method_decorator(is_staff, name="post")
 class BatchCreateView(View):
     def post(self, request, dept_id, file_id):
         try:
@@ -698,9 +721,13 @@ class BatchCreateView(View):
                 super_levels = []
 
                 for row in csv_obj:
-                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+
                     if 'super' in request.POST:
+                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
                         super_levels.append(row[3])
+
+                    if 'student' in request.POST:
+                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
 
                 created_users = User.objects.bulk_create(objs)
 
@@ -731,6 +758,7 @@ class BatchCreateView(View):
 
         if 'super' in request.POST:
             return redirect('auth:files_super', dept_id)
+
 class ListStudentView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_student.html"
@@ -748,7 +776,12 @@ class ListSupervisorView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return SupervisorProfile.objects.filter(dept_id=self.kwargs['dept_id']).order_by('-pk')
-class ManageCoordinatorsView(View):
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
+class ManageCoordinatorsView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
     programmes = Programme.objects.all()
     def get(self, request, dept_id):
         try:
@@ -800,6 +833,9 @@ class ManageCoordinatorsView(View):
 
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
 class AllocateView(View):
     form = AllocationForm()
     def get(self, request, dept_id):
@@ -846,7 +882,8 @@ class AllocateView(View):
 
                                 count = 0
 
-                                flag = False
+                                flag = False #To detect if student was assigned successfully
+
                                 # FOR ND STUDENTS
                                 if len(match_studs_list) >= 3:
 
@@ -885,12 +922,15 @@ class AllocateView(View):
                                 flag = True
 
                             # ASSIGN LECTURES
+                            index = 1
                             if flag:
                                 for i in range(1, len(groups)+ 1):
-                                    if i > len(match_super):
-                                        allocation[groups[i - 1]].insert(0, random.choice(match_super))
+                                    if index <= len(match_super):
+                                        allocation[groups[i - 1]].insert(0, match_super[index - 1])
                                     else:
-                                        allocation[groups[i - 1]].insert(0, match_super[i - 1])
+                                        index = 1
+                                        allocation[groups[i - 1]].insert(0, match_super[index - 1])
+                                    index += 1
 
                                 objs = []
 
@@ -933,6 +973,9 @@ class AllocateView(View):
 
                                 messages.success(request, 'Student to supervisor allocation successful!')
                                 return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2, 't_students':len(match_studs), 't_super':len(match_super), 'groups':len(groups), 'grouping':groupings})
+                            else:
+                                messages.error(request, 'Something went wrong!')
+                                return redirect('auth:allocate')
                         #ERROR
                         else:
                             if len(match_studs) == 0 and len(match_super) == 0:
@@ -1011,13 +1054,17 @@ class AllocateView(View):
 
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
-class ManageAllocationsView(StudentFilesView):
+
+@method_decorator(is_staff, name="get")
+@method_decorator(is_staff, name='post')
+class ManageAllocationsView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
     form = RAllocationForm()
 
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'programmes':self.programmes, 'form':self.form})
+            return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -1099,11 +1146,10 @@ class ManageAllocationsView(StudentFilesView):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
             return redirect('auth:list_department')
-class StudentDashboardView(View):
-    def get(self, request):
-        return render(request, 'auth/student/dashboard.html')
 
-class AssignedStudentView(View):
+class AssignedStudentView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
     programmes = Programme.objects.all()
     def get(self, request):
         try:
@@ -1116,7 +1162,9 @@ class AssignedStudentView(View):
             messages.success(request, 'Unable to get your account profile')
             return redirect('auth:dashboard')
 
-class AssignedSupervisorView(View):
+class AssignedSupervisorView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
     def get(self, request):
         try:
             stud_id = StudentProfile.objects.get(user_id=request.user)
@@ -1142,4 +1190,29 @@ class DisplayGroupMembersView(LoginRequiredMixin, View):
         except:
             messages.error(request, 'Unable to fetch group members')
             return HttpResponse(status=204)
+
+class ViewProjectCoordinator(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+    
+    programmes = Programme.objects.all()
+    def get(self, request):
+        try:
+            if request.user.is_super:
+                user_id = SupervisorProfile.objects.get(user_id=request.user)
+                coordinators = Coordinators.objects.filter(dept_id=user_id.dept_id)
+            elif not request.user.is_staff:
+                user_id = StudentProfile.objects.get(user_id=request.user)
+                coordinators = Coordinators.objects.get(prog_id=user_id.programme_id, dept_id=user_id.dept_id)
+            else:
+                messages.info(request, 'You are not allowed to view that page')
+                return redirect('auth:dashboard')
+
+            return render(request, 'auth/view_project_coordinator.html', context={'coordinators':coordinators, 'stud':user_id, 'programmes':self.programmes})
+
+        except StudentProfile.DoesNotExist:
+            messages.info(request, 'Unable to get your account profile')
+        except Coordinators.DoesNotExist:
+            messages.info(request, 'Unable to get coordinator for your programme try again!')
+
+        return redirect('auth:dashboard')
 
