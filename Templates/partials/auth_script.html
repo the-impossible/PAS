@@ -10,10 +10,15 @@
 <link rel="stylesheet" href="{% static 'auth/select2/css/select2.min.css' %}">
 <script src="{% static 'auth/select2/js/select2.min.js' %}"></script>
 <script src="{% static 'auth/js/htmx.min.js' %}"></script>
+<script src="{% static 'auth/js/wow.min.js' %}"></script>
+
 <script>
     window.setTimeout(function() {
     $(".alert").fadeTo(500, 0).slideUp(500, function(){
         $(this).remove();
     });
 }, 2000);
+
+new WOW().init();
+
 </script>

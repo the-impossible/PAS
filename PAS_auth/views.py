@@ -1,7 +1,8 @@
 # My Django imports
 from django.shortcuts import render, redirect, reverse
 from django.views import View
-import csv, io, codecs
+import csv, io, codecs, random
+from pprint import pprint
 from django.views.generic import ListView
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
@@ -15,6 +16,14 @@ from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
+from django.utils.decorators import method_decorator
+#Email
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.contrib.sites.shortcuts import get_current_site
+from PAS_auth.utils import EmailThread, email_activation_token, Email
+from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
+
+
 
 # My App imports
 from PAS_app.models import (
@@ -28,9 +37,12 @@ from PAS_app.models import (
 )
 from PAS_auth.models import (
     User,
+    Allocate,
     StudentProfile,
     SupervisorProfile,
     Coordinators,
+    Groups,
+    EmailSendCount,
 )
 from PAS_app.form import (
     FilesForm,
@@ -42,13 +54,17 @@ from PAS_app.form import (
     CoordinatorsForm,
     AllocationForm,
     MAllocationForm,
+    RAllocationForm,
+    DepartmentForm,
 )
 from PAS_auth.form import (
     UserForm,
+    UpdateProfileForm,
 )
 
-PASSWORD = '12345678'
+from PAS_auth.decorator import *
 
+PASSWORD = '12345678'
 # Create your views here.
 class LoginView(View):
     def get(self, request):
@@ -74,23 +90,89 @@ class LoginView(View):
         else:
             messages.error(request, 'All fields are required!!')
             return redirect('auth:login')
-
 class LogoutView(LoginRequiredMixin, View):
     login_url = 'auth:login'
+    @method_decorator(only_authenticated_users)
     def post(self, request):
         logout(request)
         messages.success(request, 'You are successfully logged out, to continue login again')
         return redirect('auth:login')
-
 class ResetPasswordView(View):
     def get(self, request):
         return render(request, 'auth/password_reset.html')
 
+    def post(self, request):
+        email = request.POST.get('email').lower()
+        if email:
+            user = User.objects.filter(email=email)
+            if user.exists():
+                current_site = get_current_site(request).domain
+                data = user[0]
+                user_details = {
+                    'fullname':data.get_fullname(),
+                    'email': data.email,
+                    'domain':current_site,
+                    'uid': urlsafe_base64_encode(force_bytes(data.user_id)),
+                    'token': email_activation_token.make_token(data),
+                }
+                Email.send(user_details, 'reset')
+                messages.success(request, 'A mail has been sent to your mailbox to enable you reset your password!')
+            else:
+                messages.error(request, "Email address doesn't exist!")
+        return render(request, 'auth/password_reset.html')
+class ResetPasswordActivationView(View):
+    def get(self, request, uidb64, token):
+        context = {
+            'uidb64':uidb64,
+            'token':token
+        }
+        user_id = force_str(force_bytes(urlsafe_base64_decode(uidb64)))
+        try:
+            user = User.objects.get(user_id=user_id)
+            if email_activation_token.check_token(user, token):
+                messages.info(request, 'Create a password for your account!')
+                return render(request, 'auth/complete_password_reset.html', context)
+            else:
+                messages.info(request, 'Link broken or Invalid reset link, Please Request a new one!')
+                return redirect('auth:reset_password')
+
+        except User.DoesNotExist:
+            messages.error(request, 'Oops User not found, hence password cannot be changed, kindly request for a new link!')
+            return redirect('auth:reset_password')
+
+    def post(self, request, uidb64, token):
+        user_id = force_str(force_bytes(urlsafe_base64_decode(uidb64)).decode())
+        context = {
+            'uidb64':uidb64,
+            'token':token
+        }
+        try:
+            user = User.objects.get(user_id=user_id)
+            password1 = request.POST['password1']
+            password2 = request.POST['password2']
+
+            if(password1 != password2):
+                messages.error(request, 'Password don\'t match!')
+                return render(request, 'auth/complete_password_reset.html', context)
+
+            if(len(password1) < 6):
+                messages.error(request, 'Password too short!')
+                return render(request, 'auth/complete_password_reset.html', context)
+
+            user.set_password(password1)
+            user.save()
+            messages.success(request, 'Password Changed you can now login with new password')
+
+            return redirect('auth:login')
+
+        except User.DoesNotExist:
+            messages.error(request, 'Oops user does not exist!')
+            return redirect('auth:reset_password')
 class DashboardView(LoginRequiredMixin, View):
     login_url = 'auth:login'
+    @method_decorator(has_updated)
     def get(self, request):
         return render(request, 'auth/dashboard.html')
-
 class StudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
     programmes = Programme.objects.all()
@@ -134,15 +216,12 @@ class StudentFilesView(LoginRequiredMixin, View):
             return render(request, 'auth/student_files.html', context={'programmes':self.programmes, 'dept':self.dept , 'form':form})
         else:
             return redirect('auth:list_department')
-
 class DisplayForm(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
     def get(self, request):
         form = FilesForm()
         return render(request, 'partials/files/stud_file_form.html', context={'form':form})
-
-# DELETE FILES START ---------------
 class DeleteStudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -163,7 +242,6 @@ class DeleteStudentFilesView(LoginRequiredMixin, View):
         except:
             messages.error(request, 'Failed to delete File!')
             return HttpResponse(status=204, headers={'Hx-Trigger':'listChanged'})
-
 class DeleteSupervisorFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -184,22 +262,18 @@ class DeleteSupervisorFilesView(LoginRequiredMixin, View):
         except:
             messages.error(request, 'Failed to delete File!')
             return HttpResponse(status=204, headers={'Hx-Trigger':'listChanged'})
-# END DELETE FILES ---------------
-
 class ListFilesView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_files.html"
 
     def get_queryset(self):
         return Files.objects.filter(programme=self.kwargs['programme_id'], dept=self.kwargs['dept_id']).order_by('-pk')
-
 class ListSupervisorFilesView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_super.html"
 
     def get_queryset(self):
         return SupervisorsFiles.objects.filter(dept=self.kwargs['dept_id']).order_by('-pk')
-
 class SupervisorFilesView(View):
     dept = None
     def check_department(self, dept_id, request):
@@ -240,7 +314,6 @@ class SupervisorFilesView(View):
             return render(request, 'auth/supervisor_files.html', context={'dept':self.dept, 'form':form})
         else:
             return redirect('auth:list_department')
-
 class ManageStudentsView(StudentFilesView):
     form1 = UserForm()
     form2 = StudentProfileForm()
@@ -317,7 +390,6 @@ class ManageStudentsView(StudentFilesView):
 
             messages.error(request, 'Error Creating Account from file Check form for more details!')
             return render(request, 'auth/manage_students.html', context={'dept':dept, 'programmes':self.programmes, 'form1':form1, 'form2':form2, 'form3':form3})
-
 class DeleteUserAccountView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -338,7 +410,6 @@ class DeleteUserAccountView(LoginRequiredMixin, View):
         except:
             messages.error(request, 'Failed to delete Account!')
             return HttpResponse(status=204, headers={'Hx-Trigger':'listChanged'})
-
 class ManageSupervisorsView(View):
     form1 = UserForm()
     form2 = SupervisorProfileForm()
@@ -410,34 +481,180 @@ class ManageSupervisorsView(View):
 
             messages.error(request, 'Error Creating Account from file Check form for more details!')
             return render(request, 'auth/manage_supervisors.html', context={'dept':dept, 'form1':form1, 'form2':form2, 'form3':form3})
-
 class ManageAdministratorsView(View):
     def get(self, request):
         return render(request, 'auth/manage_administrators.html')
-
 class ManageProfileView(View):
-    def get(self, request):
-        return render(request, 'auth/manage_profile.html')
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(user_id=user_id)
+            form = UpdateProfileForm(instance=user)
+            return render(request, 'auth/manage_profile.html', context={'info':user, 'form':form})
+        except ObjectDoesNotExist:
+            return redirect('auth:dashboard')
 
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(user_id=user_id)
+            form = UpdateProfileForm(request.POST, request.FILES, instance=user)
+
+            old_email = user.email
+
+            if 'profile' in request.POST:
+                if form.is_valid():
+                    user = form.save(commit=False)
+
+                    #Retrieve user details
+                    email = user.email
+                    fullname = user.get_fullname()
+
+                    # Send an email if old email is not same as new email
+                    if email != old_email:
+                        user.is_verified = False
+
+                        current_site = get_current_site(request).domain
+                        user_details = {
+                            'fullname':fullname,
+                            'email': email,
+                            'domain':current_site,
+                            'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
+                            'token': email_activation_token.make_token(user),
+                        }
+                        user.save()
+
+                        messages.success(request, 'Profile updated!')
+                        return redirect('auth:resend_email')
+                    else:
+                        user.save()
+                        messages.success(request, 'Profile updated!')
+
+                    return redirect('auth:reverify_email')
+                messages.error(request, 'Error updating profile')
+
+            if 'changeP' in request.POST:
+                password1 = request.POST.get('password1')
+                password2 = request.POST.get('password2')
+
+                if password1 and password2:
+                    if password1 == password2:
+                        if len(password1) >= 6:
+                            user.password = make_password(password1)
+                            messages.success(request, 'Password has been updated successfully! You have to re-login to continue')
+                            user.save()
+                            return redirect('auth:logout')
+                        else:
+                            messages.error(request, 'Passwords should not be less than 6 characters!')
+                    else:
+                        messages.error(request, 'Passwords do not match!')
+                else:
+                    messages.error(request, 'All fields are required!')
+
+            return render(request, 'auth/manage_profile.html', context={'info':user, 'form':form})
+        except ObjectDoesNotExist:
+            return redirect('auth:manage_profile', user.user_id)
 class SettingsView(View):
     def get(self, request):
         return render(request, 'auth/settings.html')
-
-# NOTIFICATIONS
 class NotificationsView(View):
     def get(self, request):
         return render(request, 'auth/notifications.html')
-
-# HELP VIEW
 class HelpView(View):
     def get(self, request):
         return render(request, 'auth/help.html')
+class ReVerifyEmailView(View):
+    def get(self, request):
+        try:
+            user = User.objects.get(user_id=request.user.user_id)
+            email = user.email
+            return render(request, 'auth/reverify_email.html', context={'email':email})
+        except ObjectDoesNotExist:
+            return redirect('auth:manage_profile', request.user.user_id)
+class ResendEmailVerificationView(View):
+    def get(self, request):
+        try:
+            user = User.objects.get(user_id=request.user.user_id)
+            count, created = EmailSendCount.objects.get_or_create(user=user)
+            count.increaseCount
+            count.save()
 
-class ListDepartmentView(ListView):
+            if count.getCount >= 9:
+                messages.warning(request, (f'Email address cannot be Verified, verification has exceeded it limit'))
+                return render(request, 'auth/reverify_email.html', {'email':user.email, 'check':'check'})
+
+            else:
+                # send verification email
+                current_site = get_current_site(request).domain
+
+                user_details = {
+                    'fullname':user.get_fullname(),
+                    'email': user.email,
+                    'domain':current_site,
+                    'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
+                    'token': email_activation_token.make_token(user),
+                }
+
+                Email.send(user_details, 'verify')
+                messages.success(request, 'Email 📧 has been sent to your mailbox 📫, kindly verify')
+
+                context = {
+                    'email':user.email,
+                }
+                return render(request, 'auth/reverify_email.html', context)
+        except:
+            messages.error(request, 'User not found')
+            context = {
+                'email':request.user.email,
+            }
+            return render(request, 'auth/reverify_email.html', context)
+class EmailActivationView(View):
+    def get(self, request, uidb64, token):
+        user_id = force_str(force_bytes(urlsafe_base64_decode(uidb64)))
+
+        try:
+            user = User.objects.get(user_id=user_id)
+
+            if user.is_verified:
+                messages.warning(request, 'Your email has already been verified!')
+                return redirect('auth:dashboard')
+
+            if email_activation_token.check_token(user, token):
+                user.is_verified = True
+                user.save()
+
+                # Reset EmailCount
+                count, created = EmailSendCount.objects.get_or_create(user=user)
+                count.resetCount
+                count.save()
+
+                messages.success(request, 'Email activated successfully')
+                return redirect('auth:manage_profile', request.user.user_id)
+            else:
+                messages.info(request, 'Email not verified, Link broken or Invalid reset link, Please Request a new one')
+                return redirect('auth:reverify_email')
+
+        except User.DoesNotExist:
+            messages.warning(request, 'Oops User not found, hence email not verified!')
+            return redirect('auth:manage_profile', request.user.user_id)
+class ListDepartmentView(LoginRequiredMixin, View):
     login_url = 'auth:login'
-    model = Department
-    template_name = 'auth/list_department.html'
+    form = DepartmentForm()
 
+    def get(self, request):
+        dept = Department.objects.all()
+        return render(request, 'auth/list_department.html', context={'dept':dept, 'form':self.form})
+
+    def post(self, request):
+        form = DepartmentForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Department has been created!')
+            return redirect('auth:list_department')
+
+        messages.error(request, 'Error creating Department!')
+        dept = Department.objects.all()
+
+        return render(request, 'auth/list_department.html', context={'dept':dept, 'form':form})
 class DepartmentView(View):
     def get(self, request, dept_id):
         try:
@@ -448,7 +665,6 @@ class DepartmentView(View):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
-
 class WhatFileView(View):
     def get(self, request, dept_id):
         try:
@@ -459,7 +675,6 @@ class WhatFileView(View):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
-
 class BatchCreateView(View):
     def post(self, request, dept_id, file_id):
         try:
@@ -481,6 +696,7 @@ class BatchCreateView(View):
                 objs = []
                 sub_objs = []
                 super_levels = []
+
                 for row in csv_obj:
                     objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
                     if 'super' in request.POST:
@@ -515,7 +731,6 @@ class BatchCreateView(View):
 
         if 'super' in request.POST:
             return redirect('auth:files_super', dept_id)
-
 class ListStudentView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_student.html"
@@ -527,14 +742,12 @@ class ListStudentView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return StudentProfile.objects.filter(programme_id=self.kwargs['programme_id'], dept_id=self.kwargs['dept_id']).order_by('-pk')
-
 class ListSupervisorView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_supervisors.html"
 
     def get_queryset(self):
         return SupervisorProfile.objects.filter(dept_id=self.kwargs['dept_id']).order_by('-pk')
-
 class ManageCoordinatorsView(View):
     programmes = Programme.objects.all()
     def get(self, request, dept_id):
@@ -587,14 +800,12 @@ class ManageCoordinatorsView(View):
 
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
-
-# Allocate
 class AllocateView(View):
     form = AllocationForm()
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            form2 = MAllocationForm(dept)
+            form2 = MAllocationForm(dept_id=dept)
             return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
@@ -602,14 +813,333 @@ class AllocateView(View):
     def post(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            form2 = MAllocationForm(dept)
+            form2 = MAllocationForm(dept_id=dept)
 
             if 'authA' in request.POST:
                 form = AllocationForm(request.POST)
+                if form.is_valid():
+                    prog_id = form.cleaned_data.get('prog_id')
+                    sess_id = form.cleaned_data.get('sess_id')
+                    type_id = form.cleaned_data.get('type_id')
+
+                    # GET STUDENTS AND SUPERVISOR
+                    match_studs = StudentProfile.objects.filter(programme_id=prog_id, session_id=sess_id, type_id=type_id)
+                    match_super = SupervisorProfile.objects.filter(dept_id=dept_id)
+
+                    # DETERMINE IF ALLOCATION FOR THAT SESSION AND DEPT EXISTS
+                    allocation_exists = Allocate.objects.filter(dept_id=dept, sess_id=sess_id, prog_id=prog_id, type_id=type_id).exists()
+
+                    if not allocation_exists:
+                        # ALLOCATION STARTS
+                        allocation = {}
+                        match_studs_list = list(match_studs)
+
+                        if match_studs and match_super:
+                            # SETTING THE SIZE OF THE GROUP BASED ON THE LEVEL (ND|HND)
+                            if prog_id.programme_title == 'ND':
+                                size = round(len(match_studs)/3)
+                                if size * 3 < len(match_studs):
+                                    size += 1
+
+                                # GENERATE THE GROUPS
+                                groups = [Groups.objects.get(group_num=f"Group{i}") for i in range(1, size + 1)]
+
+                                count = 0
+
+                                flag = False
+                                # FOR ND STUDENTS
+                                if len(match_studs_list) >= 3:
+
+                                    # ASSIGN STUDENTS
+                                    for i in range(len(groups)):
+                                        temp_list = []
+
+                                        while count < 3:
+                                            temp_list.append(match_studs_list.pop())
+                                            count += 1
+
+                                        allocation[groups[i]] = [temp_list]
+                                        count = 0
+
+                                        if len(match_studs_list) < 3 and len(match_studs_list) > 0:
+                                            allocation[groups[i + 1]] = [match_studs]
+                                            break
+
+                                    flag = True
+
+                                # ERROR MESSAGE
+                                else:
+                                    messages.error(request, 'You need at-least 3 students records before allocation can take place for ND student')
+                                    return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+
+                            else:
+                                # GENERATE THE GROUPS
+                                groups = [Groups.objects.get(group_num=f"Group{i}") for i in range(1, len(match_studs) + 1)]
+
+                                # ASSIGN STUDENTS
+                                for i in range(len(groups)):
+                                    temp_list = []
+                                    temp_list.append(match_studs_list.pop())
+                                    allocation[groups[i]] = [temp_list]
+
+                                flag = True
+
+                            # ASSIGN LECTURES
+                            if flag:
+                                for i in range(1, len(groups)+ 1):
+                                    if i > len(match_super):
+                                        allocation[groups[i - 1]].insert(0, random.choice(match_super))
+                                    else:
+                                        allocation[groups[i - 1]].insert(0, match_super[i - 1])
+
+                                objs = []
+
+                                # PREPARE OBJECTS FOR BATCH CREATE
+                                for (key, value) in allocation.items():
+                                    for v in range(len(value[1])):
+                                        objs.append(Allocate(super_id=value[0], group_id=key, type_id=type_id, stud_id=value[1][v], dept_id=dept, sess_id=sess_id, prog_id=prog_id))
+
+                                # SAVE RECORD TO TABLE: -> ALLOCATE
+                                allocations = Allocate.objects.bulk_create(objs)
+
+                                groupings = []
+
+                                if prog_id.programme_title == 'ND':
+                                    for i in range(len(groups)):
+                                        groupings.append([groups[i]])
+
+                                        temp_stud = []
+                                        count = 0
+
+                                        for obj in enumerate(allocations):
+
+                                            if obj[1].group_id == groups[i]:
+                                                count += 1
+                                                temp_stud.append(obj[1].stud_id)
+
+                                            if count == 3:
+                                                groupings[i].append(obj[1].super_id)
+                                                count = 0
+                                                break
+
+                                        groupings[i].insert(1, temp_stud)
+                                else:
+                                    for i in range(len(allocations)):
+                                        temp = []
+                                        temp.append(allocations[i].group_id)
+                                        temp.append([allocations[i].stud_id])
+                                        temp.append(allocations[i].super_id)
+                                        groupings.append(temp)
+
+                                messages.success(request, 'Student to supervisor allocation successful!')
+                                return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2, 't_students':len(match_studs), 't_super':len(match_super), 'groups':len(groups), 'grouping':groupings})
+                        #ERROR
+                        else:
+                            if len(match_studs) == 0 and len(match_super) == 0:
+                                messages.error(request, 'Students and Supervisors Records not found!, allocation aborted!')
+
+                            elif len(match_studs) == 0:
+                                messages.error(request, 'Students Records not found!, allocation aborted!')
+
+                            elif len(match_super) == 0:
+                                messages.error(request, 'Supervisors Records not found!, allocation aborted!')
+                    else:
+                        messages.error(request, 'Allocation already exist for the supplied information!,  try allocating manually')
+
+                return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
 
             if 'mAllocate' in request.POST:
-                form2 = MAllocationForm(request.POST, dept)
+                form2 = MAllocationForm(request.POST, dept_id=dept)
 
-            return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+                groupings = []
+
+                if form2.is_valid():
+                    group_id = form2.cleaned_data.get('group_id')
+                    sess_id = form2.cleaned_data.get('sess_id')
+                    super_id = form2.cleaned_data.get('super_id')
+                    stud_id = form2.cleaned_data.get('stud_id')
+
+                    allocation_exists = Allocate.objects.filter(sess_id=sess_id, stud_id=stud_id).exists()
+
+                    if allocation_exists:
+                        messages.error(request, 'Allocation exist!, Attempt deleting current student allocation')
+                    else:
+                        user_id = User.objects.get(username=stud_id)
+                        stud_type = StudentProfile.objects.get(user_id=user_id)
+
+                        group_occupied = Allocate.objects.filter(group_id=group_id, prog_id=stud_type.programme_id)
+                        if group_occupied:
+                            if stud_type.programme_id.programme_title == 'ND':
+                                if group_occupied and len(group_occupied) == 3:
+
+                                    to_try = Allocate.objects.filter(sess_id=sess_id, prog_id=stud_type.programme_id, dept_id=dept_id).order_by('group_id').last()
+
+                                    messages.warning(request, f'{group_id} is already filled up, try from above {to_try.group_id}')
+
+                                    return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+                                else:
+                                    if group_occupied.first().super_id != super_id:
+
+                                        messages.warning(request, f'{group_id} already contains a supervisor: {group_occupied.first().super_id} select the mentioned supervisor or try another group')
+
+                                        return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+                            else:
+                                group_occupied = Allocate.objects.filter(group_id=group_id, prog_id=stud_type.programme_id)
+
+                                if group_occupied:
+
+                                    to_try = Allocate.objects.filter(sess_id=sess_id, prog_id=stud_type.programme_id, dept_id=dept_id).order_by('group_id').last()
+
+                                    messages.warning(request, f'{group_id} is already filled up, try from above {to_try.group_id}')
+
+                                    return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
+
+                        data = form2.save(commit=False)
+
+                        data.prog_id = stud_type.programme_id
+                        data.dept_id = stud_type.dept_id
+                        data.type_id = stud_type.type_id
+
+                        data.save()
+
+                        groupings.append([data.group_id, [data.stud_id], data.super_id])
+
+                        messages.success(request, f'{stud_id} has been allocated to group {group_id} Successfully')
+
+            form2 = MAllocationForm(dept_id=dept)
+            return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2, 'grouping':groupings})
+
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
+class ManageAllocationsView(StudentFilesView):
+    form = RAllocationForm()
+
+    def get(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'programmes':self.programmes, 'form':self.form})
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')
+
+    def retrieve(self, prog_id, sess_id, type_id):
+        allocations = Allocate.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id).order_by('group_id')
+
+        if prog_id.programme_title == 'ND':
+            groupings = {}
+            for allocation in enumerate(allocations):
+                groupings[allocation[1].group_id] = [allocation[1].group_id,[]]
+
+            for groups in enumerate(groupings):
+                allocations = Allocate.objects.filter(prog_id=prog_id, sess_id=sess_id, group_id=groups[1], type_id=type_id)
+
+                for allocation in enumerate(allocations):
+                    groupings[groups[1]][1].append(allocation[1].stud_id)
+                    if allocation[0] == 0:
+                        groupings[groups[1]].append(allocation[1].super_id)
+                        groupings[groups[1]].append(allocation[1].pk)
+
+            groupings = list(groupings.values())
+
+        else:
+            groupings = []
+            for allocation in allocations:
+                groupings.append([allocation.group_id, [allocation.stud_id], allocation.super_id, allocation.pk])
+        return groupings
+
+    def post(self, request, dept_id):
+
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+
+            if 'authR' in request.POST:
+
+                form = RAllocationForm(request.POST)
+
+                if form.is_valid():
+                    prog_id = form.cleaned_data.get('prog_id')
+                    sess_id = form.cleaned_data.get('sess_id')
+                    type_id = form.cleaned_data.get('type_id')
+
+                    groupings = self.retrieve(prog_id, sess_id, type_id)
+
+                return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+            else:
+                print(request.POST)
+                prog_id = Programme.objects.get(programme_title=request.POST.get('prog'))
+                sess_id = Session.objects.get(session_title=request.POST.get('sess'))
+                type_id = StudentType.objects.get(type_title=request.POST.get('type'))
+
+                check_list = request.POST.getlist('to_delete')
+
+                if check_list:
+                    for item in check_list:
+                        try:
+                            to_delete_group = Allocate.objects.get(allocate_id=item)
+                            Allocate.objects.filter(group_id=to_delete_group.group_id, prog_id=to_delete_group.prog_id, type_id=type_id).delete()
+                        except ValidationError:
+                            try:
+                                Allocate.objects.filter(stud_id=StudentProfile.objects.get(user_id=User.objects.get(username=item))).delete()
+                            except:
+                                messages.warning(request, 'Failed deleting individual student allocations')
+                                groupings = self.retrieve(prog_id, sess_id, type_id)
+                                return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id})
+                    groupings = self.retrieve(prog_id, sess_id, type_id)
+                    messages.success(request, 'Successfully deleted the selected allocations')
+                    return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+
+                messages.error(request, 'No allocation was selected, Try again!')
+                return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Deleting!')
+            return redirect('auth:manage_allocate', dept_id)
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+            return redirect('auth:list_department')
+class StudentDashboardView(View):
+    def get(self, request):
+        return render(request, 'auth/student/dashboard.html')
+
+class AssignedStudentView(View):
+    programmes = Programme.objects.all()
+    def get(self, request):
+        try:
+            super_id = SupervisorProfile.objects.get(user_id=request.user)
+            group_nums = Allocate.objects.filter(super_id=super_id).values_list('group_id', flat=True).distinct()
+            allocations_nd = [Groups.objects.get(id=i) for i in group_nums]
+            allocations_hnd = Allocate.objects.filter(super_id=super_id, prog_id=Programme.objects.get(programme_title='HND'))
+            return render(request, 'auth/assigned_students.html', context={'programmes':self.programmes, 'allocations_nd':allocations_nd, 'allocations_hnd':allocations_hnd})
+        except SupervisorProfile.DoesNotExist:
+            messages.success(request, 'Unable to get your account profile')
+            return redirect('auth:dashboard')
+
+class AssignedSupervisorView(View):
+    def get(self, request):
+        try:
+            stud_id = StudentProfile.objects.get(user_id=request.user)
+            allocation = Allocate.objects.get(stud_id=stud_id)
+            group_members = Allocate.objects.filter(group_id=allocation.group_id, prog_id=stud_id.programme_id)
+            return render(request, 'auth/assigned_supervisor.html', context={'allocation':allocation, 'stud':stud_id, 'group_members':group_members})
+
+        except StudentProfile.DoesNotExist:
+            messages.success(request, 'Unable to get your account profile')
+            return redirect('auth:dashboard')
+
+        except Allocate.DoesNotExist:
+            messages.success(request, 'You are yet to be allocated!')
+            return redirect('auth:dashboard')
+
+class DisplayGroupMembersView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
+    def get(self, request, group_id):
+        try:
+            members = Allocate.objects.filter(group_id=Groups.objects.get(group_num=group_id), super_id=SupervisorProfile.objects.get(user_id=request.user.user_id), prog_id=Programme.objects.get(programme_title='ND'))
+            return render(request, 'partials/group_members_modal.html', context={'members':members, 'group_id':group_id})
+        except:
+            messages.error(request, 'Unable to fetch group members')
+            return HttpResponse(status=204)
+

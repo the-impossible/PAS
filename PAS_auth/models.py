@@ -67,21 +67,22 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
-
 class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
     username = models.CharField(max_length=20, db_index=True, unique=True, blank=True)
     firstname = models.CharField(max_length=20, db_index=True, blank=True)
     lastname = models.CharField(max_length=20, db_index=True, blank=True)
     phone = models.CharField(max_length=11, db_index=True, unique=True, blank=True, null=True)
+    pic = models.ImageField(default='img/comlogo.png', null=True, blank=True, upload_to='uploads/profile/')
     email = models.CharField(max_length=100, db_index=True, unique=True, verbose_name='email address', blank=True, null=True)
 
     date_joined = models.DateTimeField(verbose_name='date_joined', auto_now_add=True)
     last_login = models.DateTimeField(verbose_name='last_login', auto_now=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    has_changed = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    is_super = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
 
@@ -98,6 +99,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_fullname(self):
         return f'{self.lastname} {self.firstname}'
 
+    def has_updated(self):
+        return self.is_verified
+
     def __str__(self):
         return f'{self.username.upper()}'
 
@@ -113,7 +117,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class StudentProfile(models.Model):
     stud_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_id = models.OneToOneField(User,blank=True, null=True, on_delete=models.CASCADE)
     programme_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
     session_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
@@ -152,18 +156,52 @@ class Coordinators(models.Model):
         db_table = 'Coordinator Details'
         verbose_name_plural = 'Coordinators Details'
 
+class Groups(models.Model):
+    group_num = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return f'{self.group_num}'
+
+    class Meta:
+        db_table = 'Groups'
+        verbose_name_plural = 'Groups'
+
 class Allocate(models.Model):
     allocate_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
-    group_num = models.CharField(max_length=500)
+    group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
     sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
     stud_id = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
     super_id = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.stud_id} is allocated to {self.super_id} with group number of {self.group_num}'
+        return f'{self.stud_id} is allocated to {self.super_id} with group number of {self.group_id}'
 
     class Meta:
         db_table = 'Allocation Details'
         verbose_name_plural = 'Allocation Details'
+
+class EmailSendCount(models.Model):
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE, null=True)
+    count = models.IntegerField(default=0)
+
+    @property
+    def increaseCount(self):
+        self.count += 1
+
+    @property
+    def resetCount(self):
+        self.count = 0
+
+    @property
+    def getCount(self):
+        return self.count
+
+    def __str__(self):
+        return f'{self.user}, has used ({self.count})/({10})'
+
+    class Meta:
+        db_table = 'EmailCounter'
+

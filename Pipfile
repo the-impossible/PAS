@@ -9,6 +9,7 @@ pillow = "*"
 django = "*"
 argon2-cffi = "*"
 django-crispy-forms = "*"
+six = "*"
 
 [dev-packages]
 

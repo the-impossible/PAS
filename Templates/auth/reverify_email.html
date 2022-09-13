@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Reverify
+{% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+			<div class="app-content pt-3 p-md-3 p-lg-4">
+				<div class="container-xl">
+					<h1 class="app-page-title">Account Verification</h1>
+					<div class="row gy-4">
+						{% include "partials/messages.html" %}
+						<div class="col-12 col-lg-12">
+							<div class="app-card  shadow-sm d-flex flex-column align-items-start">
+								<div class="app-card-header p-3 border-bottom-0">
+									<div class="row align-items-center gx-3">
+										<div class="col-auto">
+											<div class="app-icon-holder">
+												<span>
+													<i class="fa fa-location-arrow"></i>
+												</span>
+											</div>
+											<!--//icon-holder-->
+										</div>
+										<!--//col-->
+										<div class="col-auto">
+											<h4 class="app-card-title">Verify Email</h4>
+										</div>
+										<!--//col-->
+									</div>
+									<!--//row-->
+								</div>
+								<div class="app-card-body px-4 w-100">
+									<div class="item border-bottom py-3">
+										<div class="row justify-content-between align-items-center">
+											<div class="col-4 col-md-4 col-lg-4">
+												<img src="{% static 'img/mail.png' %}" class="img-fluid wow swing" width="250" height="200" alt="">
+											</div>
+											<div class="col-8 col-md-8 col-lg-8 mb-4">
+												{% if check %}
+												<h4 class="item-label mb-2">Verification Failed</h4>
+												<p class="">You obviously cannot verify this: <b>{{ email }}</b> <br> <br>
+													Supply a new email address from your profile to fully utilize <span class="logo-text">PROJECT Manager</span>. <br> <br>
+												</p>
+												{% else %}
+												<h4 class="item-label mb-2">Verify you're a your email with <span class="logo-text">PROJECT Manager</span></h4>
+												<br>
+												<p class="">We sent an email to <b>{{ email }}</b> <br> <br>
+													To continue, please check your mailbox and verify your email. <br> <br>
+													Didn't receive the email? <br> <br>
+													<a href="{% url 'auth:resend_email' %}"> Resend Email</a>
+												</p>
+												{% endif %}
+												<a href="{% url 'auth:manage_profile' request.user.user_id %}" class="btn btn-success float-right text-white"><i class="fa fa-user-tie"></i> Profile</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% include 'partials/auth_footer.html' %}
+		</div>
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+{% endblock %}
+

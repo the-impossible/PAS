@@ -14,6 +14,7 @@ from PAS_app.models import (
 
 from PAS_auth.models import (
     User,
+    Groups,
     StudentProfile,
     SupervisorProfile,
     Coordinators,
@@ -273,15 +274,21 @@ class AllocationForm(forms.ModelForm):
         }
     ))
 
+    type_id = forms.ModelChoiceField(queryset=StudentType.objects.all(), empty_label="(Select Student Category)", help_text="Select Category of Student", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
     class Meta:
         model = Allocate
         fields = ('sess_id', 'prog_id')
 
 class MAllocationForm(forms.ModelForm):
 
-    prog_id = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", help_text="Select Academic programme", widget=forms.Select(
+    group_id = forms.ModelChoiceField(queryset=Groups.objects.all(), empty_label="(Select Group)", help_text="Select Academic Group", widget=forms.Select(
         attrs={
-            'class':'form-control',
+            'class':'form-control searchable',
         }
     ))
 
@@ -303,16 +310,69 @@ class MAllocationForm(forms.ModelForm):
         }
     ))
 
-    def __init__(self, dept_id, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        self.dept_id = kwargs.pop('dept_id', '')
         super(MAllocationForm, self).__init__(*args, **kwargs)
-        self.fields['stud_id'].queryset=StudentProfile.objects.filter(dept_id=dept_id)
-        self.fields['super_id'].queryset=SupervisorProfile.objects.filter(dept_id=dept_id)
+        self.fields['stud_id'].queryset=StudentProfile.objects.filter(dept_id=self.dept_id)
+        self.fields['super_id'].queryset=SupervisorProfile.objects.filter(dept_id=self.dept_id)
+        self.fields['group_id'].widget.attrs['style'] = 'width:400px;'
         self.fields['stud_id'].widget.attrs['style'] = 'width:400px;'
         self.fields['super_id'].widget.attrs['style'] = 'width:400px;'
         self.fields['sess_id'].widget.attrs['style'] = 'width:400px;'
 
     class Meta:
         model = Allocate
-        fields = ('sess_id', 'prog_id', 'stud_id', 'super_id')
+        fields = ('sess_id', 'group_id', 'stud_id', 'super_id')
+
+class RAllocationForm(forms.ModelForm):
+
+    sess_id = forms.ModelChoiceField(queryset=Session.objects.all(), empty_label="(Select Session)", help_text="Select Academic Session", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    prog_id = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", help_text="Select Student", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    type_id = forms.ModelChoiceField(queryset=StudentType.objects.all(), empty_label="(Select Student Category)", help_text="Select Student Category", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    class Meta:
+        model = Allocate
+        fields = ('sess_id', 'prog_id', 'type_id')
+
+class DepartmentForm(forms.ModelForm):
+
+    dept_title = forms.CharField(help_text='Please enter department title',widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    dept_desc = forms.CharField(help_text='Please enter department description',widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    dept_logo = forms.ImageField(required=False, widget=forms.FileInput(
+        attrs={
+            'class':'form-control',
+            'type':'file',
+            'accept':'image/png, image/jpeg'
+        }
+    ))
+
+    class Meta:
+        model = Department
+        fields = ('dept_title', 'dept_desc', 'dept_logo')
+
 
 
