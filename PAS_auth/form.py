@@ -67,3 +67,51 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('username', 'firstname', 'lastname', 'phone', 'email')
+
+
+class UpdateProfileForm(forms.ModelForm):
+    email = forms.EmailField(help_text='Enter a valid email address',empty_value=None, widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+            'type':'email'
+        }
+    ))
+
+    phone = forms.CharField(help_text='Enter a valid phone number', strip=True, empty_value=None, widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+            'type':'number'
+        }
+    ))
+
+    pic = forms.ImageField(required=False, widget=forms.FileInput(
+        attrs={
+            'class':'form-control',
+            'type':'file',
+            'accept':'image/png, image/jpeg'
+        }
+    ))
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        check = User.objects.filter(email=email)
+        if self.instance:
+            check = check.exclude(pk=self.instance.pk)
+        if check.exists():
+            raise forms.ValidationError('Email Already taken!')
+
+        return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        check = User.objects.filter(phone=phone)
+        if self.instance:
+            check = check.exclude(pk=self.instance.pk)
+        if check.exists():
+            raise forms.ValidationError('Phone Number Already taken!')
+
+        return phone
+
+    class Meta:
+        model = User
+        fields = ('phone', 'email', 'pic')

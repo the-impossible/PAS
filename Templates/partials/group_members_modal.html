@@ -1,0 +1,41 @@
+{% load crispy_forms_tags %}
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">{{group_id}} members?</h5>
+        <button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p class="text-center">Below are the members of {{group_id}} for your supervision</p>
+        <div class="row g-4">
+        {% if members %}
+            {% for member in members %}
+            <div class="col-sm-12 col-md-4 col-lg-4">
+            <div class="app-card app-card-doc shadow-sm h-100">
+                <div class="app-card-thumb-holder p-3">
+                    <span class="">
+                        <img src="{{ member.stud_id.user_id.pic.url }}" alt="" style="border-radius: 50%; height: 80px; width: 80px;">
+                    </span>
+                    <a class="app-card-link-mask" href="#file-link"></a>
+                </div>
+                <div class="app-card-body p-3 has-card-actions">
+                    <h4 class="app-doc-title truncate mb-0"><a href="#file-link">{{member.group_id}}</a></h4>
+                    <div class="app-doc-meta">
+                        <ul class="list-unstyled mb-0">
+                            <li><span class="text-muted">Full Name:</span> {{member.stud_id.user_id.get_fullname }}</li>
+                            <li><span class="text-muted">Reg No:</span> {{member.stud_id.user_id.username }}</li>
+                            <li><span class="text-muted">Phone:</span> {{member.stud_id.user_id.phone}}</li>
+                            <li><span class="text-muted">Category:</span> {{member.type_id}}</li>
+                        </ul>
+                    </div><!--//app-doc-meta-->
+                </div><!--//app-card-body-->
+            </div><!--//app-card-->
+            </div><!--//col-->
+            {% endfor %}
+        {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+    </div>
+</div>

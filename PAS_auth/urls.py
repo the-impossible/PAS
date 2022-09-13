@@ -29,7 +29,10 @@ from PAS_auth.views import (
 
     # Department
     DepartmentView,
+
+    # Allocation
     AllocateView,
+    ManageAllocationsView,
 
     ManageProfileView,
     SettingsView,
@@ -40,6 +43,16 @@ from PAS_auth.views import (
 
     ListSupervisorView,
     ManageCoordinatorsView,
+    StudentDashboardView,
+
+    ReVerifyEmailView,
+    ResendEmailVerificationView,
+    EmailActivationView,
+    ResetPasswordActivationView,
+
+    AssignedStudentView,
+    AssignedSupervisorView,
+    DisplayGroupMembersView,
 
 )
 
@@ -49,7 +62,6 @@ urlpatterns = [
     # Authentication
     path('login', LoginView.as_view(), name='login'),
     path('logout', LogoutView.as_view(), name='logout'),
-    path('reset_password', ResetPasswordView.as_view(), name='reset_password'),
 
     # Dashboard
     path('dashboard', DashboardView.as_view(), name='dashboard'),
@@ -79,7 +91,14 @@ urlpatterns = [
     path('manage_supervisors/<str:dept_id>', ManageSupervisorsView.as_view(), name='manage_supervisors'),
 
     # Profile
-    path('manage_profile', ManageProfileView.as_view(), name='manage_profile'),
+    path('manage_profile/<str:user_id>', ManageProfileView.as_view(), name='manage_profile'),
+
+    # Email
+    path('reverify_email', ReVerifyEmailView.as_view(), name='reverify_email'),
+    path('resend_email', ResendEmailVerificationView.as_view(), name='resend_email'),
+    path('verify/<uidb64>/<token>', EmailActivationView.as_view(), name='verify'),
+    path('reset_password', ResetPasswordView.as_view(), name='reset_password'),
+    path('complete_reset_password/<uidb64>/<token>', ResetPasswordActivationView.as_view(), name='complete_reset_password'),
 
     # Settings
     path('settings', SettingsView.as_view(), name='settings'),
@@ -99,6 +118,15 @@ urlpatterns = [
     path('manage_coordinators/<str:dept_id>', ManageCoordinatorsView.as_view(), name='manage_coordinators'),
 
     # Allocate Students
-    path('allocate/<str:dept_id>', AllocateView.as_view(), name='allocate')
+    path('allocate/<str:dept_id>', AllocateView.as_view(), name='allocate'),
+    path('manage_allocate/<str:dept_id>', ManageAllocationsView.as_view(), name='manage_allocate'),
+
+    path('assigned_students', AssignedStudentView.as_view(), name='assigned_students'),
+    path('assigned_supervisor', AssignedSupervisorView.as_view(), name='assigned_supervisors'),
+    path('display_group_members/<str:group_id>', DisplayGroupMembersView.as_view(), name='display_group_members'),
+
+    # Student Dashboard
+    # path may be 'dashboard/CST20HND1231'
+    path('student_dashboard', StudentDashboardView.as_view(), name='student_dashboard')
 
 ]
