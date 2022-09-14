@@ -54,7 +54,7 @@ class Mailer(View):
             context_data = {'type':'reset', 'user': user_details['fullname'], 'activate': activation_url}
             email_body = get_template(activation_path).render(context_data)
             print('DETAILS: ', activation_url)
-            # EmailThread(email_subject, email_body, receiver).start()
+            EmailThread(email_subject, email_body, receiver).start()
 
         elif which == 'verify':
             link = reverse('auth:verify', kwargs={'uidb64':user_details['uid'], 'token':user_details['token']})
@@ -66,7 +66,7 @@ class Mailer(View):
             email_body = get_template(activation_path).render(context_data)
             print('DETAILS: ', activation_url)
 
-            # EmailThread(email_subject, email_body, receiver).start()
+            EmailThread(email_subject, email_body, receiver).start()
         else:
             messages.error(request, 'Unable to process verification')
 
