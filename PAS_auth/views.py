@@ -1,7 +1,8 @@
 # My Django imports
 from django.shortcuts import render, redirect, reverse
 from django.views import View
-import csv, io, codecs, random
+from django.core.files.storage import default_storage
+import csv, io, codecs, random, os
 from pprint import pprint
 from django.views.generic import ListView
 from django.contrib.auth import authenticate, login, logout, get_user
@@ -706,41 +707,45 @@ class BatchCreateView(View):
 
             if 'student' in request.POST:
                 et_file = Files.objects.get(id=file_id)
+
                 prog_id = Programme.objects.get(id=et_file.programme_id)
                 sess_id = Session.objects.get(id=et_file.session_id)
                 type_id = StudentType.objects.get(type_title=et_file.student_type)
 
             dept = Department.objects.get(dept_id=et_file.dept_id)
 
-            path = f'{settings.BASE_DIR}{staticfiles_storage.url(str(et_file.file))}'
-            with open(path, 'r') as file:
-                csv_obj = csv.reader(file)
-                next(csv_obj)
-                objs = []
-                sub_objs = []
-                super_levels = []
+            file = default_storage.open(f'{et_file}', mode='r')
+            data = file.readlines()
+            file.close()
 
-                for row in csv_obj:
+            csv_obj = csv.reader(data)
+            next(csv_obj)
 
-                    if 'super' in request.POST:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
-                        super_levels.append(row[3])
+            objs = []
+            sub_objs = []
+            super_levels = []
 
-                    if 'student' in request.POST:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
-
-                created_users = User.objects.bulk_create(objs)
-
-                if 'student' in request.POST:
-                    for user in created_users:
-                        sub_objs.append(StudentProfile(user_id=user, programme_id=prog_id, session_id=sess_id, dept_id=dept, type_id=type_id))
-                    created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
+            for row in csv_obj:
 
                 if 'super' in request.POST:
-                    for (user, level) in zip(created_users, super_levels):
-                        rank_id = SupervisorRank.objects.get(rank_number=level)
-                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id))
-                    created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
+                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
+                    super_levels.append(row[3])
+
+                if 'student' in request.POST:
+                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+
+            created_users = User.objects.bulk_create(objs)
+
+            if 'student' in request.POST:
+                for user in created_users:
+                    sub_objs.append(StudentProfile(user_id=user, programme_id=prog_id, session_id=sess_id, dept_id=dept, type_id=type_id))
+                created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
+
+            if 'super' in request.POST:
+                for (user, level) in zip(created_users, super_levels):
+                    rank_id = SupervisorRank.objects.get(rank_number=level)
+                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id))
+                created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
             et_file.used = True
             et_file.save()
@@ -751,13 +756,13 @@ class BatchCreateView(View):
             messages.error(request, 'Error bulk creating from File!')
         except IntegrityError:
             messages.error(request, 'Error bulk creating from File!, Duplicate record found!')
+        else:
+            messages.success(request, 'Account has been created successfully!')
+            if 'student' in request.POST:
+                return redirect('auth:files_stud', dept_id)
 
-        messages.success(request, 'Account has been created successfully!')
-        if 'student' in request.POST:
-            return redirect('auth:files_stud', dept_id)
-
-        if 'super' in request.POST:
-            return redirect('auth:files_super', dept_id)
+            if 'super' in request.POST:
+                return redirect('auth:files_super', dept_id)
 
 class ListStudentView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
@@ -1193,7 +1198,7 @@ class DisplayGroupMembersView(LoginRequiredMixin, View):
 
 class ViewProjectCoordinator(LoginRequiredMixin, View):
     login_url = 'auth:login'
-    
+
     programmes = Programme.objects.all()
     def get(self, request):
         try:
