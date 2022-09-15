@@ -39,7 +39,7 @@ email_activation_token = AppTokenGenerator()
 
 class Mailer(View):
 
-    http = 'http://'
+    http = 'https://'
 
     def send(self, user_details, which):
         reset = 'Reset Your PROJECT Manager Account Password'
@@ -53,7 +53,6 @@ class Mailer(View):
             email_subject = reset
             context_data = {'type':'reset', 'user': user_details['fullname'], 'activate': activation_url}
             email_body = get_template(activation_path).render(context_data)
-            print('DETAILS: ', activation_url)
             EmailThread(email_subject, email_body, receiver).start()
 
         elif which == 'verify':
@@ -64,8 +63,6 @@ class Mailer(View):
             email_subject = activate
             context_data = {'type':'verify', 'user': user_details['fullname'], 'activate': activation_url}
             email_body = get_template(activation_path).render(context_data)
-            print('DETAILS: ', activation_url)
-
             EmailThread(email_subject, email_body, receiver).start()
         else:
             messages.error(request, 'Unable to process verification')
