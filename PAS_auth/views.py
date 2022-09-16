@@ -528,6 +528,10 @@ class ManageProfileView(LoginRequiredMixin, View):
                     if email != old_email:
                         user.is_verified = False
 
+                        count, created = EmailSendCount.objects.get_or_create(user=user)
+                        count.resetCount
+                        count.save()
+
                         current_site = get_current_site(request).domain
                         user_details = {
                             'fullname':fullname,
@@ -758,11 +762,11 @@ class BatchCreateView(View):
             messages.error(request, 'Error bulk creating from File!, Duplicate record found!')
         else:
             messages.success(request, 'Account has been created successfully!')
-            if 'student' in request.POST:
-                return redirect('auth:files_stud', dept_id)
+        if 'student' in request.POST:
+            return redirect('auth:files_stud', dept_id)
 
-            if 'super' in request.POST:
-                return redirect('auth:files_super', dept_id)
+        if 'super' in request.POST:
+            return redirect('auth:files_super', dept_id)
 
 class ListStudentView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
@@ -838,6 +842,7 @@ class ManageCoordinatorsView(LoginRequiredMixin, View):
 
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
+
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
@@ -1152,6 +1157,7 @@ class ManageAllocationsView(LoginRequiredMixin, View):
             messages.error(request, 'Error Retrieving department!')
             return redirect('auth:list_department')
 
+@method_decorator(has_updated, name="get")
 class AssignedStudentView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -1167,6 +1173,7 @@ class AssignedStudentView(LoginRequiredMixin, View):
             messages.success(request, 'Unable to get your account profile')
             return redirect('auth:dashboard')
 
+@method_decorator(has_updated, name="get")
 class AssignedSupervisorView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -1196,6 +1203,7 @@ class DisplayGroupMembersView(LoginRequiredMixin, View):
             messages.error(request, 'Unable to fetch group members')
             return HttpResponse(status=204)
 
+@method_decorator(has_updated, name="get")
 class ViewProjectCoordinator(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
