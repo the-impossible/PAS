@@ -24,8 +24,6 @@ from django.contrib.sites.shortcuts import get_current_site
 from PAS_auth.utils import EmailThread, email_activation_token, Email
 from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
 
-
-
 # My App imports
 from PAS_app.models import (
     Files,
@@ -310,6 +308,7 @@ class SupervisorFilesView(LoginRequiredMixin, View):
                 data = form.save(commit=False)
                 data.file = request.FILES['file']
                 data.dept = self.dept
+                data.prog = Programme.objects.get(programme_title=form.cleaned_data['prog'])
                 data.save()
                 messages.success(request, 'Supervisors File has been added!')
                 return redirect('auth:files_super', self.dept.dept_id)
@@ -430,7 +429,8 @@ class ManageSupervisorsView(LoginRequiredMixin, View):
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/manage_supervisors.html', context={'dept':dept, 'form1':self.form1, 'form2':self.form2, 'form3':self.form3})
+            object_list = SupervisorProfile.objects.filter(dept_id=dept_id).order_by('-pk')
+            return render(request, 'auth/manage_supervisors.html', context={'dept':dept, 'form1':self.form1, 'form2':self.form2, 'form3':self.form3, 'object_list':object_list})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -469,6 +469,7 @@ class ManageSupervisorsView(LoginRequiredMixin, View):
 
                 if form3.is_valid():
                     file = request.FILES['file']
+                    prog_id = Programme.objects.get(programme_title=form3.cleaned_data['prog'])
 
                     csv_obj = csv.reader(codecs.iterdecode(file, 'utf-8'))
                     next(csv_obj)
@@ -486,7 +487,7 @@ class ManageSupervisorsView(LoginRequiredMixin, View):
 
                     for (user, level) in zip(created_users, super_levels):
                         rank_id = SupervisorRank.objects.get(rank_number=level)
-                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id))
+                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id))
                     created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
                     messages.success(request, 'Account Created Successfully!')
@@ -708,6 +709,7 @@ class BatchCreateView(View):
         try:
             if 'super' in request.POST:
                 et_file = SupervisorsFiles.objects.get(id=file_id)
+                prog_id = Programme.objects.get(id=et_file.prog.id)
 
             if 'student' in request.POST:
                 et_file = Files.objects.get(id=file_id)
@@ -748,7 +750,7 @@ class BatchCreateView(View):
             if 'super' in request.POST:
                 for (user, level) in zip(created_users, super_levels):
                     rank_id = SupervisorRank.objects.get(rank_number=level)
-                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id))
+                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id))
                 created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
             et_file.used = True
@@ -843,7 +845,6 @@ class ManageCoordinatorsView(LoginRequiredMixin, View):
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
 
-
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
 class AllocateView(View):
@@ -870,7 +871,7 @@ class AllocateView(View):
 
                     # GET STUDENTS AND SUPERVISOR
                     match_studs = StudentProfile.objects.filter(programme_id=prog_id, session_id=sess_id, type_id=type_id)
-                    match_super = SupervisorProfile.objects.filter(dept_id=dept_id)
+                    match_super = SupervisorProfile.objects.filter(dept_id=dept_id, prog_id=prog_id)
 
                     # DETERMINE IF ALLOCATION FOR THAT SESSION AND DEPT EXISTS
                     allocation_exists = Allocate.objects.filter(dept_id=dept, sess_id=sess_id, prog_id=prog_id, type_id=type_id).exists()

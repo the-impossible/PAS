@@ -97,6 +97,7 @@ def path_and_rename_super(instance, filename):
 class SupervisorsFiles(models.Model):
     file = models.FileField(upload_to=path_and_rename_super)
     dept = models.ForeignKey(to=Department, on_delete=models.CASCADE)
+    prog = models.ForeignKey(to=Programme, on_delete=models.CASCADE)
     used = models.BooleanField(default=False)
 
     def __str__(self):

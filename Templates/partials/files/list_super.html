@@ -12,6 +12,7 @@
         <tr>
             <td class="cell">{{ forloop.counter }}</td>
             <td class="cell"><span class="truncate">{{ file.file|cut:'uploads/csv/' }}</span></td>
+            <td class="cell">{{ file.prog}}</td>
             <td class="cell">{% if file.used %}<span class="badge bg-danger">USED</span>{% else %}<span class="badge bg-primary">UN-USED</span>{% endif %}</td>
             <td class="cell">
                 <a class="btn btn-sm btn-outline text-primary" href="{{ file.file.url}}" download><i class="fa fa-download"></i> Download</a>
