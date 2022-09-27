@@ -23,66 +23,26 @@
 							Retrieve {{ dept }} Allocations
 						</h1>
 					</div>
+					<div class="col-auto">
+						<div class="page-utilities">
+						   <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
+							   <div class="col-auto">
+
+								   <a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#retrieveAllocationModal">
+									   <i class="fa fa-download"></i>
+									   Retrieve Allocation
+								   </a>
+							   </div>
+						   </div><!--//row-->
+					   </div><!--//table-utilities-->
+				   </div><!--//col-auto-->
 					<!--//col-auto-->
 					{% include "partials/messages.html" %}
 				</div>
 				<!--//row-->
 
 				<div class="row g-4">
-					<div class="col-12 col-md-4">
-						<div
-							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
-						>
-							<div class="app-card-header p-3 border-bottom-0">
-								<div class="row align-items-center gx-3">
-									<div class="col-auto">
-										<div class="app-icon-holder icon-holder-mono">
-											<i class="fa fa-angle-double-down" style="margin-top: 3px"></i>
-										</div>
-										<!--//icon-holder-->
-									</div>
-									<!--//col-->
-									<div class="col-auto">
-										<h4 class="app-card-title">Retrieve Allocate</h4>
-									</div>
-									<!--//col-->
-								</div>
-								<!--//row-->
-							</div>
-							<!--//app-card-header-->
-							<div class="app-card-body px-4 col-12">
-								<div class="intro mb-3">
-									<p class="text-center mb-2">
-										This section retrieves allocation details based on the state of the form.
-									</p>
-									<div class="row mt-3">
-										<form method="post">
-											{% csrf_token %}
-											{{ form|crispy }}
-											<div class="row">
-												<div class="col-12 mx-auto">
-													<button
-														type="submit"
-														name="authR"
-														class="btn btn-primary form-control text-white mt-3"
-													>
-														<i class="fa fa-angle-double-down"></i> Retrieve
-													</button>
-												</div>
-											</div>
-										</form>
-									</div>
-								</div>
-							</div>
-							<!--//app-card-body-->
-							<div class="app-card-footer p-4 mt-auto"></div>
-							<!--//app-card-footer-->
-						</div>
-						<!--//app-card-->
-					</div>
-					<!--//col-->
-
-					<div class="col-12 col-md-8">
+					<div class="col-12">
 						<div
 							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
 						>
@@ -106,9 +66,10 @@
 										<thead>
 											<tr>
 												<th class="cell"><input type="checkbox" id="delete_all"> &nbsp; S/No</th>
-												<th class="cell">Group No</th>
-												<th class="cell">Supervisors</th>
+												<th class="cell">Supervisor</th>
+												<th class="cell">File No.</th>
 												<th class="cell">Students</th>
+												<th class="cell">RegNo.</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -124,14 +85,15 @@
 																	{{ forloop.parentloop.counter }}
 																</td>
 															{% endif %}
+
 															{% if forloop.counter == 1 %}
 																<td rowspan="{{item.1|length}}" class="align-middle">
-																	{{ item.0 }}
+																	{{ item.2.user_id.get_fullname }}
 																</td>
 															{% endif %}
 															{% if forloop.counter == 1 %}
 																<td rowspan="{{item.1|length}}" class="align-middle">
-																	{{ item.2.user_id.get_fullname }}
+																	{{ item.2.user_id.get_username }}
 																</td>
 															{% endif %}
 															<td>
@@ -139,6 +101,12 @@
 																	<input type="checkbox" data-bs-toggle="tooltip" data-bs-placement="top" title="This deletes a single student from a group" name="to_delete" class="to_delete" value="{{ i.user_id }}">
 																{% endif %}
 																{{ i.user_id.get_fullname }}
+															</td>
+															<td>
+																{% if item.1|length != 1 %}
+																	<input type="checkbox" data-bs-toggle="tooltip" data-bs-placement="top" title="This deletes a single student from a group" name="to_delete" class="to_delete" value="{{ i.user_id }}">
+																{% endif %}
+																{{ i.user_id.username }}
 															</td>
 														</tr>
 														{% endfor %}
@@ -206,10 +174,30 @@
 		</div>
 		{% include 'partials/auth_footer.html' %}
 	</div>
+	<div class="modal fade" id="retrieveAllocationModal" style="display: none;" aria-hidden="true">
+		<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Retrieve Allocation</h5>
+					<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+					</button>
+				</div>
+				<form method="post" enctype="multipart/form-data">
+					<div class="modal-body">
+						{% csrf_token %}
+						{{ form|crispy }}
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" name="authR" class="btn btn-primary text-white"> <i class="fa fa-angle-double-down"></i> Retrieve </button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 	<!-- Javascript -->
 	{% include "partials/auth_script.html" %}
 	<script>
-		$('.searchable').select2()
 		document.getElementById('delete_all').addEventListener("click",()=> {
 			to_delete = document.getElementsByClassName('to_delete');
 			if (delete_all.checked){
@@ -222,6 +210,11 @@
 				}
 			}
 		})
+
+		$('.searchable').select2({
+			dropdownParent: $('#retrieveAllocationModal'),
+			width: 'resolve'
+		});
 	</script>
 </div>
 {% endblock body %}
