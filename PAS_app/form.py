@@ -114,6 +114,12 @@ class SuperFilesForm(forms.ModelForm):
         }
     ))
 
+    prog = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
     def __init__(self, *args, **kwargs):
         self.dept_id = kwargs.pop('dept_id', '')
         super(SuperFilesForm, self).__init__(*args, **kwargs)
@@ -132,7 +138,7 @@ class SuperFilesForm(forms.ModelForm):
 
     class Meta:
         model = SupervisorsFiles
-        fields = ('file',)
+        fields = ('file', 'prog')
 
 class StudentProfileForm(forms.ModelForm):
 
@@ -166,6 +172,13 @@ class MultipleSuperForm(forms.Form):
             'accept':'.csv'
         }
     ))
+
+    prog = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
 
     def clean_file(self):
         file = io.TextIOWrapper(self.cleaned_data.get('file').file)
@@ -225,9 +238,16 @@ class SupervisorProfileForm(forms.ModelForm):
         }
     ))
 
+    prog_id = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+
     class Meta:
         model = SupervisorProfile
-        fields = ('rank_id',)
+        fields = ('rank_id', 'prog_id')
 
 class CoordinatorsForm(forms.ModelForm):
 
@@ -375,4 +395,12 @@ class DepartmentForm(forms.ModelForm):
         fields = ('dept_title', 'dept_desc', 'dept_logo')
 
 
-
+"""
+TODO:
+*modify the models to add field for level of supervisor
+*modify form for submitting supervisor file
+*modify single supervisor form
+*modify batch create for supervisors
+*modify allocation to diff super base on student level
+add print functionality to the view allocation page
+"""

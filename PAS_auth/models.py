@@ -135,6 +135,7 @@ class SupervisorProfile(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     rank_id = models.ForeignKey(SupervisorRank, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.user_id}: {self.user_id.get_fullname()}'

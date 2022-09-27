@@ -9,6 +9,7 @@ pillow = "*"
 django = "*"
 django-crispy-forms = "*"
 six = "*"
+mysqlclient = "*"
 
 [dev-packages]
 

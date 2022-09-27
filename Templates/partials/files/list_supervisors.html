@@ -7,47 +7,46 @@
 </tr>
 {% endif %}
 
-
 {% if object_list.count > 0 %}
     {% for user in object_list  %}
-        <tr>
-            <td class="cell">{{ forloop.counter }}</td>
-            <td class="cell">{{ user.user_id.username  }}</td>
-            <td class="cell">{{ user.user_id.get_fullname }}</td>
-            <td class="cell">{{ user.rank_id }}</td>
-            <td class="cell">
-                {% if user.user_id.email  %}
-                <a href="mailto:{{ user.user_id.email }}">{{ user.user_id.email }}</a>
+    <tr>
+        <td class="cell">{{ forloop.counter }}</td>
+        <td class="cell">{{ user.user_id.username  }}</td>
+        <td class="cell">{{ user.user_id.get_fullname }}</td>
+        <td class="cell">{{ user.rank_id }}</td>
+        <td class="cell">
+            {% if user.user_id.email  %}
+            <a href="mailto:{{ user.user_id.email }}">{{ user.user_id.email }}</a>
 
+            {% else %}
+            <span class="badge bg-warning">NOT SET</span>
+            {% endif %}
+        </td>
+        <td class="cell">
+            {% if user.user_id.phone  %}
+                <a href="tel:{{ user.user_id.phone }}">{{ user.user_id.phone }}</a>
+            {% else %}
+                <span class="badge bg-warning">NOT SET</span>
+            {% endif %}
+        </td>
+        <td class="cell">{{ user.prog_id }}</td>
+        <td class="cell">
+            <i class="fa
+                {% if user.user_id.is_active %}
+                    fa-check text-success
                 {% else %}
-                    <span class="badge bg-warning">NOT SET</span>
+                    fa-times text-danger
                 {% endif %}
-            </td>
-            <td class="cell">
-                {% if user.user_id.phone  %}
-                    <a href="tel:{{ user.user_id.phone }}">{{ user.user_id.phone }}</a>
-                {% else %}
-                    <span class="badge bg-warning">NOT SET</span>
-                {% endif %}
-            </td>
-            <td class="cell">
-                <i class="fa
-                    {% if user.user_id.is_active %}
-                        fa-check text-success
-                    {% else %}
-                        fa-times text-danger
-                    {% endif %}
-                "></i>
-
-            </td>
-            <td>
-                <button class="btn btn-danger btn-sm text-white" hx-get="{% url 'auth:delete_user' user.user_id.user_id %}" hx-target="#deleteUser">
-                    <i class="fa fa-trash "></i> Delete
-                </button>
-            </td>
-        </tr>
+            "></i>
+        </td>
+        <td>
+            <button class="btn btn-danger btn-sm text-white" hx-get="{% url 'auth:delete_user' user.user_id.user_id %}" hx-target="#deleteUser">
+                <i class="fa fa-trash "></i> Delete
+            </button>
+        </td>
+    </tr>
     {% endfor %}
-{% else %}
+    {% else %}
 <tr>
     <td colspan="8">
         <div class="jumbotron text-center p-5   ">
