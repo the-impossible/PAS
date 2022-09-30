@@ -549,7 +549,7 @@ class ManageProfileView(LoginRequiredMixin, View):
                         user.save()
                         messages.success(request, 'Profile updated!')
 
-                    return redirect('auth:reverify_email')
+                    return redirect('auth:manage_profile', user.user_id)
                 messages.error(request, 'Error updating profile')
 
             if 'changeP' in request.POST:
@@ -889,7 +889,7 @@ class AllocateView(View):
                                     size += 1
 
                                 # GENERATE THE GROUPS
-                                groups = [Groups.objects.get(group_num=f"Group{i}") for i in range(1, size + 1)]
+                                groups = [Groups.objects.get(group_num=f"Group {i}") for i in range(1, size + 1)]
 
                                 count = 0
 
@@ -922,7 +922,7 @@ class AllocateView(View):
 
                             else:
                                 # GENERATE THE GROUPS
-                                groups = [Groups.objects.get(group_num=f"Group{i}") for i in range(1, len(match_studs) + 1)]
+                                groups = [Groups.objects.get(group_num=f"Group {i}") for i in range(1, len(match_studs) + 1)]
 
                                 # ASSIGN STUDENTS
                                 for i in range(len(groups)):

@@ -30,10 +30,12 @@
 							topics, the use of keywords is recommended
 						</p>
 						<div class="position-relative w-100 mt-3 animated slideInLeft">
-							<input class="form-control border-0 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Start typing to search.." style="height: 48px"/>
-							<button type="button" class="btn shadow-none position-absolute top-0 end-0 mt-1 me-2">
-								<i class="fa fa-search text-primary fs-4"></i>
-							</button>
+							<form action="https://content.kadpolypms.ng" method="get" target="_blank">
+								<input class="form-control border-0 rounded-pill w-100 ps-4 pe-5" name="s" id="s" type="text" placeholder="Start typing to search.." style="height: 48px"/>
+								<button type="button" class="btn shadow-none position-absolute top-0 end-0 mt-1 me-2">
+									<i class="fa fa-search text-primary fs-4"></i>
+								</button>
+							</form>
 						</div>
 					</div>
 					<div class="col-lg-6 text-center text-lg-start">
@@ -45,26 +47,28 @@
 	<!-- Navbar & Hero End -->
 
 	<!-- Full Screen Search Start -->
-	<div class="modal fade" id="searchModal" tabindex="-1">
-		<div class="modal-dialog modal-fullscreen">
-			<div class="modal-content" style="background: rgba(29, 29, 39, 0.7)">
-				<div class="modal-header border-0">
-					<button type="button" class="btn bg-white btn-close" data-bs-dismiss="modal" aria-label="Close"><button>
-				</div>
-				<div class="modal-body d-flex align-items-center justify-content-center">
-					<div class="input-group" style="max-width: 600px">
-						<input type="text"
-							class="form-control bg-transparent border-light p-3"
-							placeholder="Type search keyword"
-						/>
-						<button class="btn btn-light px-4">
-							<i class="fa fa-search"></i>
-						</button>
+	<form action="https://content.kadpolypms.ng" method="get" target="_blank">
+		<div class="modal fade" id="searchModal" tabindex="-1">
+			<div class="modal-dialog modal-fullscreen">
+				<div class="modal-content" style="background: rgba(29, 29, 39, 0.7)">
+					<div class="modal-header border-0">
+						<button type="button" class="btn bg-white btn-close" data-bs-dismiss="modal" aria-label="Close"><button>
+					</div>
+					<div class="modal-body d-flex align-items-center justify-content-center">
+						<div class="input-group" style="max-width: 600px">
+							<input type="text" id="s" name="s"
+								class="form-control bg-transparent border-light p-3"
+								placeholder="Type search keyword"
+							/>
+							<button class="btn btn-light px-4">
+								<i class="fa fa-search"></i>
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
+	</form>
 	<!-- Full Screen Search End -->
 
 	<!-- Portfolio Start -->
@@ -186,30 +190,6 @@
 					</div>
 				</div>
 				<div
-					class="col-lg-4 col-md-6 portfolio-item first wow zoomIn"
-					data-wow-delay="0.3s"
-				>
-					<div class="position-relative rounded overflow-hidden">
-						<img class="img-fluid w-100" src="{% static 'img/portfolio-5.jpg '%}" alt="" />
-						<div class="portfolio-overlay">
-							<a
-								class="btn btn-light"
-								href="{% static 'img/portfolio-5.jpg' %}"
-								data-lightbox="portfolio"
-								><i class="fa fa-plus fa-2x text-primary"></i
-							></a>
-							<div class="mt-auto">
-								<small class="text-white"
-									><i class="fa fa-folder me-2"></i>Web Design</small
-								>
-								<a class="h5 d-block text-white mt-1 mb-0" href=""
-									>Project Name</a
-								>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div
 					class="col-lg-4 col-md-6 portfolio-item second wow zoomIn"
 					data-wow-delay="0.6s"
 				>
@@ -237,7 +217,6 @@
 		</div>
 	</div>
 	<!-- Portfolio End -->
-
 
 	<!-- Service Start -->
 	<div class="container-xxl py-5 mt-5">
