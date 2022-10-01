@@ -29,20 +29,19 @@ class FileHandler:
     def validate_stud_file(self):
         for col in self.csv_obj:
             existing_users = User.objects.filter(username=col[0])
-            if len(col) != 3:raise forms.ValidationError('Invalid CSV FILE')
+            if len(col) != 2:raise forms.ValidationError('Invalid CSV FILE')
             for row in col:
-                if row == '':raise forms.ValidationError('Invalid CSV')
+                if row == '':raise forms.ValidationError('Invalid CSV, Missing DATA!!')
 
             if existing_users.exists():
                 raise forms.ValidationError('File contains already registered registration numbers!')
 
-
     def validate_super_file(self):
         for col in self.csv_obj:
             existing_users = User.objects.filter(username=col[0])
-            if len(col) != 4:raise forms.ValidationError('Invalid CSV FILE')
+            if len(col) != 4:raise forms.ValidationError('Invalid CSV FILE Format!!')
             for row in col:
-                if row == '':raise forms.ValidationError('Invalid CSV')
+                if row == '':raise forms.ValidationError('Invalid CSV, Missing Data!!')
 
             if existing_users.exists():
                 raise forms.ValidationError('File contains already registered registration numbers!')
@@ -394,13 +393,3 @@ class DepartmentForm(forms.ModelForm):
         model = Department
         fields = ('dept_title', 'dept_desc', 'dept_logo')
 
-
-"""
-TODO:
-*modify the models to add field for level of supervisor
-*modify form for submitting supervisor file
-*modify single supervisor form
-*modify batch create for supervisors
-*modify allocation to diff super base on student level
-add print functionality to the view allocation page
-"""
