@@ -90,14 +90,11 @@
 					<p>Fill the form below to create a supervisor account.</p>
 					<div id='form-errors'>{{ form_errors }}</div>
 					<div class="row">
-						<div class="col-12">
+						<div class="col-6">
 							{{ form1.username|as_crispy_field }}
 						</div>
 						<div class="col-6">
-							{{ form1.firstname|as_crispy_field }}
-						</div>
-						<div class="col-6">
-							{{ form1.lastname|as_crispy_field }}
+							{{ form1.name|as_crispy_field }}
 						</div>
 						<div class="col-6">
 							{{ form1.phone|as_crispy_field }}
@@ -110,6 +107,12 @@
 						</div>
 						<div class="col-6">
 							{{ form2.prog_id|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form2.title|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form2.capacity|as_crispy_field }}
 						</div>
 					</div>
 					{% csrf_token %}

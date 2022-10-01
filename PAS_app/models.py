@@ -111,3 +111,12 @@ class SupervisorsFiles(models.Model):
         db_table = 'Supervisors File'
         verbose_name_plural = 'Supervisors Files'
 
+class Title(models.Model):
+    title_number = models.CharField(max_length=10, unique=True)
+    title_description = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f'{self.title_description}'
+    class Meta:
+        db_table = 'Supervisor Title'
+        verbose_name_plural = 'Supervisor Title'

@@ -17,10 +17,15 @@
 
 <script>
     window.setTimeout(function() {
-    $(".alert").fadeTo(500, 0).slideUp(500, function(){
-        $(this).remove();
-    });
-}, 2000);
+        $(".alert").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+
+        $("#remove").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+
+    }, 10000);
 
     new WOW().init();
     $('#table_id').DataTable( {

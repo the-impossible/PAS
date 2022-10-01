@@ -10,6 +10,7 @@ from PAS_app.models import (
     Session,
     StudentType,
     SupervisorRank,
+    Title,
 )
 
 # Create your models here.
@@ -82,6 +83,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def get_fullname(self):
+        if self.is_super:
+            return f'{SupervisorProfile.objects.get(user_id=self.user_id).title} {self.name}'
         return f'{self.name}'
 
     def has_updated(self):
@@ -121,6 +124,8 @@ class SupervisorProfile(models.Model):
     rank_id = models.ForeignKey(SupervisorRank, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    capacity = models.CharField(max_length=10)
 
     def __str__(self):
         return f'{self.user_id}: {self.user_id.get_fullname()}'

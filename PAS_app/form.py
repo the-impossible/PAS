@@ -10,6 +10,7 @@ from PAS_app.models import (
     SupervisorsFiles,
     Files,
     SupervisorRank,
+    Title,
 )
 
 from PAS_auth.models import (
@@ -39,7 +40,7 @@ class FileHandler:
     def validate_super_file(self):
         for col in self.csv_obj:
             existing_users = User.objects.filter(username=col[0])
-            if len(col) != 4:raise forms.ValidationError('Invalid CSV FILE Format!!')
+            if len(col) != 5:raise forms.ValidationError('Invalid CSV FILE Format!!')
             for row in col:
                 if row == '':raise forms.ValidationError('Invalid CSV, Missing Data!!')
 
@@ -243,10 +244,21 @@ class SupervisorProfileForm(forms.ModelForm):
         }
     ))
 
+    title = forms.ModelChoiceField(queryset=Title.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    capacity = forms.CharField(help_text='Enter Supervisor Capacity',widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+        }
+    ))
 
     class Meta:
         model = SupervisorProfile
-        fields = ('rank_id', 'prog_id')
+        fields = ('rank_id', 'prog_id', 'title', 'capacity')
 
 class CoordinatorsForm(forms.ModelForm):
 

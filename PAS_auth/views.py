@@ -33,6 +33,7 @@ from PAS_app.models import (
     SupervisorsFiles,
     StudentType,
     SupervisorRank,
+    Title,
 )
 from PAS_auth.models import (
     User,
@@ -730,15 +731,19 @@ class BatchCreateView(View):
             objs = []
             sub_objs = []
             super_levels = []
+            super_titles = []
+            super_capacity = []
 
             for row in csv_obj:
 
                 if 'super' in request.POST:
-                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
+                    objs.append(User(username=row[0], name=row[2], password=make_password(PASSWORD), is_super=True))
                     super_levels.append(row[3])
+                    super_titles.append(row[1])
+                    super_capacity.append(row[4])
 
                 if 'student' in request.POST:
-                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                    objs.append(User(username=row[0], name=row[1], password=make_password(PASSWORD)))
 
             created_users = User.objects.bulk_create(objs)
 
@@ -748,9 +753,10 @@ class BatchCreateView(View):
                 created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
 
             if 'super' in request.POST:
-                for (user, level) in zip(created_users, super_levels):
+                for (user, level, title, capacity) in zip(created_users, super_levels, super_titles, super_capacity):
                     rank_id = SupervisorRank.objects.get(rank_number=level)
-                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id))
+                    title = Title.objects.get(title_number=title)
+                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id, title=title, capacity=capacity))
                 created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
             et_file.used = True
