@@ -479,17 +479,29 @@ class ManageSupervisorsView(LoginRequiredMixin, View):
                     objs = []
                     sub_objs = []
                     super_levels = []
+                    super_titles = []
+                    super_rg_capacity = []
+                    super_ev_capacity = []
+                    super_nd = []
 
                     dept = Department.objects.get(dept_id=dept_id)
                     for row in csv_obj:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
+                        objs.append(User(username=row[0], name=row[2], password=make_password(PASSWORD), is_super=True))
                         super_levels.append(row[3])
+                        super_titles.append(row[1])
+                        super_rg_capacity.append(row[4])
+                        super_ev_capacity.append(row[5])
+                        super_nd.append(row[6])
 
                     created_users = User.objects.bulk_create(objs)
 
-                    for (user, level) in zip(created_users, super_levels):
+                    for (user, level, title, rg_capacity, ev_capacity, super_nd) in zip(created_users, super_levels, super_titles, super_rg_capacity, super_ev_capacity, super_nd):
                         rank_id = SupervisorRank.objects.get(rank_number=level)
-                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id))
+                        title = Title.objects.get(title_number=title)
+                        can_super = False
+                        if super_nd == '1':
+                            can_super = True
+                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id, title=title, RG_capacity=rg_capacity, Ev_capacity=ev_capacity, super_nd=can_super))
                     created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
                     messages.success(request, 'Account Created Successfully!')
@@ -735,6 +747,7 @@ class BatchCreateView(View):
             super_titles = []
             super_rg_capacity = []
             super_ev_capacity = []
+            super_nd = []
 
             for row in csv_obj:
 
@@ -744,6 +757,7 @@ class BatchCreateView(View):
                     super_titles.append(row[1])
                     super_rg_capacity.append(row[4])
                     super_ev_capacity.append(row[5])
+                    super_nd.append(row[6])
 
                 if 'student' in request.POST:
                     objs.append(User(username=row[0], name=row[1], password=make_password(PASSWORD)))
@@ -756,10 +770,13 @@ class BatchCreateView(View):
                 created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
 
             if 'super' in request.POST:
-                for (user, level, title, rg_capacity, ev_capacity) in zip(created_users, super_levels, super_titles, super_rg_capacity, super_ev_capacity):
+                for (user, level, title, rg_capacity, ev_capacity, super_nd) in zip(created_users, super_levels, super_titles, super_rg_capacity, super_ev_capacity, super_nd):
                     rank_id = SupervisorRank.objects.get(rank_number=level)
                     title = Title.objects.get(title_number=title)
-                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id, title=title, RG_capacity=rg_capacity, Ev_capacity=ev_capacity))
+                    can_super = False
+                    if super_nd == '1':
+                        can_super = True
+                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id, title=title, RG_capacity=rg_capacity, Ev_capacity=ev_capacity, super_nd=can_super))
                 created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
             et_file.used = True
@@ -1134,14 +1151,14 @@ class ManageAllocationsView(LoginRequiredMixin, View):
             groupings = []
             for allocation in allocations:
                 if not groupings:
-                    groupings.append([allocation.super_id, allocation.group_id, [allocation.stud_id], allocation.pk])
+                    groupings.append([allocation.super_id, allocation.group_id, [allocation.stud_id], allocation.super_id.super_id])
                 else:
                     for mini in groupings:
                         if allocation.super_id in mini:
                             groupings[groupings.index(mini)][2].append(allocation.stud_id)
                             break
                     else:
-                        groupings.append([allocation.super_id, allocation.group_id, [allocation.stud_id], allocation.pk])
+                        groupings.append([allocation.super_id, allocation.group_id, [allocation.stud_id], allocation.super_id.super_id])
         return groupings
 
     def post(self, request, dept_id):
@@ -1167,25 +1184,21 @@ class ManageAllocationsView(LoginRequiredMixin, View):
                 type_id = StudentType.objects.get(type_title=request.POST.get('type'))
 
                 check_list = request.POST.getlist('to_delete')
-                pprint(check_list)
-
                 if check_list:
                     for item in check_list:
                         try:
-                            to_delete_group = Allocate.objects.get(allocate_id=item)
-                            print(Allocate.objects.filter(group_id=to_delete_group.group_id, prog_id=to_delete_group.prog_id, type_id=type_id))
-                            # Allocate.objects.filter(group_id=to_delete_group.group_id, prog_id=to_delete_group.prog_id, type_id=type_id).delete()
+                            Allocate.objects.filter(super_id=SupervisorProfile.objects.get(super_id=item), prog_id=prog_id, sess_id=sess_id, type_id=type_id).delete()
+
                         except ValidationError:
                             try:
-                                print(Allocate.objects.filter(stud_id=StudentProfile.objects.get(user_id=User.objects.get(username=item))))
-                                # Allocate.objects.filter(stud_id=StudentProfile.objects.get(user_id=User.objects.get(username=item))).delete()
+                                Allocate.objects.filter(stud_id=StudentProfile.objects.get(user_id=User.objects.get(username=item))).delete()
                             except:
                                 messages.warning(request, 'Failed deleting individual student allocations')
                                 groupings = self.retrieve(prog_id, sess_id, type_id)
                                 return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id})
                     groupings = self.retrieve(prog_id, sess_id, type_id)
                     messages.success(request, 'Successfully deleted the selected allocations')
-                    return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+                    return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'groupings':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
 
                 messages.error(request, 'No allocation was selected, Try again!')
                 return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'prog':prog_id, 'sess':sess_id, 'type':type_id})

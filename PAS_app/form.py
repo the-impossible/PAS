@@ -40,7 +40,7 @@ class FileHandler:
     def validate_super_file(self):
         for col in self.csv_obj:
             existing_users = User.objects.filter(username=col[0])
-            if len(col) != 6:raise forms.ValidationError('Invalid CSV FILE Format!!')
+            if len(col) != 7:raise forms.ValidationError('Invalid CSV FILE Format!!')
             for row in col:
                 if row == '':raise forms.ValidationError('Invalid CSV, Missing Data!!')
 
@@ -262,9 +262,11 @@ class SupervisorProfileForm(forms.ModelForm):
         }
     ))
 
+    super_nd = forms.BooleanField(help_text='Can he/she supervise ND?',widget=forms.CheckboxInput())
+
     class Meta:
         model = SupervisorProfile
-        fields = ('rank_id', 'prog_id', 'title', 'RG_capacity', 'Eve_capacity')
+        fields = ('rank_id', 'prog_id', 'title', 'RG_capacity', 'Eve_capacity', 'super_nd')
 
 class CoordinatorsForm(forms.ModelForm):
 

@@ -81,7 +81,7 @@
 														<tr>
 															{% if forloop.counter == 1 %}
 																<td rowspan="{{item.2|length}}" class="align-middle">
-																	<input type="checkbox" data-bs-toggle="tooltip" data-bs-placement="top" title="This deletes the entire group" name="to_delete" class="to_delete" value="{{ item.3 }}"> &nbsp; &nbsp;
+																	<input type="checkbox" data-bs-toggle="tooltip" data-bs-placement="top" title="This deletes the entire group" name="to_delete" class="delete_per_super" value="{{ item.0.super_id }}"> &nbsp; &nbsp;
 																	{{ forloop.parentloop.counter }}
 																</td>
 															{% endif %}
@@ -196,7 +196,7 @@
 	{% include "partials/auth_script.html" %}
 	<script>
 		document.getElementById('delete_all').addEventListener("click",()=> {
-			to_delete = document.getElementsByClassName('to_delete');
+			to_delete = document.getElementsByClassName('delete_per_super');
 			if (delete_all.checked){
 				for (const item of to_delete) {
 					item.checked = true;

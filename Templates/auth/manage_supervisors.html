@@ -112,7 +112,13 @@
 							{{ form2.title|as_crispy_field }}
 						</div>
 						<div class="col-6">
-							{{ form2.capacity|as_crispy_field }}
+							{{ form2.RG_capacity|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form2.Eve_capacity|as_crispy_field }}
+						</div>
+						<div class="col-6 mt-4">
+							{{ form2.super_nd|as_crispy_field }}
 						</div>
 					</div>
 					{% csrf_token %}
