@@ -125,7 +125,8 @@ class SupervisorProfile(models.Model):
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    capacity = models.CharField(max_length=10)
+    RG_capacity = models.CharField(max_length=10, default=0)
+    Ev_capacity = models.CharField(max_length=10, default=0)
 
     def __str__(self):
         return f'{self.user_id}: {self.user_id.get_fullname()}'
