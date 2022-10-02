@@ -35,7 +35,7 @@ class FileHandler:
                 if row == '':raise forms.ValidationError('Invalid CSV, Missing DATA!!')
 
             if existing_users.exists():
-                raise forms.ValidationError('File contains already registered registration numbers!')
+                raise forms.ValidationError(f'File contains already registered registration number! {existing_users[0].username}')
 
     def validate_super_file(self):
         for col in self.csv_obj:
@@ -45,7 +45,7 @@ class FileHandler:
                 if row == '':raise forms.ValidationError('Invalid CSV, Missing Data!!')
 
             if existing_users.exists():
-                raise forms.ValidationError('File contains already registered registration numbers!')
+                raise forms.ValidationError(f'File contains already registered registration numbers! {existing_users[0].username}')
 
 class FilesForm(forms.ModelForm):
 

@@ -29,6 +29,10 @@
 								class="row g-2 justify-content-start justify-content-md-end align-items-center"
 							>
 								<div class="col-auto">
+									<a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#autoAllocationModal">
+										<i class="fa fa-share-alt"></i>
+										Auto Allocation
+									</a>
 									<a
 										class="btn app-btn-secondary"
 										href="#"
@@ -52,61 +56,7 @@
 				<!--//row-->
 
 				<div class="row g-4">
-					<div class="col-12 col-md-4">
-						<div
-							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
-						>
-							<div class="app-card-header p-3 border-bottom-0">
-								<div class="row align-items-center gx-3">
-									<div class="col-auto">
-										<div class="app-icon-holder icon-holder-mono">
-											<i class="fa fa-share-alt" style="margin-top: 3px"></i>
-										</div>
-										<!--//icon-holder-->
-									</div>
-									<!--//col-->
-									<div class="col-auto">
-										<h4 class="app-card-title">Allocate</h4>
-									</div>
-									<!--//col-->
-								</div>
-								<!--//row-->
-							</div>
-							<!--//app-card-header-->
-							<div class="app-card-body px-4 col-12">
-								<div class="intro mb-3">
-									<p class="text-center mb-2">
-										This section allocates students to supervisors based on the
-										state of the form.
-									</p>
-									<div class="row mt-3">
-										<form method="post">
-											{% csrf_token %}
-											{{ form|crispy }}
-											<div class="row">
-												<div class="col-12 mx-auto">
-													<button
-														type="submit"
-														name="authA"
-														class="btn btn-primary form-control text-white mt-3"
-													>
-														<i class="fa fa-share-alt"></i> Allocate
-													</button>
-												</div>
-											</div>
-										</form>
-									</div>
-								</div>
-							</div>
-							<!--//app-card-body-->
-							<div class="app-card-footer p-4 mt-auto"></div>
-							<!--//app-card-footer-->
-						</div>
-						<!--//app-card-->
-					</div>
-					<!--//col-->
-
-					<div class="col-12 col-md-8">
+					<div class="col-12">
 						<div
 							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
 						>
@@ -141,37 +91,42 @@
 										<thead>
 											<tr>
 												<th class="cell">S/No</th>
-												<th class="cell">Group No</th>
-												<th class="cell">Supervisors</th>
+												<th class="cell">Supervisor</th>
+												<th class="cell">File No.</th>
 												<th class="cell">Students</th>
+												<th class="cell">RegNo.</th>
 											</tr>
 										</thead>
 										<tbody>
-											{% if grouping %}
-												{% for item in grouping %}
-													{% for i in item.1 %}
-														<tr>
-															{% if forloop.counter == 1 %}
-																<td rowspan="{{item.1|length}}" class="align-middle">
-																	{{ forloop.parentloop.counter }}
-																</td>
-															{% endif %}
-															{% if forloop.counter == 1 %}
-																<td rowspan="{{item.1|length}}" class="align-middle">
-																	{{ item.0 }}
-																</td>
-															{% endif %}
-															{% if forloop.counter == 1 %}
-																<td rowspan="{{item.1|length}}" class="align-middle">
-																	{{ item.2.user_id.get_fullname }}
-																</td>
-															{% endif %}
-															<td>
-																{% if item.1|length != 1 %}
-																{% endif %}
-																{{ i.user_id.get_fullname }}
+											{% if groupings %}
+												{% for item in groupings %}
+													{% for i in item.2 %}
+													<tr>
+														{% if forloop.counter == 1 %}
+															<td rowspan="{{item.2|length}}" class="align-middle">
+																{{ forloop.parentloop.counter }}
 															</td>
-														</tr>
+														{% endif %}
+
+														{% if forloop.counter == 1 %}
+															<td rowspan="{{item.2|length}}" class="align-middle">
+																{{ item.0.user_id.get_fullname }}
+															</td>
+														{% endif %}
+														{% if forloop.counter == 1 %}
+															<td rowspan="{{item.2|length}}" class="align-middle">
+																{{ item.0.user_id.get_username }}
+															</td>
+														{% endif %}
+														<td>
+															{{ i.user_id.get_fullname }}
+														</td>
+														<td>
+															{% if item.2|length != 1 %}
+															{% endif %}
+															{{ i.user_id.username }}
+														</td>
+													</tr>
 													{% endfor %}
 												{% endfor %}
 											{% else %}
@@ -253,6 +208,32 @@
 								>
 									Allocate
 								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal fade" id="autoAllocationModal" style="display: none;" aria-hidden="true">
+				<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Auto Allocation</h5>
+							<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+							</button>
+						</div>
+						<form method="post" enctype="multipart/form-data">
+							<div class="modal-body">
+								<p class="text-center">
+									This section allocates students to supervisors based on the
+									state of the form.
+								</p>
+								{% csrf_token %}
+								{{ form|crispy }}
+							</div>
+							<div class="modal-footer">
+								<button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+								<button type="submit" name="authA" class="btn btn-primary text-white"> <i class="fa fa-share-alt"></i> Allocate </button>
 							</div>
 						</form>
 					</div>
