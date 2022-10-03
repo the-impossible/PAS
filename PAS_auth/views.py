@@ -1206,13 +1206,14 @@ class AssignedStudentView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
     programmes = Programme.objects.all()
+    categories = StudentType.objects.all()
     def get(self, request):
         try:
             super_id = SupervisorProfile.objects.get(user_id=request.user)
             group_nums = Allocate.objects.filter(super_id=super_id).values_list('group_id', flat=True).distinct()
             allocations_nd = [Groups.objects.get(id=i) for i in group_nums]
             allocations_hnd = Allocate.objects.filter(super_id=super_id, prog_id=Programme.objects.get(programme_title='HND'))
-            return render(request, 'auth/assigned_students.html', context={'programmes':self.programmes, 'allocations_nd':allocations_nd, 'allocations_hnd':allocations_hnd})
+            return render(request, 'auth/assigned_students.html', context={'programmes':self.programmes, 'categories':self.categories, 'allocations_nd':allocations_nd, 'allocations_hnd':allocations_hnd})
         except SupervisorProfile.DoesNotExist:
             messages.success(request, 'Unable to get your account profile')
             return redirect('auth:dashboard')
@@ -1239,12 +1240,46 @@ class AssignedSupervisorView(LoginRequiredMixin, View):
 class DisplayGroupMembersView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
-    def get(self, request, group_id):
+    def get(self, request, group_id, prog_id, type_id):
         try:
-            members = Allocate.objects.filter(group_id=Groups.objects.get(group_num=group_id), super_id=SupervisorProfile.objects.get(user_id=request.user.user_id), prog_id=Programme.objects.get(programme_title='ND'))
+            super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
+            #Filter all the groups by prog, group_id and type
+            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id, group_id=group_id)
+
             return render(request, 'partials/group_members_modal.html', context={'members':members, 'group_id':group_id})
         except:
             messages.error(request, 'Unable to fetch group members')
+            return HttpResponse(status=204)
+
+class DisplayMembersView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
+    def get(self, request, prog_id, type_id):
+        try:
+            super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
+
+            #Filter all the groups by prog, group_id and type
+            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id)
+            return render(request, 'partials/group_members_modal.html', context={'members':members})
+        except:
+            messages.error(request, 'Unable to fetch group members')
+            return HttpResponse(status=204)
+
+class DisplayGroupsView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
+    def get(self, request, prog_id, type_id):
+        try:
+            super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
+            group_nums = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id).values_list('group_id', flat=True).distinct() #Filter all the groups by prog and type
+
+            groups = [Groups.objects.get(id=i) for i in group_nums]
+            prog_id = Programme.objects.get(id=prog_id)
+            type_id = StudentType.objects.get(id=type_id)
+            return render(request, 'partials/groups_modal.html', context={'groups':groups, 'prog_id':prog_id, 'type_id':type_id})
+
+        except:
+            messages.error(request, 'Unable to fetch group')
             return HttpResponse(status=204)
 
 @method_decorator(has_updated, name="get")
