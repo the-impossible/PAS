@@ -33,6 +33,7 @@ from PAS_app.models import (
     SupervisorsFiles,
     StudentType,
     SupervisorRank,
+    Title,
 )
 from PAS_auth.models import (
     User,
@@ -64,6 +65,7 @@ from PAS_auth.form import (
 from PAS_auth.decorator import *
 
 PASSWORD = '12345678'
+SPLIT = 6
 # Create your views here.
 class LoginView(View):
     def get(self, request):
@@ -477,17 +479,29 @@ class ManageSupervisorsView(LoginRequiredMixin, View):
                     objs = []
                     sub_objs = []
                     super_levels = []
+                    super_titles = []
+                    super_rg_capacity = []
+                    super_ev_capacity = []
+                    super_nd = []
 
                     dept = Department.objects.get(dept_id=dept_id)
                     for row in csv_obj:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
+                        objs.append(User(username=row[0], name=row[2], password=make_password(PASSWORD), is_super=True))
                         super_levels.append(row[3])
+                        super_titles.append(row[1])
+                        super_rg_capacity.append(row[4])
+                        super_ev_capacity.append(row[5])
+                        super_nd.append(row[6])
 
                     created_users = User.objects.bulk_create(objs)
 
-                    for (user, level) in zip(created_users, super_levels):
+                    for (user, level, title, rg_capacity, ev_capacity, super_nd) in zip(created_users, super_levels, super_titles, super_rg_capacity, super_ev_capacity, super_nd):
                         rank_id = SupervisorRank.objects.get(rank_number=level)
-                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id))
+                        title = Title.objects.get(title_number=title)
+                        can_super = False
+                        if super_nd == '1':
+                            can_super = True
+                        sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id, title=title, RG_capacity=rg_capacity, Ev_capacity=ev_capacity, super_nd=can_super))
                     created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
                     messages.success(request, 'Account Created Successfully!')
@@ -549,7 +563,7 @@ class ManageProfileView(LoginRequiredMixin, View):
                         user.save()
                         messages.success(request, 'Profile updated!')
 
-                    return redirect('auth:reverify_email')
+                    return redirect('auth:manage_profile', user.user_id)
                 messages.error(request, 'Error updating profile')
 
             if 'changeP' in request.POST:
@@ -730,15 +744,23 @@ class BatchCreateView(View):
             objs = []
             sub_objs = []
             super_levels = []
+            super_titles = []
+            super_rg_capacity = []
+            super_ev_capacity = []
+            super_nd = []
 
             for row in csv_obj:
 
                 if 'super' in request.POST:
-                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD), is_super=True))
+                    objs.append(User(username=row[0], name=row[2], password=make_password(PASSWORD), is_super=True))
                     super_levels.append(row[3])
+                    super_titles.append(row[1])
+                    super_rg_capacity.append(row[4])
+                    super_ev_capacity.append(row[5])
+                    super_nd.append(row[6])
 
                 if 'student' in request.POST:
-                    objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                    objs.append(User(username=row[0], name=row[1], password=make_password(PASSWORD)))
 
             created_users = User.objects.bulk_create(objs)
 
@@ -748,9 +770,13 @@ class BatchCreateView(View):
                 created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
 
             if 'super' in request.POST:
-                for (user, level) in zip(created_users, super_levels):
+                for (user, level, title, rg_capacity, ev_capacity, super_nd) in zip(created_users, super_levels, super_titles, super_rg_capacity, super_ev_capacity, super_nd):
                     rank_id = SupervisorRank.objects.get(rank_number=level)
-                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id))
+                    title = Title.objects.get(title_number=title)
+                    can_super = False
+                    if super_nd == '1':
+                        can_super = True
+                    sub_objs.append(SupervisorProfile(user_id=user, dept_id=dept, rank_id=rank_id, prog_id=prog_id, title=title, RG_capacity=rg_capacity, Ev_capacity=ev_capacity, super_nd=can_super))
                 created_user_profiles = SupervisorProfile.objects.bulk_create(sub_objs)
 
             et_file.used = True
@@ -804,7 +830,6 @@ class ManageCoordinatorsView(LoginRequiredMixin, View):
             return redirect('auth:list_department')
 
     def post(self, request, dept_id):
-        coordinators = Coordinators.objects.filter(dept_id=dept_id)
         try:
             dept = Department.objects.get(dept_id=dept_id)
             form = CoordinatorsForm(dept, request.POST)
@@ -817,30 +842,62 @@ class ManageCoordinatorsView(LoginRequiredMixin, View):
                 form_asst_coord = form.cleaned_data['asst_coord_id']
                 form_prog = data.prog_id
 
-                try:
-                    coord = Coordinators.objects.get(prog_id=form_prog)
+                coordinators = Coordinators.objects.filter(dept_id=dept_id, prog_id=form_prog)
+                if coordinators:
+                    coordinators = coordinators[0]
+
+                    existing_coordinator_hnd = Coordinators.objects.filter(dept_id=dept_id, prog_id=Programme.objects.get(programme_title='HND'))
+                    existing_coordinator_nd = Coordinators.objects.filter(dept_id=dept_id, prog_id=Programme.objects.get(programme_title='ND'))
+
                     if form_chief_coord:
-                        coord.chief_coord_id = form_chief_coord
 
-                    if form_asst_coord:
-                        coord.asst_coord_id = form_asst_coord
-                    coord.save()
+                        if existing_coordinator_nd and existing_coordinator_hnd:
+                            user = User.objects.get(username=coordinators.chief_coord_id.user_id)
+
+                            if existing_coordinator_nd[0].chief_coord_id.user_id.username != existing_coordinator_hnd[0].chief_coord_id.user_id.username:
+                                user.is_staff = False
+
+                            user.save()
+
+                            if existing_coordinator_nd[0].asst_coord_id.user_id.username != existing_coordinator_hnd[0].asst_coord_id.user_id.username:
+                                user.is_staff = False
+                            user.save()
+
+
+                        coordinators.chief_coord_id = form_chief_coord
+                        coordinators.asst_coord_id = form_asst_coord
+                        coordinators.save()
+
+                    user = User.objects.get(username=form_asst_coord.user_id)
+                    user.is_staff = True
+                    user.save()
+
+                    user = User.objects.get(username=form_chief_coord.user_id)
+                    user.is_staff = True
+                    user.save()
+
                     messages.success(request, f'{form_prog} Coordinators has been updated!!')
-                    return redirect('auth:manage_coordinators', dept_id)
-
-                except ObjectDoesNotExist:
-
+                else:
                     for content in form.cleaned_data:
                         if form.cleaned_data[content] == None:
                             messages.warning(request, 'All fields are required!!')
                             return render(request, 'auth/manage_coordinators.html', context={"dept": dept, 'form':form, 'programmes':self.programmes, 'coordinators':coordinators})
 
+                    user = User.objects.get(username=form_asst_coord.user_id)
+                    user.is_staff = True
+                    user.save()
+
+                    user = User.objects.get(username=form_chief_coord.user_id)
+                    user.is_staff = True
+                    user.save()
+
                     messages.success(request, f'Coordinators has been registered!!')
                     data.save()
                 return redirect('auth:manage_coordinators', dept_id)
 
-            messages.error(request, f'Error processing form!!')
-            return render(request, 'auth/manage_coordinators.html', context={"dept": dept, 'form':form, 'programmes':self.programmes, 'coordinators':coordinators})
+            else:
+                messages.error(request, f'Error processing form!!')
+                return render(request, 'auth/manage_coordinators.html', context={"dept": dept, 'form':form, 'programmes':self.programmes, 'coordinators':coordinators})
 
         except ObjectDoesNotExist:
             return redirect('auth:list_department')
@@ -869,9 +926,14 @@ class AllocateView(View):
                     sess_id = form.cleaned_data.get('sess_id')
                     type_id = form.cleaned_data.get('type_id')
 
+                    stud_type = StudentType.objects.get(type_title='Evening')
+
                     # GET STUDENTS AND SUPERVISOR
                     match_studs = StudentProfile.objects.filter(programme_id=prog_id, session_id=sess_id, type_id=type_id)
-                    match_super = SupervisorProfile.objects.filter(dept_id=dept_id, prog_id=prog_id)
+                    if prog_id.programme_title == 'ND':
+                        match_super = SupervisorProfile.objects.filter(dept_id=dept_id, super_nd=True)
+                    else:
+                        match_super = SupervisorProfile.objects.filter(dept_id=dept_id, prog_id=prog_id)
 
                     # DETERMINE IF ALLOCATION FOR THAT SESSION AND DEPT EXISTS
                     allocation_exists = Allocate.objects.filter(dept_id=dept, sess_id=sess_id, prog_id=prog_id, type_id=type_id).exists()
@@ -880,49 +942,49 @@ class AllocateView(View):
                         # ALLOCATION STARTS
                         allocation = {}
                         match_studs_list = list(match_studs)
+                        match_super_list = list(match_super)
 
                         if match_studs and match_super:
                             # SETTING THE SIZE OF THE GROUP BASED ON THE LEVEL (ND|HND)
                             if prog_id.programme_title == 'ND':
-                                size = round(len(match_studs)/3)
-                                if size * 3 < len(match_studs):
+                                size = round(len(match_studs)/SPLIT)
+                                if size * SPLIT < len(match_studs):
                                     size += 1
 
                                 # GENERATE THE GROUPS
-                                groups = [Groups.objects.get(group_num=f"Group{i}") for i in range(1, size + 1)]
+                                groups = [Groups.objects.get(group_num=f"Group {i}") for i in range(1, size + 1)]
 
                                 count = 0
-
                                 flag = False #To detect if student was assigned successfully
 
                                 # FOR ND STUDENTS
-                                if len(match_studs_list) >= 3:
+                                if len(match_studs_list) >= SPLIT:
 
                                     # ASSIGN STUDENTS
                                     for i in range(len(groups)):
                                         temp_list = []
 
-                                        while count < 3:
+                                        while count < SPLIT:
                                             temp_list.append(match_studs_list.pop())
                                             count += 1
 
                                         allocation[groups[i]] = [temp_list]
                                         count = 0
 
-                                        if len(match_studs_list) < 3 and len(match_studs_list) > 0:
-                                            allocation[groups[i + 1]] = [match_studs]
+                                        if len(match_studs_list) < SPLIT and len(match_studs_list) > 0:
+                                            allocation[groups[i + 1]] = [match_studs_list]
                                             break
 
                                     flag = True
 
                                 # ERROR MESSAGE
                                 else:
-                                    messages.error(request, 'You need at-least 3 students records before allocation can take place for ND student')
+                                    messages.error(request, f'You need at-least {SPLIT} students records before allocation can take place for ND student')
                                     return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2})
 
                             else:
                                 # GENERATE THE GROUPS
-                                groups = [Groups.objects.get(group_num=f"Group{i}") for i in range(1, len(match_studs) + 1)]
+                                groups = [Groups.objects.get(group_num=f"Group {i}") for i in range(1, len(match_studs) + 1)]
 
                                 # ASSIGN STUDENTS
                                 for i in range(len(groups)):
@@ -934,15 +996,25 @@ class AllocateView(View):
 
                             # ASSIGN LECTURES
                             index = 1
+                            count = 0
                             if flag:
                                 for i in range(1, len(groups)+ 1):
-                                    if index <= len(match_super):
-                                        allocation[groups[i - 1]].insert(0, match_super[index - 1])
-                                    else:
-                                        index = 1
-                                        allocation[groups[i - 1]].insert(0, match_super[index - 1])
-                                    index += 1
 
+                                    if index <= len(match_super_list):
+                                        allocation[groups[i - 1]].insert(0, match_super_list[index - 1])
+                                    else:
+                                        if prog_id.programme_title != 'ND': #For HND only where supervisor capacity matters
+                                            count += 1
+                                            for j in match_super_list:
+                                                if stud_type == type_id:
+                                                    if int(j.Ev_capacity) == count:
+                                                        match_super_list.remove(j)
+                                                else:
+                                                    if int(j.RG_capacity) == count:
+                                                        match_super_list.remove(j)
+                                        index = 1
+                                        allocation[groups[i - 1]].insert(0, match_super_list[index - 1])
+                                    index += 1
                                 objs = []
 
                                 # PREPARE OBJECTS FOR BATCH CREATE
@@ -953,37 +1025,10 @@ class AllocateView(View):
                                 # SAVE RECORD TO TABLE: -> ALLOCATE
                                 allocations = Allocate.objects.bulk_create(objs)
 
-                                groupings = []
-
-                                if prog_id.programme_title == 'ND':
-                                    for i in range(len(groups)):
-                                        groupings.append([groups[i]])
-
-                                        temp_stud = []
-                                        count = 0
-
-                                        for obj in enumerate(allocations):
-
-                                            if obj[1].group_id == groups[i]:
-                                                count += 1
-                                                temp_stud.append(obj[1].stud_id)
-
-                                            if count == 3:
-                                                groupings[i].append(obj[1].super_id)
-                                                count = 0
-                                                break
-
-                                        groupings[i].insert(1, temp_stud)
-                                else:
-                                    for i in range(len(allocations)):
-                                        temp = []
-                                        temp.append(allocations[i].group_id)
-                                        temp.append([allocations[i].stud_id])
-                                        temp.append(allocations[i].super_id)
-                                        groupings.append(temp)
+                                groupings = ManageAllocationsView().retrieve(prog_id, sess_id, type_id)
 
                                 messages.success(request, 'Student to supervisor allocation successful!')
-                                return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2, 't_students':len(match_studs), 't_super':len(match_super), 'groups':len(groups), 'grouping':groupings})
+                                return render(request, 'auth/allocate.html', context={"dept": dept, 'form':self.form, 'form2':form2, 't_students':len(match_studs), 't_super':len(match_super), 'groups':len(groups), 'groupings':groupings})
                             else:
                                 messages.error(request, 'Something went wrong!')
                                 return redirect('auth:allocate')
@@ -1084,27 +1129,27 @@ class ManageAllocationsView(LoginRequiredMixin, View):
 
     def retrieve(self, prog_id, sess_id, type_id):
         allocations = Allocate.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id).order_by('group_id')
-
-        if prog_id.programme_title == 'ND':
-            groupings = {}
-            for allocation in enumerate(allocations):
-                groupings[allocation[1].group_id] = [allocation[1].group_id,[]]
-
-            for groups in enumerate(groupings):
-                allocations = Allocate.objects.filter(prog_id=prog_id, sess_id=sess_id, group_id=groups[1], type_id=type_id)
-
-                for allocation in enumerate(allocations):
-                    groupings[groups[1]][1].append(allocation[1].stud_id)
-                    if allocation[0] == 0:
-                        groupings[groups[1]].append(allocation[1].super_id)
-                        groupings[groups[1]].append(allocation[1].pk)
-
-            groupings = list(groupings.values())
-
-        else:
-            groupings = []
-            for allocation in allocations:
-                groupings.append([allocation.group_id, [allocation.stud_id], allocation.super_id, allocation.pk])
+        """
+            [<SupervisorProfile: LEC12987: Mr.   MUHAMMAD HARUNA ISA>,
+                <Groups: Group 51>,
+                [<StudentProfile: CST20HND0788>,
+                <StudentProfile: CST20HND0406>,
+                <StudentProfile: CST20HND0156>,
+                <StudentProfile: CST19HND48024>],
+                UUID('e08a86ed-e6b3-4952-9320-2b218857db7f')
+            ]
+        """
+        groupings = []
+        for allocation in allocations:
+            if not groupings:
+                groupings.append([allocation.super_id, allocation.group_id, [allocation.stud_id], allocation.super_id.super_id])
+            else:
+                for mini in groupings:
+                    if allocation.super_id in mini:
+                        groupings[groupings.index(mini)][2].append(allocation.stud_id)
+                        break
+                else:
+                    groupings.append([allocation.super_id, allocation.group_id, [allocation.stud_id], allocation.super_id.super_id])
         return groupings
 
     def post(self, request, dept_id):
@@ -1123,20 +1168,18 @@ class ManageAllocationsView(LoginRequiredMixin, View):
 
                     groupings = self.retrieve(prog_id, sess_id, type_id)
 
-                return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+                return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'groupings':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
             else:
-                print(request.POST)
                 prog_id = Programme.objects.get(programme_title=request.POST.get('prog'))
                 sess_id = Session.objects.get(session_title=request.POST.get('sess'))
                 type_id = StudentType.objects.get(type_title=request.POST.get('type'))
 
                 check_list = request.POST.getlist('to_delete')
-
                 if check_list:
                     for item in check_list:
                         try:
-                            to_delete_group = Allocate.objects.get(allocate_id=item)
-                            Allocate.objects.filter(group_id=to_delete_group.group_id, prog_id=to_delete_group.prog_id, type_id=type_id).delete()
+                            Allocate.objects.filter(super_id=SupervisorProfile.objects.get(super_id=item), prog_id=prog_id, sess_id=sess_id, type_id=type_id).delete()
+
                         except ValidationError:
                             try:
                                 Allocate.objects.filter(stud_id=StudentProfile.objects.get(user_id=User.objects.get(username=item))).delete()
@@ -1146,7 +1189,7 @@ class ManageAllocationsView(LoginRequiredMixin, View):
                                 return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id})
                     groupings = self.retrieve(prog_id, sess_id, type_id)
                     messages.success(request, 'Successfully deleted the selected allocations')
-                    return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'grouping':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+                    return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'groupings':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
 
                 messages.error(request, 'No allocation was selected, Try again!')
                 return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
@@ -1163,13 +1206,14 @@ class AssignedStudentView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
     programmes = Programme.objects.all()
+    categories = StudentType.objects.all()
     def get(self, request):
         try:
             super_id = SupervisorProfile.objects.get(user_id=request.user)
             group_nums = Allocate.objects.filter(super_id=super_id).values_list('group_id', flat=True).distinct()
             allocations_nd = [Groups.objects.get(id=i) for i in group_nums]
             allocations_hnd = Allocate.objects.filter(super_id=super_id, prog_id=Programme.objects.get(programme_title='HND'))
-            return render(request, 'auth/assigned_students.html', context={'programmes':self.programmes, 'allocations_nd':allocations_nd, 'allocations_hnd':allocations_hnd})
+            return render(request, 'auth/assigned_students.html', context={'programmes':self.programmes, 'categories':self.categories, 'allocations_nd':allocations_nd, 'allocations_hnd':allocations_hnd})
         except SupervisorProfile.DoesNotExist:
             messages.success(request, 'Unable to get your account profile')
             return redirect('auth:dashboard')
@@ -1186,22 +1230,58 @@ class AssignedSupervisorView(LoginRequiredMixin, View):
             return render(request, 'auth/assigned_supervisor.html', context={'allocation':allocation, 'stud':stud_id, 'group_members':group_members})
 
         except StudentProfile.DoesNotExist:
-            messages.success(request, 'Unable to get your account profile')
-            return redirect('auth:dashboard')
+            messages.error(request, 'Unable to get your account profile')
+
+        except Allocate.MultipleObjectsReturned:
+            messages.error(request, 'Something went wrong')
 
         except Allocate.DoesNotExist:
-            messages.success(request, 'You are yet to be allocated!')
-            return redirect('auth:dashboard')
+            messages.info(request, 'You are yet to be allocated!')
+        return redirect('auth:dashboard')
 
 class DisplayGroupMembersView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
-    def get(self, request, group_id):
+    def get(self, request, group_id, prog_id, type_id):
         try:
-            members = Allocate.objects.filter(group_id=Groups.objects.get(group_num=group_id), super_id=SupervisorProfile.objects.get(user_id=request.user.user_id), prog_id=Programme.objects.get(programme_title='ND'))
+            super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
+            #Filter all the groups by prog, group_id and type
+            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id, group_id=group_id)
+
             return render(request, 'partials/group_members_modal.html', context={'members':members, 'group_id':group_id})
         except:
             messages.error(request, 'Unable to fetch group members')
+            return HttpResponse(status=204)
+
+class DisplayMembersView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
+    def get(self, request, prog_id, type_id):
+        try:
+            super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
+
+            #Filter all the groups by prog, group_id and type
+            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id)
+            return render(request, 'partials/group_members_modal.html', context={'members':members})
+        except:
+            messages.error(request, 'Unable to fetch group members')
+            return HttpResponse(status=204)
+
+class DisplayGroupsView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
+    def get(self, request, prog_id, type_id):
+        try:
+            super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
+            group_nums = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id).values_list('group_id', flat=True).distinct() #Filter all the groups by prog and type
+
+            groups = [Groups.objects.get(id=i) for i in group_nums]
+            prog_id = Programme.objects.get(id=prog_id)
+            type_id = StudentType.objects.get(id=type_id)
+            return render(request, 'partials/groups_modal.html', context={'groups':groups, 'prog_id':prog_id, 'type_id':type_id})
+
+        except:
+            messages.error(request, 'Unable to fetch group')
             return HttpResponse(status=204)
 
 @method_decorator(has_updated, name="get")

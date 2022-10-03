@@ -8,7 +8,7 @@ from PAS_auth.models import StudentProfile, SupervisorProfile, Coordinators, Gro
 # Register your models here.
 
 class UserAdmin(UserAdmin):
-    list_display = ('username', 'firstname', 'lastname', 'email', 'pic', 'phone', 'date_joined', 'last_login', 'is_active', 'is_staff', 'is_superuser', 'is_super', 'is_verified' )
+    list_display = ('username', 'name', 'email', 'pic', 'phone', 'date_joined', 'last_login', 'is_active', 'is_staff', 'is_superuser', 'is_super', 'is_verified' )
     search_fields = ('username',)
     ordering = ('username',)
     readonly_fields = ('date_joined', 'last_login',)

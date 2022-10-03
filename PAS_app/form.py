@@ -10,6 +10,7 @@ from PAS_app.models import (
     SupervisorsFiles,
     Files,
     SupervisorRank,
+    Title,
 )
 
 from PAS_auth.models import (
@@ -29,23 +30,22 @@ class FileHandler:
     def validate_stud_file(self):
         for col in self.csv_obj:
             existing_users = User.objects.filter(username=col[0])
-            if len(col) != 3:raise forms.ValidationError('Invalid CSV FILE')
+            if len(col) != 2:raise forms.ValidationError('Invalid CSV FILE')
             for row in col:
-                if row == '':raise forms.ValidationError('Invalid CSV')
+                if row == '':raise forms.ValidationError('Invalid CSV, Missing DATA!!')
 
             if existing_users.exists():
-                raise forms.ValidationError('File contains already registered registration numbers!')
-
+                raise forms.ValidationError(f'File contains already registered registration number! {existing_users[0].username}')
 
     def validate_super_file(self):
         for col in self.csv_obj:
             existing_users = User.objects.filter(username=col[0])
-            if len(col) != 4:raise forms.ValidationError('Invalid CSV FILE')
+            if len(col) != 7:raise forms.ValidationError('Invalid CSV FILE Format!!')
             for row in col:
-                if row == '':raise forms.ValidationError('Invalid CSV')
+                if row == '':raise forms.ValidationError('Invalid CSV, Missing Data!!')
 
             if existing_users.exists():
-                raise forms.ValidationError('File contains already registered registration numbers!')
+                raise forms.ValidationError(f'File contains already registered registration numbers! {existing_users[0].username}')
 
 class FilesForm(forms.ModelForm):
 
@@ -244,10 +244,29 @@ class SupervisorProfileForm(forms.ModelForm):
         }
     ))
 
+    title = forms.ModelChoiceField(queryset=Title.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    RG_capacity = forms.CharField(help_text='Enter Supervisor Capacity for Regular Student',widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    Eve_capacity = forms.CharField(help_text='Enter Supervisor Capacity for Evening Student',widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    super_nd = forms.BooleanField(help_text='Can he/she supervise ND?',widget=forms.CheckboxInput())
 
     class Meta:
         model = SupervisorProfile
-        fields = ('rank_id', 'prog_id')
+        fields = ('rank_id', 'prog_id', 'title', 'RG_capacity', 'Eve_capacity', 'super_nd')
 
 class CoordinatorsForm(forms.ModelForm):
 
@@ -394,13 +413,3 @@ class DepartmentForm(forms.ModelForm):
         model = Department
         fields = ('dept_title', 'dept_desc', 'dept_logo')
 
-
-"""
-TODO:
-*modify the models to add field for level of supervisor
-*modify form for submitting supervisor file
-*modify single supervisor form
-*modify batch create for supervisors
-*modify allocation to diff super base on student level
-add print functionality to the view allocation page
-"""

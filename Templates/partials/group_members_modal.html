@@ -1,7 +1,7 @@
 {% load crispy_forms_tags %}
 <div class="modal-content">
     <div class="modal-header">
-        <h5 class="modal-title">{{group_id}} members?</h5>
+        <h5 class="modal-title">{{group_id}} members</h5>
         <button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
         </button>
     </div>
@@ -19,7 +19,6 @@
                     <a class="app-card-link-mask" href="#file-link"></a>
                 </div>
                 <div class="app-card-body p-3 has-card-actions">
-                    <h4 class="app-doc-title truncate mb-0"><a href="#file-link">{{member.group_id}}</a></h4>
                     <div class="app-doc-meta">
                         <ul class="list-unstyled mb-0">
                             <li><span class="text-muted">Full Name:</span> {{member.stud_id.user_id.get_fullname }}</li>

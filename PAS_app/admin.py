@@ -9,6 +9,7 @@ from PAS_app.models import (
     SupervisorRank,
     SupervisorsFiles,
     Department,
+    Title,
 )
 
 from PAS_auth.models import (
@@ -26,3 +27,4 @@ admin.site.register(SupervisorRank)
 admin.site.register(Files)
 admin.site.register(SupervisorsFiles)
 admin.site.register(Allocate)
+admin.site.register(Title)
