@@ -955,7 +955,6 @@ class AllocateView(View):
                                 groups = [Groups.objects.get(group_num=f"Group {i}") for i in range(1, size + 1)]
 
                                 count = 0
-
                                 flag = False #To detect if student was assigned successfully
 
                                 # FOR ND STUDENTS
@@ -973,7 +972,7 @@ class AllocateView(View):
                                         count = 0
 
                                         if len(match_studs_list) < SPLIT and len(match_studs_list) > 0:
-                                            allocation[groups[i + 1]] = [match_studs]
+                                            allocation[groups[i + 1]] = [match_studs_list]
                                             break
 
                                     flag = True
@@ -1000,6 +999,7 @@ class AllocateView(View):
                             count = 0
                             if flag:
                                 for i in range(1, len(groups)+ 1):
+
                                     if index <= len(match_super_list):
                                         allocation[groups[i - 1]].insert(0, match_super_list[index - 1])
                                     else:
@@ -1230,12 +1230,14 @@ class AssignedSupervisorView(LoginRequiredMixin, View):
             return render(request, 'auth/assigned_supervisor.html', context={'allocation':allocation, 'stud':stud_id, 'group_members':group_members})
 
         except StudentProfile.DoesNotExist:
-            messages.success(request, 'Unable to get your account profile')
-            return redirect('auth:dashboard')
+            messages.error(request, 'Unable to get your account profile')
+
+        except Allocate.MultipleObjectsReturned:
+            messages.error(request, 'Something went wrong')
 
         except Allocate.DoesNotExist:
-            messages.success(request, 'You are yet to be allocated!')
-            return redirect('auth:dashboard')
+            messages.info(request, 'You are yet to be allocated!')
+        return redirect('auth:dashboard')
 
 class DisplayGroupMembersView(LoginRequiredMixin, View):
     login_url = 'auth:login'

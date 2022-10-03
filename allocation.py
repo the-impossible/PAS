@@ -4,7 +4,7 @@ from pprint import pprint
 SPLIT = 6
 
 # GENERATE THE STUDENTS
-students = [f'Student{i}' for i in range(1, 1001)]
+students = [f'Student{i}' for i in range(1, 603)]
 # random.shuffle(students)
 
 # SETTING THE SIZE OF THE GROUP
@@ -13,7 +13,7 @@ if size * SPLIT < len(students):
     size += 1
 
 # GENERATE THE SUPERVISORS
-supervisors = [f'Supervisor{i}' for i in range(1, 10)]
+supervisors = [f'Supervisor{i}' for i in range(1, 56)]
 
 # GENERATE THE GROUPS
 groups = [f'Group{i}' for i in range(1, size + 1)]
@@ -36,13 +36,6 @@ if len(students) >= SPLIT:
             allocation[groups[i + 1]] = [students]
             break
 
-    # ASSIGN LECTURES
-    # for i in range(1, len(groups)+ 1):
-    #     if i > len(supervisors):
-    #         allocation[groups[i - 1]].insert(0, random.choice(supervisors))
-    #     else:
-    #         allocation[groups[i - 1]].insert(0, supervisors[i - 1])
-
     index = 1
 
     for i in range(1, len(groups)+ 1):
@@ -53,7 +46,16 @@ if len(students) >= SPLIT:
             allocation[groups[i - 1]].insert(0, supervisors[index - 1])
         index += 1
 
-pprint(allocation)
+# pprint(allocation)
+
+
+    # ASSIGN LECTURES
+    # for i in range(1, len(groups)+ 1):
+    #     if i > len(supervisors):
+    #         allocation[groups[i - 1]].insert(0, random.choice(supervisors))
+    #     else:
+    #         allocation[groups[i - 1]].insert(0, supervisors[i - 1])
 {
+
     'Group1': ['lecturer1', ['stud1', 'stud2', 'stud3'] ]
 }
