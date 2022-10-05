@@ -99,6 +99,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
+MEDIA_URL = '/media/'
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [STATIC_DIR,]
 
