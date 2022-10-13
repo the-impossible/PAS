@@ -540,28 +540,29 @@ class ManageProfileView(LoginRequiredMixin, View):
                     fullname = user.get_fullname()
 
                     # Send an email if old email is not same as new email
-                    if email != old_email:
-                        user.is_verified = False
+                    # if email != old_email:
+                    #     user.is_verified = False
 
-                        count, created = EmailSendCount.objects.get_or_create(user=user)
-                        count.resetCount
-                        count.save()
+                    #     count, created = EmailSendCount.objects.get_or_create(user=user)
+                    #     count.resetCount
+                    #     count.save()
 
-                        current_site = get_current_site(request).domain
-                        user_details = {
-                            'fullname':fullname,
-                            'email': email,
-                            'domain':current_site,
-                            'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
-                            'token': email_activation_token.make_token(user),
-                        }
-                        user.save()
+                    #     current_site = get_current_site(request).domain
+                    #     user_details = {
+                    #         'fullname':fullname,
+                    #         'email': email,
+                    #         'domain':current_site,
+                    #         'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
+                    #         'token': email_activation_token.make_token(user),
+                    #     }
+                    #     user.save()
 
-                        messages.success(request, 'Profile updated!')
-                        return redirect('auth:resend_email')
-                    else:
-                        user.save()
-                        messages.success(request, 'Profile updated!')
+                    #     messages.success(request, 'Profile updated!')
+                    #     # return redirect('auth:resend_email')0
+                    # else:
+                    user.is_verified = True
+                    user.save()
+                    messages.success(request, 'Profile updated!')
 
                     return redirect('auth:manage_profile', user.user_id)
                 messages.error(request, 'Error updating profile')
@@ -694,7 +695,8 @@ class ListDepartmentView(LoginRequiredMixin, View):
         return render(request, 'auth/list_department.html', context={'dept':dept, 'form':form})
 
 @method_decorator(is_staff, name='get')
-class DepartmentView(View):
+class DepartmentView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
