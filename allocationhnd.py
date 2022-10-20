@@ -1,4 +1,4 @@
-import random
+"""import random
 from pprint import pprint
 
 # GENERATE THE STUDENTS
@@ -37,3 +37,22 @@ pprint(allocation)
 {
     'Group1': ['lecturer1', ['stud1', 'stud2', 'stud3'] ]
 }
+"""
+
+reg = ['CST20HND0558', 'CST20HND0558', 'CST20HND0558']
+
+for i in reg:
+    print(f'{i[:8]}EV{i[8:]}')
+
+
+from PAS_auth.models import SupervisorProfile
+users = SupervisorProfile.objects.all()
+
+no_details = {
+    'LEC2123':[]
+}
+
+for user in users:
+    if not (user.user_id.phone) or not(user.user_id.email):
+        no_details[f"{user.user_id.username}"] = [user.user_id.username, f"{user.title}{user.user_id.name}"]
+
