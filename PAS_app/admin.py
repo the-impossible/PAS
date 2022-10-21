@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from PAS_app.models import (
     Session,
@@ -16,9 +15,9 @@ from PAS_auth.models import (
     Allocate,
 )
 
-class AllocateAdmin(UserAdmin):
+class AllocateAdmin(admin.ModelAdmin):
     list_display = ('stud_id', 'group_id', 'prog_id', 'dept_id', 'type_id', 'super_id', 'sess_id' )
-    search_fields = ('stud_id', 'super_id')
+    search_fields = ('stud_id__user_id__username', 'super_id__user_id__username')
     ordering = ('prog_id', 'stud_id', 'sess_id')
 
     filter_horizontal = ()
