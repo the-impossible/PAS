@@ -17,7 +17,7 @@ class UserAdmin(UserAdmin):
     list_filter = ()
     fieldsets = ()
 
-class StudentProfileAdmin(UserAdmin):
+class StudentProfileAdmin(admin.ModelAdmin):
     list_display = ('user_id', 'programme_id', 'session_id', 'type_id', 'dept_id')
     search_fields = ('user_id','programme_id','session_id','type_id', 'dept_id')
     ordering = ('programme_id',)
@@ -27,9 +27,9 @@ class StudentProfileAdmin(UserAdmin):
     list_filter = ()
     fieldsets = ()
 
-class SupervisorProfileAdmin(UserAdmin):
+class SupervisorProfileAdmin(admin.ModelAdmin):
     list_display = ('user_id', 'rank_id', 'dept_id', 'prog_id', 'title', 'RG_capacity', 'Ev_capacity', 'super_nd')
-    search_fields = ('user_id','rank_id','title','prog_id', 'RG_capacity')
+    search_fields = ('rank_id__rank_number','title__title_description','prog_id__programme_title', 'RG_capacity')
     ordering = ('rank_id', 'dept_id')
     readonly_fields = ('super_id',)
 
@@ -37,7 +37,7 @@ class SupervisorProfileAdmin(UserAdmin):
     list_filter = ()
     fieldsets = ()
 
-class CoordinatorsAdmin(UserAdmin):
+class CoordinatorsAdmin(admin.ModelAdmin):
     list_display = ('chief_coord_id', 'asst_coord_id', 'dept_id', 'prog_id')
     search_fields = ('chief_coord_id','asst_coord_id','dept_id','prog_id')
     ordering = ('dept_id', 'prog_id')
