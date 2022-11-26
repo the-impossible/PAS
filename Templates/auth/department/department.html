@@ -24,6 +24,7 @@
 				{% include 'partials/messages.html' %}
 
 				<div class="row g-4 mb-4">
+					<!-- Students -->
 				    <div class="col-12 col-md-6 col-lg-4">
 					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
 						    <div class="app-card-header p-3 border-bottom-0">
@@ -46,8 +47,8 @@
 						    </div><!--//app-card-footer-->
                             <a class="app-card-link-mask" href="{% url 'auth:what_prog' dept.pk %}"></a>
 						</div><!--//app-card-->
-				    </div><!--//col-->
-
+				    </div>
+					<!-- Supervisors -->
                     <div class="col-12 col-md-6 col-lg-4">
 					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
 						    <div class="app-card-header p-3 border-bottom-0">
@@ -71,7 +72,7 @@
                             <a class="app-card-link-mask" href="{% url 'auth:manage_supervisors' dept.dept_id %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
-
+					<!-- Files -->
                     <div class="col-12 col-md-6 col-lg-4">
 					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
 						    <div class="app-card-header p-3 border-bottom-0">
@@ -94,7 +95,7 @@
                             <a class="app-card-link-mask" href="{% url 'auth:what_file' dept.dept_id %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
-
+					<!-- Coordinators -->
                     <div class="col-12 col-md-6 col-lg-4">
 					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
 						    <div class="app-card-header p-3 border-bottom-0">
@@ -118,7 +119,7 @@
                             <a class="app-card-link-mask" href="{% url 'auth:manage_coordinators' dept.dept_id %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
-
+					<!-- Assessment -->
                     <div class="col-12 col-md-6 col-lg-4">
 					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
 						    <div class="app-card-header p-3 border-bottom-0">
@@ -129,17 +130,17 @@
 									    </div><!--//icon-holder-->
 							        </div><!--//col-->
 							        <div class="col-auto">
-								        <h4 class="app-card-title">Projects</h4>
+								        <h4 class="app-card-title">Assessment</h4>
 							        </div><!--//col-->
 						        </div><!--//row-->
 						    </div><!--//app-card-header-->
 						    <div class="app-card-body px-4">
-							    <div class="intro">Lorem ipsum dolor sit amet. </div>
+							    <div class="intro">This page handles student project and seminar Assessment </div>
 						    </div><!--//app-card-body-->
 						    <div class="app-card-footer p-2 mt-auto">
 							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
 						    </div><!--//app-card-footer-->
-                            <a class="app-card-link-mask" href="#"></a>
+                            <a class="app-card-link-mask" href="{% url 'assess:what_assess' dept.pk %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
 
