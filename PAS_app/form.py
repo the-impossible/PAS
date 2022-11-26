@@ -154,15 +154,16 @@ class StudentProfileForm(forms.ModelForm):
         }
     ))
 
-    programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
-        attrs={
-            'class':'form-control',
-        }
-    ))
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
+    #     attrs={
+    #         'class':'form-control',
+    #     }
+    # ))
 
     class Meta:
         model = StudentProfile
-        fields = ('session', 'programme', 'student_type')
+        # fields = ('session', 'programme', 'student_type')
+        fields = ('session', 'student_type')
 
 class MultipleSuperForm(forms.Form):
     file = forms.FileField(help_text='Select CSV file',widget=forms.FileInput(
@@ -206,11 +207,11 @@ class MultipleStudentForm(forms.Form):
         }
     ))
 
-    programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
-        attrs={
-            'class':'form-control',
-        }
-    ))
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
+    #     attrs={
+    #         'class':'form-control',
+    #     }
+    # ))
 
     student_type = forms.ModelChoiceField(queryset=StudentType.objects.all(), empty_label="(Select Student type)", required=True, help_text="Select either Regular or Evening", widget=forms.Select(
         attrs={

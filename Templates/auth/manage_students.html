@@ -36,7 +36,7 @@
 					    </div><!--//table-utilities-->
 				    </div><!--//col-auto-->
 			    </div><!--//row-->
-
+				{% include "partials/messages.html" %}
 				<div class="col-lg-12 grid-margin stretch-card">
 					<div class="card">
 					  <div class="card-body">
@@ -61,13 +61,6 @@
 								  </tr>
 								</thead>
 								<tbody>
-									{% if messages %}
-									<tr id="remove">
-										<td colspan="12">
-										{% include "partials/messages.html" %}
-										</td>
-									</tr>
-									{% endif %}
 									{% if object_list.count > 0 %}
 										{% for user in object_list  %}
 										<tr>
@@ -157,9 +150,6 @@
 							{{ form2.session|as_crispy_field }}
 						</div>
 						<div class="col-6">
-							{{ form2.programme|as_crispy_field }}
-						</div>
-						<div class="col-6">
 							{{ form2.student_type|as_crispy_field }}
 						</div>
 					</div>
@@ -218,6 +208,5 @@
 		}
 	})
 
-</script>
-
+</script>	
 {% endblock body %}

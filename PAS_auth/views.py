@@ -66,6 +66,10 @@ from PAS_auth.decorator import *
 
 PASSWORD = '12345678'
 SPLIT = 6
+
+class EnforceAuth(LoginRequiredMixin):
+    login_url = 'auth:login'
+
 # Create your views here.
 class LoginView(View):
     def get(self, request):
@@ -276,8 +280,7 @@ class ListSupervisorFilesView(LoginRequiredMixin, ListView):
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
-class SupervisorFilesView(LoginRequiredMixin, View):
-    login_url = 'auth:login'
+class SupervisorFilesView(EnforceAuth, View):
 
     dept = None
     def check_department(self, dept_id, request):
@@ -322,9 +325,8 @@ class SupervisorFilesView(LoginRequiredMixin, View):
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
-class ManageStudentsView(ListView):
+class ManageStudentsView(EnforceAuth, ListView):
     template_name = "auth/manage_students.html"
-    # paginate_by = 50
 
     def get_context_data(self, **kwargs):
         context = super(ManageStudentsView, self).get_context_data(**kwargs)
@@ -340,7 +342,7 @@ class ManageStudentsView(ListView):
     def get_queryset(self):
         return StudentProfile.objects.filter(programme_id=self.kwargs['programme_id'], dept_id=self.kwargs['dept_id']).order_by('-pk')
 
-    def post(self, request, dept_id):
+    def post(self, request, programme_id, dept_id):
         form1 = UserForm(request.POST)
         form2 = StudentProfileForm(request.POST)
 
@@ -357,17 +359,25 @@ class ManageStudentsView(ListView):
                     user_form = form2.save(commit=False)
                     user_form.user_id = user
                     user_form.dept_id = dept
-                    user_form.programme_id = Programme.objects.get(id=request.POST['programme'])
+                    user_form.programme_id = Programme.objects.get(id=programme_id)
                     user_form.session_id = Session.objects.get(id=request.POST['session'])
                     user_form.type_id = StudentType.objects.get(id=request.POST['student_type'])
 
                     user.save()
                     user_form.save()
                     messages.success(request, 'Account Created Successfully!')
-                    return redirect('auth:manage_students', dept_id)
+                    return redirect('auth:manage_students',programme_id, dept_id)
 
                 messages.error(request, 'Error Creating Account Check form for more details!')
-                return render(request, 'auth/manage_students.html', context={'dept':dept, 'programmes':self.programmes, 'form1':form1, 'form2':form2})
+                return render(request, 'auth/manage_students.html',
+                context={
+                    'dept':dept,
+                    'prog':programme_id,
+                    'form1':form1,
+                    'form2':form2,
+                    'form3':form3,
+                    'object_list':self.get_queryset()
+                })
 
             elif 'multiple' in request.POST:
                 form3 = MultipleStudentForm(request.POST,request.FILES)
@@ -381,13 +391,14 @@ class ManageStudentsView(ListView):
                     objs = []
                     sub_objs = []
 
-                    prog_id = Programme.objects.get(programme_title=data['programme'])
+                    prog_id = Programme.objects.get(id=programme_id)
                     session_id = Session.objects.get(session_title=data['session'])
                     type_id = StudentType.objects.get(type_title=data['student_type'])
                     dept = Department.objects.get(dept_id=dept_id)
 
                     for row in csv_obj:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                        objs.append(User(username=row[0], name=row[1], password=make_password(PASSWORD)))
+
                     created_users = User.objects.bulk_create(objs)
 
                     for user in created_users:
@@ -395,10 +406,18 @@ class ManageStudentsView(ListView):
                     created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
 
                     messages.success(request, 'Account Created Successfully!')
-                    return redirect('auth:manage_students', dept_id)
+                    return redirect('auth:manage_students', programme_id, dept_id)
 
             messages.error(request, 'Error Creating Account from file Check form for more details!')
-            return render(request, 'auth/manage_students.html', context={'dept':dept, 'programmes':self.programmes, 'form1':form1, 'form2':form2, 'form3':form3})
+            return render(request, 'auth/manage_students.html',
+            context={
+                'dept':dept,
+                'prog':programme_id,
+                'form1':form1,
+                'form2':form2,
+                'form3':form3,
+                'object_list':self.get_queryset()
+            })
 
 class DeleteUserAccountView(LoginRequiredMixin, View):
     login_url = 'auth:login'
