@@ -6,14 +6,14 @@
     </td>
 </tr>
 {% endif %}
-
 {% if object_list.count > 0 %}
     {% for user in object_list  %}
         <tr>
             <td class="cell">{{ forloop.counter }}</td>
             <td class="cell"><a href="#">{{ user.user_id.get_fullname|title }}</a></td>
             <td class="cell"><span class="truncate">{{ user }}</span></td>
-            <td class="cell">{% if user.user_id.email  %}{{ user.user_id.email }}{% else %}<span class="badge bg-warning"> NOT SET</span>{% endif %}
+            <td class="cell">{% if user.user_id.email  %}{{ user.user_id.email }}{% else %}
+                <span class="badge bg-warning"> NOT SET</span>{% endif %}
             </td>
             <td class="cell">
                 {% if user.user_id.phone  %}

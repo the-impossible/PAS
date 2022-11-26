@@ -19,7 +19,7 @@ class UserAdmin(UserAdmin):
 
 class StudentProfileAdmin(admin.ModelAdmin):
     list_display = ('user_id', 'programme_id', 'session_id', 'type_id', 'dept_id')
-    search_fields = ('user_id','programme_id','session_id','type_id', 'dept_id')
+    search_fields = ('user_id__username','programme_id__programme_title','session_id__session_title','type_id__type_title', 'dept_id__dept_title')
     ordering = ('programme_id',)
     readonly_fields = ('stud_id',)
 
@@ -29,7 +29,7 @@ class StudentProfileAdmin(admin.ModelAdmin):
 
 class SupervisorProfileAdmin(admin.ModelAdmin):
     list_display = ('user_id', 'rank_id', 'dept_id', 'prog_id', 'title', 'RG_capacity', 'Ev_capacity', 'super_nd')
-    search_fields = ('rank_id__rank_number','title__title_description','prog_id__programme_title', 'RG_capacity')
+    search_fields = ('user_id__username', 'rank_id__rank_number','title__title_description','prog_id__programme_title', 'RG_capacity')
     ordering = ('rank_id', 'dept_id')
     readonly_fields = ('super_id',)
 

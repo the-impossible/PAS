@@ -39,6 +39,7 @@ from PAS_auth.views import (
     NotificationsView,
     HelpView,
     WhatFileView,
+    WhatProgrammeView,
     BatchCreateView,
 
     ListSupervisorView,
@@ -81,9 +82,8 @@ urlpatterns = [
     path('delete_super_files/<pk>', DeleteSupervisorFilesView.as_view(), name='delete_super_files'),
     path('list_supervisor/<dept_id>', ListSupervisorView.as_view(), name='list_supervisor'),
 
-
     # Manage Students
-    path('manage_students/<str:dept_id>', ManageStudentsView.as_view(), name='manage_students'),
+    path('manage_students/<programme_id>/<str:dept_id>', ManageStudentsView.as_view(), name='manage_students'),
     path('delete_user/<str:user_id>', DeleteUserAccountView.as_view(), name='delete_user'),
 
     # Manage Administrators
@@ -114,6 +114,7 @@ urlpatterns = [
     # Department
     path('department/<str:dept_id>', DepartmentView.as_view(), name='department'),
     path('what_file/<str:dept_id>', WhatFileView.as_view(), name='what_file'),
+    path('what_programme/<str:dept_id>', WhatProgrammeView.as_view(), name='what_prog'),
     path('batch_create/<str:dept_id>/<int:file_id>', BatchCreateView.as_view(), name='batch_create'),
 
     # Manage Coordinators
