@@ -224,7 +224,6 @@ class StudentFilesView(LoginRequiredMixin, View):
             return render(request, 'auth/student_files.html', context={'programmes':self.programmes, 'dept':self.dept , 'form':form})
         else:
             return redirect('auth:list_department')
-
 class DeleteStudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -746,7 +745,6 @@ class WhatFileView(View):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
-
 class WhatProgrammeView(View):
     def get(self, request, dept_id):
         try:
@@ -837,7 +835,6 @@ class BatchCreateView(View):
 
         if 'super' in request.POST:
             return redirect('auth:files_super', dept_id)
-
 class ListStudentView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_student.html"
@@ -852,7 +849,6 @@ class ListStudentView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return StudentProfile.objects.filter(programme_id=self.kwargs['programme_id'], dept_id=self.kwargs['dept_id']).order_by('-pk')
-
 class ListSupervisorView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_supervisors.html"

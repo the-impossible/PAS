@@ -47,15 +47,3 @@ if len(students) >= SPLIT:
         index += 1
 
 # pprint(allocation)
-
-
-    # ASSIGN LECTURES
-    # for i in range(1, len(groups)+ 1):
-    #     if i > len(supervisors):
-    #         allocation[groups[i - 1]].insert(0, random.choice(supervisors))
-    #     else:
-    #         allocation[groups[i - 1]].insert(0, supervisors[i - 1])
-{
-
-    'Group1': ['lecturer1', ['stud1', 'stud2', 'stud3'] ]
-}

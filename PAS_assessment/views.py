@@ -44,3 +44,13 @@ class WhatAssessmentView(EnforceAuth, View):
             return render(request, 'assess/what_assess.html', context={'dept':dept, 'programmes':programmes})
 
         return redirect('auth:list_department')
+
+class HallAllocationDashboardView(EnforceAuth, View):
+
+    def get(self, request, dept_id):
+        dept = ValidateDepartment(dept_id, request).validate
+
+        if dept:
+            return render(request, 'assess/hall_allocation_dashboard.html', context={'dept':dept})
+
+        return redirect('auth:list_department')

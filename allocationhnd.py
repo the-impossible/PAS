@@ -57,20 +57,3 @@ for user in users:
         no_details[f"{user.user_id.username}"] = [user.user_id.username, f"{user.title}{user.user_id.name}"]
 
 """
-from PAS_auth.models import User
-users = User.objects.filter(is_super=True)
-correct  = []
-with open('no_details.csv', 'r') as file:
-    for line in file.readlines():
-        rows = line.split(',')
-        correct.append([rows[0], f'0{rows[2]}', rows[3]])
-
-
-for i in correct:
-    print(i)
-    user = User.objects.get(username=i[0])
-    user.phone = i[1]
-    user.email = i[2]
-    user.is_verified = True
-    user.save()
-    print(user)

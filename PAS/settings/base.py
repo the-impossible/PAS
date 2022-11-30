@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'PAS_auth',
     'PAS_app',
+    'PAS_assessment',
+    'PAS_hallAllocation',
 ]
 
 MIDDLEWARE = [
