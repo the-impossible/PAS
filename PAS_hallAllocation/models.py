@@ -13,7 +13,8 @@ from PAS_auth.models import (
 
 class Venue(models.Model):
     venue_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
-    venue_title = models.CharField(max_length=100)
+    venue_title = models.CharField(max_length=200)
+    date_created = models.DateTimeField(auto_now=True)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -44,6 +45,7 @@ class StudHallAllocation(models.Model):
     day_num = models.IntegerField(default=1)
     sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.stud_id} is allocated to: {self.venue} on day {self.day_num}'
@@ -57,6 +59,9 @@ class AssessorHallAllocation(models.Model):
     venue_id = models.ForeignKey(Venue, on_delete=models.CASCADE)
     super_id = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE)
     isChief = models.BooleanField(default=False)
+    sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
+    dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.super_id} is allocated to: {self.venue}'

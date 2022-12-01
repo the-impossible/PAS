@@ -229,8 +229,8 @@ class MultipleStudentForm(forms.Form):
         handler = FileHandler(csv_obj)
         handler.validate_stud_file()
 
-        return file
 
+        return file
 class SupervisorProfileForm(forms.ModelForm):
 
     rank_id = forms.ModelChoiceField(queryset=SupervisorRank.objects.all(), empty_label="(Select Supervisor Rank)", required=True, help_text="Select either level from the dropdown list", widget=forms.Select(

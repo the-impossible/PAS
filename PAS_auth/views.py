@@ -86,7 +86,10 @@ class LoginView(View):
                 if user.is_active:
                     login(request, user)
                     messages.success(request, f'You are now signed in {user}')
-                    return redirect('auth:dashboard')
+                    nxt  = request.GET.get('next', None)
+                    if nxt is None:
+                        return redirect('auth:dashboard')
+                    return redirect(self.request.GET.get('next', None))
                 else:
                     messages.warning(request, 'Account not active contact the administrator')
                     return redirect('auth:login')
@@ -727,7 +730,7 @@ class DepartmentView(LoginRequiredMixin, View):
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/department/department.html', context={'dept':dept})
+            return render(request, 'department/department.html', context={'dept':dept})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -739,7 +742,7 @@ class WhatFileView(View):
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/department/whatfile.html', context={'dept':dept})
+            return render(request, 'department/whatfile.html', context={'dept':dept})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -750,7 +753,7 @@ class WhatProgrammeView(View):
         try:
             dept = Department.objects.get(dept_id=dept_id)
             programmes = Programme.objects.all()
-            return render(request, 'auth/department/programme.html', context={'dept':dept, 'programmes':programmes})
+            return render(request, 'department/programme.html', context={'dept':dept, 'programmes':programmes})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
