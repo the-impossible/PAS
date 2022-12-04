@@ -5,6 +5,7 @@ from PAS_auth.models import (
     Programme,
     Session,
     Department,
+    StudentType,
     StudentProfile,
     SupervisorProfile,
 )
@@ -18,7 +19,7 @@ class Venue(models.Model):
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.venue_title}'
+        return f'{self.venue_title} | {self.prog_id}'
 
     class Meta:
         db_table = 'Venues'
@@ -27,9 +28,11 @@ class Venue(models.Model):
 class DaysOfDefense(models.Model):
     days_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
     num_of_day = models.IntegerField(default=3)
+    date_created = models.DateTimeField(auto_now=True)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
     sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.sess_id} - {self.dept_id} : {self.num_of_day}days'
@@ -46,9 +49,11 @@ class StudHallAllocation(models.Model):
     sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
+    type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
+
 
     def __str__(self):
-        return f'{self.stud_id} is allocated to: {self.venue} on day {self.day_num}'
+        return f'{self.stud_id} is allocated to: {self.venue_id} on day {self.day_num}'
 
     class Meta:
         db_table = 'Student Hall Allocation'

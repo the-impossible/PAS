@@ -4,9 +4,14 @@ from django.urls import path
 # My App imports
 from PAS_hallAllocation.views import (
     HallAllocationDashboardView,
+    # Venues
     VenuesView,
-    EditVenuesView,
-    DeleteVenuesView,
+    UDVenuesView,
+    # Defense
+    DefenseDaysView,
+    UDDefenseDaysView,
+    # Hall Allocation
+    CRStudentHallAllocationView,
 )
 
 app_name = 'hall'
@@ -15,6 +20,11 @@ urlpatterns = [
     path('dashboard/<str:dept_id>', HallAllocationDashboardView.as_view(), name='dashboard'),
     # VENUES
     path('venues/<str:dept_id>', VenuesView.as_view(), name='venues'),
-    path('edit_venue/<str:dept_id>/<str:venue_id>', EditVenuesView.as_view(), name='edit_venue'),
-    path('delete_venue/<str:dept_id>/<str:venue_id>', DeleteVenuesView.as_view(), name='delete_venue'),
+    path('edit_venue/<str:dept_id>/<str:venue_id>', UDVenuesView.as_view(), name='UD_venue'),
+    # DEFENSES_DAYS
+    path('defense_days/<str:dept_id>', DefenseDaysView.as_view(), name='defense_days'),
+    path('UD_defense_id/<str:dept_id>/<str:day_id>', UDDefenseDaysView.as_view(), name='UD_defense_id'),
+    # HALL_ALLOCATION
+    path('cr_student_hall/<str:dept_id>', CRStudentHallAllocationView.as_view(), name='cr_student_hall'),
+
 ]

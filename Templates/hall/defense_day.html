@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block title %} Venues {% endblock %}
+{% block title %} Defense Days {% endblock %}
 {% block head %}
 {% include "partials/auth_head.html" %}
 {%endblock %}
@@ -20,7 +20,7 @@
 								class="btn btn-secodary"
 								><i class="fa fa-arrow-left"></i
 							></a>
-							{{ dept }} Venues
+							{{ dept }} Defense Days
 						</h1>
 					</div>
 					<div class="col-auto">
@@ -28,8 +28,8 @@
 							<div class="row g-2 justify-content-start justify-content-md-end align-items-center">
 								<div class="col-auto">
 									<a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#allocateS">
-										<i class="fa fa-warehouse"></i>
-										{{ type | title }} Venue
+										<i class="fa fa-calendar-alt"></i>
+										{{ type | title }} Defense Days
 									</a>
 								</div>
 							</div>
@@ -46,22 +46,22 @@
 								<div class="row align-items-center gx-3">
 									<div class="col-auto">
 										<div class="app-icon-holder icon-holder-mono">
-											<i class="fa fa-warehouse" style="margin-top: 3px"></i>
+											<i class="fa fa-calendar-alt" style="margin-top: 3px"></i>
 										</div>
 									</div>
 									<div class="col-auto">
-										<h4 class="app-card-title">{{ type | title }} Venues</h4>
+										<h4 class="app-card-title">{{ type | title }} Defense Days</h4>
 									</div>
 								</div>
 							</div>
 							<div class="app-card-body px-4 col-12">
-								<p class="text-center mb-2">Use the form to {{ type | title }} a venue</p>
+								<p class="text-center mb-2">Use the form to {{ type | title }} a defense day</p>
 								<form action="" method="post">
 									<div id="form-errors">{{ form_errors }}</div>
 									{% csrf_token %}
 									{{ form|crispy }}
 									<div class="d-grid gap-2">
-										<button type="submit" name="edit" class="btn btn-success text-white mt-4">{{ type | title }} Venue</button>
+										<button type="submit" name="edit" class="btn btn-success text-white mt-4">{{ type | title }} Defense days</button>
 									</div>
 								</form>
 							</div>
@@ -82,7 +82,7 @@
 									</div>
 									<!--//col-->
 									<div class="col-auto">
-										<h4 class="app-card-title">Venues Details</h4>
+										<h4 class="app-card-title">Defense Days Details</h4>
 									</div>
 									<!--//col-->
 								</div>
@@ -95,20 +95,24 @@
 										<thead class="text-center">
 											<tr>
 												<th class="cell">S/No</th>
-												<th class="cell">Venues</th>
+												<th class="cell">No. of days</th>
 												<th class="cell">Programme</th>
+												<th class="cell">Type</th>
+												<th class="cell">Session</th>
 												<th class="cell">Action</th>
 											</tr>
 										</thead>
 										<tbody>
-											{% if venues %}
-											{% for venue in venues %}
+											{% if days %}
+											{% for day in days %}
 											<tr>
 												<td class="text-center">{{ forloop.counter }}</td>
-												<td class="text-center"><a href="{% url 'hall:UD_venue' dept.pk venue.venue_id %}">{{ venue.venue_title }}</a></td>
-												<td class="text-center">{{ venue.prog_id }}</td>
+												<td class="text-center"><a href="{% url 'hall:UD_defense_id' dept.pk day.days_id %}">{{ day.num_of_day }}</a></td>
+												<td class="text-center">{{ day.prog_id }}</td>
+												<td class="text-center">{{ day.type_id }}</td>
+												<td class="text-center">{{ day.sess_id }}</td>
 												<td class="text-center">
-													<form action="{% url 'hall:UD_venue' dept.pk venue.venue_id %}" method="post">
+													<form action="{% url 'hall:UD_defense_id' dept.pk day.days_id %}" method="post">
 														{% csrf_token %}
 														<button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
 													</form>
@@ -122,10 +126,10 @@
 														<p style="font-size: 3em">📂</p>
 														<br />
 														<p style="font-size: 1em; margin-top: -40px">
-															No Venues Record!
+															No Defense Days Record!
 														</p>
 														<p class="text-muted">
-															Venues records displayed if records are found
+															Defense days records are displayed if records are found
 														</p>
 													</div>
 												</td>
@@ -147,14 +151,14 @@
 				<div class="modal-dialog" id="changeCDialog" role="document" hx-target="this">
 					<div class="modal-content">
 						<div class="modal-header">
-							<h5 class="modal-title">{{ type | title }} Venue</h5>
+							<h5 class="modal-title">{{ type | title }} defense day</h5>
 							<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal">
 								<span>×</span>
 							</button>
 						</div>
 						<form method="post">
 							<div class="modal-body">
-								<p>Fill the form below to {{ type | title }} a venue.</p>
+								<p>Fill the form below to {{ type }} a defense day.</p>
 								<div id="form-errors">{{ form_errors }}</div>
 								<div class="row">
 									<div class="col-12">{{ form|crispy }}</div>
@@ -163,7 +167,7 @@
 							</div>
 							<div class="modal-footer">
 								<button class="btn btn-secondary" type="button" data-bs-dismiss="modal"> Cancel</button>
-								<button type="submit" name="edit" class="btn btn-success text-white">{{ type | title }} Venue</button>
+								<button type="submit" name="edit" class="btn btn-success text-white">{{ type | title }} Defense days</button>
 							</div>
 						</form>
 					</div>
