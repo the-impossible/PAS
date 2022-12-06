@@ -28,6 +28,7 @@ from PAS_hallAllocation.form import (
     DefenseDaysForm,
     EditDefenseDaysForm,
     StudHallAllocationForm,
+    RStudHallAllocationForm,
     MStudHallAllocationForm,
 )
 
@@ -237,7 +238,6 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
                                         allocation[match_venue_list[index - 1]].insert(0, match_studs_list.pop())
                                     index += 1
 
-
                         elif prog_id.programme_title == 'ND':
 
                             match_studs_list = list(Allocate.objects.filter(type_id=type_id, dept_id=dept_id, sess_id=sess_id, prog_id=prog_id))
@@ -277,7 +277,10 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
                             count = match_days.num_of_day
 
                         # SAVE RECORD TO TABLE: -> ALLOCATE
-                        # allocations = StudHallAllocation.objects.bulk_create(objs)
+                        allocations = StudHallAllocation.objects.bulk_create(objs)
+
+                        # DISPLAY THE ALLOCATION
+
 
                     else:
                         if not match_studs_list:
@@ -286,5 +289,82 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
                         if not match_venue_list:
                             messages.error(request, 'No Venue found! try adding defense venues')
 
-        form2 = MStudHallAllocationForm(request.POST, dept_id=dept_id)
-        return render(request, 'hall/student_to_hall.html', context={'dept':dept_id, 'form':form, 'form2':form2, 'type':self.view_type})
+            return render(request, 'hall/student_to_hall.html', context={'dept':dept_id, 'form':form, 'form2':form2, 'type':self.view_type})
+
+        elif 'mAllocate' in request.POST:
+            form = StudHallAllocationForm(dept_id=dept_id)
+            form2 = MStudHallAllocationForm(request.POST, dept_id=dept_id)
+
+            if form2.is_valid():
+                data = form2.save(commit=False)
+                user = form2.cleaned_data.get('stud_id')
+                data.sess_id = user.session_id
+                data.dept_id = user.dept_id
+                data.prog_id = user.programme_id
+                data.type_id = user.type_id
+
+                messages.success(request, f'{user.user_id.get_fullname()} has been allocated!')
+                data.save()
+                return redirect('hall:manage_hall_allocation', dept_id.pk)
+
+            messages.error(request, f'{form2.errors.as_text()}')
+            return render(request, 'hall/student_to_hall.html', context={'dept':dept_id, 'form':form, 'form2':form2, 'type':self.view_type})
+
+@method_decorator(validate_department, name="get")
+@method_decorator(validate_department, name="post")
+class ManageHallAllocationView(LoginRequiredMixin, View):
+
+    def retrieve(self, request, prog_id, sess_id, type_id, dept_id):
+        hall_allocation = StudHallAllocation.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id, dept_id=dept_id)
+
+        """
+            check = [
+                ['HND1', ['Day 1', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']], ['Day 2', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],  ['Day 3', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
+                ],
+            ]
+        """
+
+        hall_allocation
+
+        groupings = []
+
+        for allocation in hall_allocation:
+
+            if not groupings:
+                groupings.append([allocation.venue_id, [allocation.day_num, [allocation.stud_id]]])
+            else:
+                for group in groupings:
+                    if allocation.venue_id in group:
+                        for i in range(1, len(group)):
+                            if allocation.day_num in group[i]:
+                                group[i][1].append(allocation.stud_id)
+                                break
+                        else:
+                            group.append([allocation.day_num, [allocation.stud_id]])
+                            break
+                        break
+                else:
+                    groupings.append([allocation.venue_id, [allocation.day_num, [allocation.stud_id]]])
+
+
+        return groupings
+
+    def get(self, request, dept_id):
+        form = RStudHallAllocationForm(dept_id=dept_id)
+
+        return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form})
+
+    def post(self, request, dept_id):
+        form = RStudHallAllocationForm(request.POST, dept_id=dept_id)
+        if form.is_valid():
+
+            prog_id = form.cleaned_data.get('prog_id')
+            sess_id = form.cleaned_data.get('sess_id')
+            type_id = form.cleaned_data.get('type_id')
+
+            groupings = self.retrieve(request, prog_id, sess_id, type_id, dept_id)
+
+            return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form, 'groupings':groupings})
+        print(form.errors)
+
+        return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form})

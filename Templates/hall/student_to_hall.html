@@ -41,7 +41,7 @@
 										style="cursor: pointer"
 										><i class="fa fa-share-alt"></i> Manual Allocation</a
 									>
-									<a class="btn app-btn-secondary btn-sm" href="{% url 'auth:manage_allocate' dept.dept_id %}"
+									<a class="btn app-btn-secondary btn-sm" href="{% url 'hall:manage_hall_allocation' dept.dept_id %}"
 										><i class="fa fa-eye"></i> View All Allocation</a
 									>
 								</div>
@@ -172,7 +172,7 @@
 						<form method="post">
 							<div class="modal-body">
 								<p>Fill the form to Manually assign students to Venues.</p>
-								<div id="form-errors">{{ form_errors }}</div>
+								<div id="form-errors">{{ form2_errors }}</div>
 								<div class="row">
 									<div class="col-6">{{ form2.day_num|as_crispy_field }}</div>
 									<div class="col-6">{{ form2.stud_id|as_crispy_field }}</div>

@@ -12,6 +12,7 @@ from PAS_hallAllocation.views import (
     UDDefenseDaysView,
     # Hall Allocation
     CRStudentHallAllocationView,
+    ManageHallAllocationView,
 )
 
 app_name = 'hall'
@@ -26,5 +27,6 @@ urlpatterns = [
     path('UD_defense_id/<str:dept_id>/<str:day_id>', UDDefenseDaysView.as_view(), name='UD_defense_id'),
     # HALL_ALLOCATION
     path('cr_student_hall/<str:dept_id>', CRStudentHallAllocationView.as_view(), name='cr_student_hall'),
+    path('manage_hall_allocation/<str:dept_id>', ManageHallAllocationView.as_view(),name='manage_hall_allocation'),
 
 ]

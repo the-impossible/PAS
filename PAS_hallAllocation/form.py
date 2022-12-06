@@ -120,10 +120,18 @@ class StudHallAllocationForm(forms.ModelForm):
 
         if check:
             raise ValidationError('Allocation record already exist try editing!')
-
     class Meta:
         model = StudHallAllocation
         fields = ('prog_id', 'sess_id', 'type_id')
+
+class RStudHallAllocationForm(StudHallAllocationForm):
+    stud_id = forms.ModelChoiceField(queryset=StudentProfile.objects.all(), empty_label="(Select Student)", required=True, help_text="Select Student", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+    def clean(self):
+        pass
 
 class MStudHallAllocationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

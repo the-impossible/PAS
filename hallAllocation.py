@@ -27,9 +27,25 @@ for i in range(len(students)):
         allocation[venues[index - 1]].insert(0, students.pop())
     index += 1
 
-print(allocation)
+# print(allocation)
+
 
 
 {
     'Venue1':[['student1', 'student2'], ['student1', 'student2'], ['student1', 'student2']]
 }
+
+check = [
+            ['HND1', ['Day 1', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
+                     ['Day 2', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
+                     ['Day 3', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
+            ],
+        ]
+for value in check:
+    if 'HND1' in value:
+
+        if 'Day 1' in value[1]:
+            print('Day 1')
+
+    else:
+        print('E NO DEY!')
