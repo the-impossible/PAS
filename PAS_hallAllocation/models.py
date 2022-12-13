@@ -66,6 +66,7 @@ class AssessorHallAllocation(models.Model):
     isChief = models.BooleanField(default=False)
     sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):

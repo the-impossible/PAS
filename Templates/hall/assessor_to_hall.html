@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block title %} Venues {% endblock %}
+{% block title %} Assessor to Venues {% endblock %}
 {% block head %}
 {% include "partials/auth_head.html" %}
 {%endblock %}
@@ -20,25 +20,25 @@
 								class="btn btn-secodary"
 								><i class="fa fa-arrow-left"></i
 							></a>
-							{{ dept }} Venues
+							{{ dept }} assessor to venue
 						</h1>
 					</div>
 					<div class="col-auto">
 						<div class="page-utilities">
-							<div class="row g-2 justify-content-start justify-content-md-end align-items-center">
+							<div
+								class="row g-2 justify-content-start justify-content-md-end align-items-center"
+							>
 								<div class="col-auto">
-									<a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#allocateS">
-										<i class="fa fa-warehouse"></i>
-										{{ type | title }} Venue
-									</a>
+
 								</div>
 							</div>
+							<!--//row-->
 						</div>
+						<!--//table-utilities-->
 					</div>
+					<!--//col-auto-->
 					{% include "partials/messages.html" %}
 				</div>
-				<!--//row-->
-
 				<div class="row g-4">
 					<div class="col-md-4 col-lg-4 col-sm-12 ">
 						<div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
@@ -55,7 +55,7 @@
 								</div>
 							</div>
 							<div class="app-card-body px-4 col-12">
-								<p class="text-center mb-2">Use the form to {{ type | title }} a venue to accessor</p>
+								<p class="text-center mb-2">Use the form to {{ type | title }} a venue</p>
 								<form action="" method="post">
 									<div id="form-errors">{{ form_errors }}</div>
 									{% csrf_token %}
@@ -91,24 +91,28 @@
 							<!--//app-card-header-->
 							<div class="app-card-body px-4 col-12">
 								<div class="table-responsive table-bordered">
-									<table class="table app-table-hover mb-0 text-left">
-										<thead class="text-center">
+									<table class="table app-table-hover mb-0 text-left" id="table_id">
+										<thead class="text-left">
 											<tr>
 												<th class="cell">S/No</th>
+												<th class="cell">Assessor</th>
 												<th class="cell">Venues</th>
+												<th class="cell">Is Chief</th>
 												<th class="cell">Programme</th>
 												<th class="cell">Action</th>
 											</tr>
 										</thead>
 										<tbody>
-											{% if venues %}
-											{% for venue in venues %}
+											{% if allocations %}
+											{% for allocation in allocations %}
 											<tr>
-												<td class="text-center">{{ forloop.counter }}</td>
-												<td class="text-center"><a href="{% url 'hall:UD_venue' dept.pk venue.venue_id %}">{{ venue.venue_title }}</a></td>
-												<td class="text-center">{{ venue.prog_id }}</td>
-												<td class="text-center">
-													<form action="{% url 'hall:UD_venue' dept.pk venue.venue_id %}" method="post">
+												<td class="">{{ forloop.counter }}</td>
+												<td class=""><a href="#">{{ allocation.super_id.user_id.get_fullname }}</a></td>
+												<td class="">{{ allocation.venue_id.venue_title }}</td>
+												<td class="">{{ allocation.isChief }}</td>
+												<td class="">{{ allocation.prog_id }} {{ allocation.type_id }}</td>
+												<td class="">
+													<form action="" method="post">
 														{% csrf_token %}
 														<button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
 													</form>
@@ -122,10 +126,10 @@
 														<p style="font-size: 3em">📂</p>
 														<br />
 														<p style="font-size: 1em; margin-top: -40px">
-															No Venues Record!
+															No Allocation Record!
 														</p>
 														<p class="text-muted">
-															Venues records displayed if records are found
+															Allocation records will be displayed here if found
 														</p>
 													</div>
 												</td>
@@ -143,42 +147,13 @@
 					</div>
 				</div>
 			</div>
-			<div class="modal fade" id="allocateS" style="display: none" aria-hidden="true">
-				<div class="modal-dialog" id="changeCDialog" role="document" hx-target="this">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title">{{ type | title }} Venue</h5>
-							<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal">
-								<span>×</span>
-							</button>
-						</div>
-						<form method="post">
-							<div class="modal-body">
-								<p>Fill the form below to {{ type | title }} a venue.</p>
-								<div id="form-errors">{{ form_errors }}</div>
-								<div class="row">
-									<div class="col-12">{{ form|crispy }}</div>
-								</div>
-								{% csrf_token %}
-							</div>
-							<div class="modal-footer">
-								<button class="btn btn-secondary" type="button" data-bs-dismiss="modal"> Cancel</button>
-								<button type="submit" name="edit" class="btn btn-success text-white">{{ type | title }} Venue</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
 		</div>
 		{% include 'partials/auth_footer.html' %}
 	</div>
 	<!-- Javascript -->
 	{% include "partials/auth_script.html" %}
 	<script>
-		$('.searchable').select2({
-			dropdownParent: $('#allocateS'),
-			width: 'resolve',
-		})
+		$('.searchable').select2()
 	</script>
 </div>
 

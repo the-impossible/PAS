@@ -13,6 +13,7 @@ from PAS_hallAllocation.views import (
     # Hall Allocation
     CRStudentHallAllocationView,
     ManageHallAllocationView,
+    CRAssessorHallAllocationView,
 )
 
 app_name = 'hall'
@@ -28,5 +29,7 @@ urlpatterns = [
     # HALL_ALLOCATION
     path('cr_student_hall/<str:dept_id>', CRStudentHallAllocationView.as_view(), name='cr_student_hall'),
     path('manage_hall_allocation/<str:dept_id>', ManageHallAllocationView.as_view(),name='manage_hall_allocation'),
+
+    path('cr_assessor_hall/<str:dept_id>', CRAssessorHallAllocationView.as_view(), name='cr_assessor_hall'),
 
 ]

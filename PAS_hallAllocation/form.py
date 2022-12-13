@@ -7,6 +7,7 @@ from PAS_hallAllocation.models import (
     Venue,
     DaysOfDefense,
     StudHallAllocation,
+    AssessorHallAllocation,
 )
 from PAS_app.models import (
     Programme,
@@ -17,6 +18,7 @@ from PAS_app.models import (
 
 from PAS_auth.models import (
     StudentProfile,
+    SupervisorProfile,
 )
 
 class VenueForm(forms.ModelForm):
@@ -125,11 +127,7 @@ class StudHallAllocationForm(forms.ModelForm):
         fields = ('prog_id', 'sess_id', 'type_id')
 
 class RStudHallAllocationForm(StudHallAllocationForm):
-    stud_id = forms.ModelChoiceField(queryset=StudentProfile.objects.all(), empty_label="(Select Student)", required=True, help_text="Select Student", widget=forms.Select(
-        attrs={
-            'class':'form-control',
-        }
-    ))
+
     def clean(self):
         pass
 
@@ -170,4 +168,78 @@ class MStudHallAllocationForm(forms.ModelForm):
         model = StudHallAllocation
         fields = ('day_num', 'stud_id', 'venue_id')
 
+class AssessHallAllocationForm(forms.ModelForm):
 
+    super_id = forms.ModelChoiceField(queryset=SupervisorProfile.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    venue_id = forms.ModelChoiceField(queryset=Venue.objects.all(), empty_label="(Select Venue)", required=True, help_text="Select Venue", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    isChief = forms.BooleanField(help_text='Is he/she the chief Assessor?',required=False, widget=forms.CheckboxInput())
+
+    sess_id = forms.ModelChoiceField(queryset=Session.objects.all(), empty_label="(Select Session Type)", required=True, help_text="Select Session Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    prog_id = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select Programme", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    type_id = forms.ModelChoiceField(queryset=StudentType.objects.all(), empty_label="(Select Student Type)", required=True, help_text="Select Student Type", widget=forms.Select(
+        attrs={
+            'class':'form-control',
+        }
+    ))
+
+    def __init__(self, *args, **kwargs):
+        self.dept_id = kwargs.pop('dept_id', '')
+        super(AssessHallAllocationForm, self).__init__(*args, **kwargs)
+        self.fields['super_id'].queryset=SupervisorProfile.objects.filter(dept_id=self.dept_id)
+        self.fields['super_id'].widget.attrs['style'] = 'width:280px;'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        sess_id = cleaned_data.get('sess_id')
+        prog_id = cleaned_data.get('prog_id')
+        super_id = cleaned_data.get('super_id')
+        isChief = cleaned_data.get('isChief')
+        venue_id = cleaned_data.get('venue_id')
+        type_id = cleaned_data.get('type_id')
+
+        check = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, type_id=type_id, prog_id=prog_id, super_id=super_id, venue_id=venue_id)
+
+        is_in_venue = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, type_id=type_id, prog_id=prog_id, super_id=super_id).exists()
+
+        num_assessor = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, type_id=type_id, prog_id=prog_id, venue_id=venue_id)
+
+        for assessor in num_assessor:
+            if assessor.isChief and isChief:
+                raise ValidationError('Chief Assessor record already exist!')
+
+        if is_in_venue:
+            raise ValidationError('Assessor is already allocated to another venue!')
+
+
+        if self.instance:
+            check = check.exclude(pk=self.instance.pk)
+
+        if check.exists():
+            raise ValidationError('Allocation record already exist try editing!')
+
+        if len(num_assessor) == 3:
+            raise ValidationError('Accessor per venue has reached limit!')
+
+    class Meta:
+        model = AssessorHallAllocation
+        fields = ('venue_id', 'super_id', 'isChief', 'prog_id', 'sess_id', 'type_id')

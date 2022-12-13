@@ -10,6 +10,7 @@ from pprint import pprint
 
 # My app imports
 from PAS_assessment.decorator import validate_department
+from PAS_auth.views import SPLIT
 
 from PAS_auth.models import (
     Programme,
@@ -30,6 +31,7 @@ from PAS_hallAllocation.form import (
     StudHallAllocationForm,
     RStudHallAllocationForm,
     MStudHallAllocationForm,
+    AssessHallAllocationForm,
 )
 
 # Create your views here.
@@ -198,6 +200,7 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
             # CHECK IF VENUE AND STUDENTS EXISTS
 
             form = StudHallAllocationForm(request.POST, dept_id=dept_id)
+            form2 = MStudHallAllocationForm(request.POST, dept_id=dept_id)
 
             if form.is_valid():
 
@@ -217,6 +220,9 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
                     match_studs_list = list(Allocate.objects.filter(type_id=type_id, dept_id=dept_id, sess_id=sess_id, prog_id=prog_id))
 
                     match_venue_list = list(Venue.objects.filter(prog_id=prog_id))
+                    index = 1
+                    days = 1
+                    objs = []
 
                     if match_studs_list and match_venue_list:
 
@@ -227,8 +233,6 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
                         if prog_id.programme_title == 'HND':
 
                             # ASSIGN STUDENTS TO HALL
-                            index = 1
-
                             while match_studs_list:
                                 for i in match_studs_list:
                                     if index <= len(match_venue_list):
@@ -238,49 +242,52 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
                                         allocation[match_venue_list[index - 1]].insert(0, match_studs_list.pop())
                                     index += 1
 
+                            # PREPARE OBJECTS FOR BATCH CREATE
+                            for (key, value) in allocation.items():
+                                for v in value:
+                                    objs.append(StudHallAllocation(venue_id=key, prog_id=prog_id, sess_id=sess_id, dept_id=dept_id, type_id=type_id, stud_id=v.stud_id, day_num=days))
+                                    days += 1
+                                    if days > match_days.num_of_day:
+                                        days = 1
+                                days = 1
+
                         elif prog_id.programme_title == 'ND':
-
-                            match_studs_list = list(Allocate.objects.filter(type_id=type_id, dept_id=dept_id, sess_id=sess_id, prog_id=prog_id))
-
                             # get a student from student list
-                            index = 1
-
                             while match_studs_list:
                                 for stud in match_studs_list:
-
                                     # Filter allocation to get group members
                                     stud_group_members = Allocate.objects.filter(group_id=stud.group_id, type_id=type_id, dept_id=dept_id, sess_id=sess_id, prog_id=prog_id)
 
                                     # ASSIGN STUDENTS TO HALL
-                                    if index <= len(match_venue_list):
+                                    def _allocate_nd():
                                         for member in stud_group_members:
-                                            allocation[match_venue_list[index - 1]].insert(0, member)
+                                            objs.append(StudHallAllocation(venue_id=match_venue_list[index - 1], prog_id=prog_id, sess_id=sess_id, dept_id=dept_id, type_id=type_id, stud_id=member.stud_id, day_num=days))
                                             match_studs_list.remove(member)
+
+                                    if index <= len(match_venue_list):
+                                        if days <= match_days.num_of_day:
+                                            _allocate_nd()
+                                        else:
+                                            days = 1
+                                            _allocate_nd()
                                     else:
                                         index = 1
-                                        for member in stud_group_members:
-                                            allocation[match_venue_list[index - 1]].insert(0, member)
-                                            match_studs_list.remove(member)
+                                        if days <= match_days.num_of_day:
+                                            _allocate_nd()
+                                        else:
+                                            days = 1
+                                            _allocate_nd()
+
                                     index += 1
-
-                        count = match_days.num_of_day
-                        objs = []
-
-                        # PREPARE OBJECTS FOR BATCH CREATE
-                        for (key, value) in allocation.items():
-                            for v in value:
-                                objs.append(StudHallAllocation(venue_id=key, prog_id=prog_id, sess_id=sess_id, dept_id=dept_id, type_id=type_id, stud_id=v.stud_id, day_num=count))
-                                count -= 1
-                                if count == 0:
-                                    count = match_days.num_of_day
-
-                            count = match_days.num_of_day
+                                    days += 1
 
                         # SAVE RECORD TO TABLE: -> ALLOCATE
                         allocations = StudHallAllocation.objects.bulk_create(objs)
 
                         # DISPLAY THE ALLOCATION
+                        groupings = ManageHallAllocationView().retrieve(prog_id, sess_id, type_id, dept_id.pk)
 
+                        return render(request, 'hall/student_to_hall.html', context={'dept':dept_id, 'form':form, 'form2':form2, 'type':self.view_type, 'groupings':groupings})
 
                     else:
                         if not match_studs_list:
@@ -314,17 +321,28 @@ class CRStudentHallAllocationView(LoginRequiredMixin, View):
 @method_decorator(validate_department, name="post")
 class ManageHallAllocationView(LoginRequiredMixin, View):
 
-    def retrieve(self, request, prog_id, sess_id, type_id, dept_id):
+    def retrieve(self, prog_id, sess_id, type_id, dept_id):
         hall_allocation = StudHallAllocation.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id, dept_id=dept_id)
 
         """
             check = [
-                ['HND1', ['Day 1', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']], ['Day 2', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],  ['Day 3', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
+                ['HND1',
+                    ['Day 1',
+                        ['CST20HND0406',
+                         'CST20HND0406',
+                         'CST20HND0406']
+                        ],
+
+                    ['Day 2',
+                        ['CST20HND0406',
+                         'CST20HND0406',
+                         'CST20HND0406']],
+                    ['Day 3', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
+                ],
+                ['Odfel', ['Day 1', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']], ['Day 2', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],  ['Day 3', ['CST20HND0406', 'CST20HND0406', 'CST20HND0406']],
                 ],
             ]
         """
-
-        hall_allocation
 
         groupings = []
 
@@ -346,7 +364,6 @@ class ManageHallAllocationView(LoginRequiredMixin, View):
                 else:
                     groupings.append([allocation.venue_id, [allocation.day_num, [allocation.stud_id]]])
 
-
         return groupings
 
     def get(self, request, dept_id):
@@ -362,9 +379,34 @@ class ManageHallAllocationView(LoginRequiredMixin, View):
             sess_id = form.cleaned_data.get('sess_id')
             type_id = form.cleaned_data.get('type_id')
 
-            groupings = self.retrieve(request, prog_id, sess_id, type_id, dept_id)
+            groupings = self.retrieve(prog_id, sess_id, type_id, dept_id)
 
             return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form, 'groupings':groupings})
         print(form.errors)
 
         return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form})
+
+
+@method_decorator(validate_department, name="get")
+@method_decorator(validate_department, name="post")
+class CRAssessorHallAllocationView(LoginRequiredMixin, View):
+    view_type = 'allocate'
+
+    def get(self, request, dept_id):
+        form = AssessHallAllocationForm(dept_id=dept_id)
+        allocations = AssessorHallAllocation.objects.all()
+        return render(request, 'hall/assessor_to_hall.html', context={'dept':dept_id, 'form':form, 'type':self.view_type, 'allocations':allocations})
+
+    def post(self, request, dept_id):
+        form = AssessHallAllocationForm(request.POST, dept_id=dept_id)
+        allocations = AssessorHallAllocation.objects.all()
+
+        if form.is_valid():
+            data = form.save(commit=False)
+            data.dept_id = dept_id
+            data.save()
+            messages.success(request, 'Allocation of accessor to venue, successful')
+            return redirect('hall:cr_assessor_hall', dept_id.pk)
+
+        messages.error(request, 'Failed in allocating accessor to venue')
+        return render(request, 'hall/assessor_to_hall.html', context={'dept':dept_id, 'form':form, 'type':self.view_type, 'allocations':allocations})

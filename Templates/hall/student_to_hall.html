@@ -78,76 +78,8 @@
 							</div>
 							<!--//app-card-header-->
 							<div class="app-card-body px-4 col-12">
-								{% if t_students %}
-								<p class="text-center mb-2">
-									Total Students: <b>{{ t_students }}</b> Total Supervisors:<b
-										>{{t_super }}</b
-									>
-									Total Groups: <b>{{ groups }}</b>.
-								</p>
-								{% endif %}
 								<div class="table-responsive table-bordered">
-									<table class="table app-table-hover mb-0 text-left">
-										<thead>
-											<tr>
-												<th class="cell">S/No</th>
-												<th class="cell">Venue</th>
-												<th class="cell">Defense Day.</th>
-												<th class="cell">Students</th>
-												<th class="cell">RegNo.</th>
-											</tr>
-										</thead>
-										<tbody>
-											{% if groupings %}
-												{% for item in groupings %}
-													{% for i in item.2 %}
-													<tr>
-														{% if forloop.counter == 1 %}
-															<td rowspan="{{item.2|length}}" class="align-middle">
-																{{ forloop.parentloop.counter }}
-															</td>
-														{% endif %}
-
-														{% if forloop.counter == 1 %}
-															<td rowspan="{{item.2|length}}" class="align-middle">
-																{{ item.0.user_id.get_fullname }}
-															</td>
-														{% endif %}
-														{% if forloop.counter == 1 %}
-															<td rowspan="{{item.2|length}}" class="align-middle">
-																{{ item.0.user_id.get_username }}
-															</td>
-														{% endif %}
-														<td>
-															{{ i.user_id.get_fullname }}
-														</td>
-														<td>
-															{% if item.2|length != 1 %}
-															{% endif %}
-															{{ i.user_id.username }}
-														</td>
-													</tr>
-													{% endfor %}
-												{% endfor %}
-											{% else %}
-											<tr>
-												<td colspan="12">
-													<div class="jumbotron text-center p-5">
-														<p style="font-size: 3em">📂</p>
-														<br />
-														<p style="font-size: 1em; margin-top: -40px">
-															No Summary Yet!
-														</p>
-														<p class="text-muted">
-															Summary will be available temporary after
-															allocation
-														</p>
-													</div>
-												</td>
-											</tr>
-											{% endif %}
-										</tbody>
-									</table>
+									{% include 'hall/partials/display_stud_allocation.html' %}
 								</div>
 							</div>
 							<!--//app-card-body-->

@@ -1,0 +1,28 @@
+{% for venue in groupings %}
+												 	{% for day in venue %}
+														{% for d in day.1  %}
+															<tr>
+																{% if forloop.counter == 1 %}
+																	<td rowspan="{{day.1|length}}" class="align-middle">
+																		{{ forloop.parentloop.counter }}
+																	</td>
+																{% endif %}
+
+																{% if forloop.counter == 1 %}
+																	<td rowspan="{{day.1|length}}" class="align-middle">
+																		{{ venue.0 }}
+																	</td>
+																{% endif %}
+
+																{% if forloop.counter == 1 %}
+																	<td rowspan="{{day.1|length}}" class="align-middle">
+																		Day {{ day.0 }}
+																	</td>
+																{% endif %}
+
+																<td>{{d}}</td>
+																<td>o</td>
+															</tr>
+														{% endfor %}
+													{% endfor %}
+												{% endfor %}
