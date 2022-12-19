@@ -170,7 +170,19 @@ class MStudHallAllocationForm(forms.ModelForm):
 
 class AssessHallAllocationForm(forms.ModelForm):
 
-    super_id = forms.ModelChoiceField(queryset=SupervisorProfile.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+    chief_assessor = forms.ModelChoiceField(queryset=SupervisorProfile.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    assessor_one = forms.ModelChoiceField(queryset=SupervisorProfile.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    assessor_two = forms.ModelChoiceField(queryset=SupervisorProfile.objects.all(), empty_label="(Select Supervisor Type)", required=True, help_text="Select Supervisor Type", widget=forms.Select(
         attrs={
             'class':'form-control searchable',
         }
@@ -181,8 +193,6 @@ class AssessHallAllocationForm(forms.ModelForm):
             'class':'form-control',
         }
     ))
-
-    isChief = forms.BooleanField(help_text='Is he/she the chief Assessor?',required=False, widget=forms.CheckboxInput())
 
     sess_id = forms.ModelChoiceField(queryset=Session.objects.all(), empty_label="(Select Session Type)", required=True, help_text="Select Session Type", widget=forms.Select(
         attrs={
@@ -205,41 +215,36 @@ class AssessHallAllocationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.dept_id = kwargs.pop('dept_id', '')
         super(AssessHallAllocationForm, self).__init__(*args, **kwargs)
-        self.fields['super_id'].queryset=SupervisorProfile.objects.filter(dept_id=self.dept_id)
-        self.fields['super_id'].widget.attrs['style'] = 'width:280px;'
+        self.fields['chief_assessor'].queryset=SupervisorProfile.objects.filter(dept_id=self.dept_id)
+        self.fields['chief_assessor'].widget.attrs['style'] = 'width:280px;'
+        self.fields['assessor_one'].queryset=SupervisorProfile.objects.filter(dept_id=self.dept_id)
+        self.fields['assessor_one'].widget.attrs['style'] = 'width:280px;'
+        self.fields['assessor_two'].queryset=SupervisorProfile.objects.filter(dept_id=self.dept_id)
+        self.fields['assessor_two'].widget.attrs['style'] = 'width:280px;'
 
     def clean(self):
         cleaned_data = super().clean()
+        assessor_one = cleaned_data.get('assessor_one')
+        assessor_two = cleaned_data.get('assessor_two')
+        chief_assessor = cleaned_data.get('chief_assessor')
         sess_id = cleaned_data.get('sess_id')
         prog_id = cleaned_data.get('prog_id')
-        super_id = cleaned_data.get('super_id')
-        isChief = cleaned_data.get('isChief')
         venue_id = cleaned_data.get('venue_id')
         type_id = cleaned_data.get('type_id')
 
-        check = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, type_id=type_id, prog_id=prog_id, super_id=super_id, venue_id=venue_id)
+        query = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, prog_id=prog_id, type_id=type_id)
 
-        is_in_venue = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, type_id=type_id, prog_id=prog_id, super_id=super_id).exists()
+        for qs in query:
+            if assessor_one == qs.assessor_one:
+                raise ValidationError('Assessor 1 is already allocated!')
 
-        num_assessor = AssessorHallAllocation.objects.filter(sess_id=sess_id, dept_id=self.dept_id, type_id=type_id, prog_id=prog_id, venue_id=venue_id)
+            if assessor_two == qs.assessor_two:
+                raise ValidationError('Assessor 2 is already allocated!')
 
-        for assessor in num_assessor:
-            if assessor.isChief and isChief:
-                raise ValidationError('Chief Assessor record already exist!')
-
-        if is_in_venue:
-            raise ValidationError('Assessor is already allocated to another venue!')
-
-
-        if self.instance:
-            check = check.exclude(pk=self.instance.pk)
-
-        if check.exists():
-            raise ValidationError('Allocation record already exist try editing!')
-
-        if len(num_assessor) == 3:
-            raise ValidationError('Accessor per venue has reached limit!')
+            if chief_assessor == qs.chief_assessor:
+                raise ValidationError('Chief Assessor is already allocated!')
 
     class Meta:
         model = AssessorHallAllocation
-        fields = ('venue_id', 'super_id', 'isChief', 'prog_id', 'sess_id', 'type_id')
+        fields = ('venue_id', 'assessor_one', 'assessor_two', 'chief_assessor', 'prog_id', 'sess_id', 'type_id')
+

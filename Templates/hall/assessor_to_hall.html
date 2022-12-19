@@ -91,13 +91,14 @@
 							<!--//app-card-header-->
 							<div class="app-card-body px-4 col-12">
 								<div class="table-responsive table-bordered">
-									<table class="table app-table-hover mb-0 text-left" id="table_id">
+									<table class="table app-table-hover mb-0 text-left table-sm" id="table_id">
 										<thead class="text-left">
 											<tr>
 												<th class="cell">S/No</th>
-												<th class="cell">Assessor</th>
+												<th class="cell">Chief Assessor</th>
+												<th class="cell">Assessor 1</th>
+												<th class="cell">Assessor 2</th>
 												<th class="cell">Venues</th>
-												<th class="cell">Is Chief</th>
 												<th class="cell">Programme</th>
 												<th class="cell">Action</th>
 											</tr>
@@ -107,9 +108,10 @@
 											{% for allocation in allocations %}
 											<tr>
 												<td class="">{{ forloop.counter }}</td>
-												<td class=""><a href="#">{{ allocation.super_id.user_id.get_fullname }}</a></td>
+												<td class=""><a href="#">{{ allocation.chief_assessor.user_id.get_fullname }}</a></td>
+												<td class="">{{ allocation.assessor_one.user_id.get_fullname }}</td>
+												<td class="">{{ allocation.assessor_two.user_id.get_fullname }}</td>
 												<td class="">{{ allocation.venue_id.venue_title }}</td>
-												<td class="">{{ allocation.isChief }}</td>
 												<td class="">{{ allocation.prog_id }} {{ allocation.type_id }}</td>
 												<td class="">
 													<form action="" method="post">

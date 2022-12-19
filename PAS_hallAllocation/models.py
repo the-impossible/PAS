@@ -62,17 +62,20 @@ class StudHallAllocation(models.Model):
 class AssessorHallAllocation(models.Model):
     assessHall_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
     venue_id = models.ForeignKey(Venue, on_delete=models.CASCADE)
-    super_id = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE)
-    isChief = models.BooleanField(default=False)
+    assessor_one = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='assessor_one')
+    assessor_two = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='assessor_two')
+    chief_assessor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE)
     sess_id = models.ForeignKey(Session, on_delete=models.CASCADE)
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)
     type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.super_id} is allocated to: {self.venue}'
+        return f'CHIEF: {self.chief_assessor} | ONE: {self.assessor_one} | TWO: {self.assessor_two}'
 
     class Meta:
         db_table = 'Assessor Hall Allocation'
         verbose_name_plural = 'Assessors Hall Allocations'
+
+
 
