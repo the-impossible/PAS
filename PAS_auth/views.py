@@ -18,6 +18,8 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.utils.decorators import method_decorator
+from django.core import serializers
+import pickle
 #Email
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.sites.shortcuts import get_current_site
@@ -87,6 +89,12 @@ class LoginView(View):
                     login(request, user)
                     messages.success(request, f'You are now signed in {user}')
                     nxt  = request.GET.get('next', None)
+                    if user.is_super:
+                        try:
+                            request.session['dept_id'] = str(SupervisorProfile.objects.get(user_id=user).dept_id.dept_id)
+                        except ObjectDoesNotExist:
+                            request.session['dept_id'] = None
+
                     if nxt is None:
                         return redirect('auth:dashboard')
                     return redirect(self.request.GET.get('next', None))

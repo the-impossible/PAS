@@ -53,7 +53,7 @@ class StudHallAllocation(models.Model):
 
 
     def __str__(self):
-        return f'{self.stud_id} is allocated to: {self.venue_id} on day {self.day_num}'
+        return f'{self.stud_id}: {self.stud_id.user_id.get_fullname()}'
 
     class Meta:
         db_table = 'Student Hall Allocation'
@@ -76,6 +76,4 @@ class AssessorHallAllocation(models.Model):
     class Meta:
         db_table = 'Assessor Hall Allocation'
         verbose_name_plural = 'Assessors Hall Allocations'
-
-
 
