@@ -56,9 +56,12 @@ class SeminarAssessmentForm(forms.ModelForm):
         if seminar_grade < 0:
             raise ValidationError('Positive grades only, try again!')
 
-        check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id).exists()
+        check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
 
-        if check:
+        if self.instance:
+            check = check.exclude(pk=self.instance.pk)
+
+        if check.exists():
             raise ValidationError('Assessment already exist for the student try editing!')
 
     class Meta:
@@ -116,9 +119,12 @@ class SuperSeminarAssessmentForm(forms.ModelForm):
         if seminar_grade < 0:
             raise ValidationError('Positive grades only, try again!')
 
-        check = Assessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id).exists()
+        check = Assessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id)
 
-        if check:
+        if self.instance:
+            check = check.exclude(pk=self.instance.pk)
+
+        if check.exists():
             raise ValidationError('Assessment already exist for the student try editing!')
 
     class Meta:
