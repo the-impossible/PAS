@@ -57,6 +57,8 @@ from PAS_auth.views import (
     DisplayMembersView,
     DisplayGroupMembersView,
 
+    ApproveTopicView,
+
 )
 
 app_name = 'auth'
@@ -114,7 +116,7 @@ urlpatterns = [
     # Department
     path('department/<str:dept_id>', DepartmentView.as_view(), name='department'),
     path('what_file/<str:dept_id>', WhatFileView.as_view(), name='what_file'),
-    path('what_programme/<str:dept_id>', WhatProgrammeView.as_view(), name='what_prog'),
+    path('what_programme/<str:dept_id>/<str:type_id>', WhatProgrammeView.as_view(), name='what_prog'),
     path('batch_create/<str:dept_id>/<int:file_id>', BatchCreateView.as_view(), name='batch_create'),
 
     # Manage Coordinators
@@ -130,6 +132,9 @@ urlpatterns = [
     path('display_member/<str:prog_id>/<str:type_id>', DisplayMembersView.as_view(), name='display_member'),
     path('display_group_members/<str:group_id>/<str:prog_id>/<str:type_id>', DisplayGroupMembersView.as_view(), name='display_group_members'),
     path('view_project_coordinator', ViewProjectCoordinator.as_view(), name='view_project_coordinator'),
+
+    # Approved Topics
+    path('approve_topics/<str:dept_id>', ApproveTopicView.as_view(), name='approve_topics'),
 
 
 ]

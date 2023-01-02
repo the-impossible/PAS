@@ -414,3 +414,6 @@ class DepartmentForm(forms.ModelForm):
         model = Department
         fields = ('dept_title', 'dept_desc', 'dept_logo')
 
+class ApproveTopicForm(FilesForm):
+    def clean(self):
+        pass

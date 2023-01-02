@@ -45,7 +45,7 @@
 						    <div class="app-card-footer p-2 mt-auto">
 							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
 						    </div><!--//app-card-footer-->
-                            <a class="app-card-link-mask" href="{% url 'auth:what_prog' dept.pk %}"></a>
+                            <a class="app-card-link-mask" href="{% url 'auth:what_prog' dept.pk 'students' %}"></a>
 						</div><!--//app-card-->
 				    </div>
 					<!-- Supervisors -->
@@ -189,6 +189,30 @@
 							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
 						    </div><!--//app-card-footer-->
                             <a class="app-card-link-mask" href="{% url 'auth:allocate' dept.dept_id %}"></a>
+						</div><!--//app-card-->
+				    </div><!--//col-->
+
+					<div class="col-12 col-md-6 col-lg-4">
+					    <div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+						    <div class="app-card-header p-3 border-bottom-0">
+						        <div class="row align-items-center gx-3">
+							        <div class="col-auto">
+								        <div class="app-icon-holder bg-info">
+										    <i class="fa mt-1 fa-archive  text-white"></i>
+									    </div><!--//icon-holder-->
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <h4 class="app-card-title">Approved Topics</h4>
+							        </div><!--//col-->
+						        </div><!--//row-->
+						    </div><!--//app-card-header-->
+						    <div class="app-card-body px-4">
+							    <div class="intro">This page implements uploading of approved Topic for {{ dept }} </div>
+						    </div><!--//app-card-body-->
+						    <div class="app-card-footer p-2 mt-auto">
+							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
+						    </div><!--//app-card-footer-->
+                            <a class="app-card-link-mask" href="{% url 'auth:what_prog' dept.pk 'topics' %}"></a>
 						</div><!--//app-card-->
 				    </div><!--//col-->
                 </div>

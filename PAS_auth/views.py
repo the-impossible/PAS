@@ -58,6 +58,7 @@ from PAS_app.form import (
     MAllocationForm,
     RAllocationForm,
     DepartmentForm,
+    ApproveTopicForm,
 )
 from PAS_auth.form import (
     UserForm,
@@ -757,11 +758,11 @@ class WhatFileView(View):
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
 class WhatProgrammeView(View):
-    def get(self, request, dept_id):
+    def get(self, request, dept_id, type_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
             programmes = Programme.objects.all()
-            return render(request, 'department/programme.html', context={'dept':dept, 'programmes':programmes})
+            return render(request, 'department/programme.html', context={'dept':dept, 'programmes':programmes, 'type_id':type_id})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -1363,3 +1364,15 @@ class ViewProjectCoordinator(LoginRequiredMixin, View):
 
         return redirect('auth:dashboard')
 
+class ApproveTopicView(View):
+    def get(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            form = ApproveTopicForm()
+            programmes = StudentType.objects.all()
+            return render(request, 'auth/approve_topic.html', context={'dept':dept, 'programmes':programmes, 'form':form})
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')
