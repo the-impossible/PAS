@@ -1,0 +1,93 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<table class="table app-table-hover mb-0 text-left">
+    <thead>
+        <tr>
+            <th class="cell"><input type="checkbox" id="delete_all"> &nbsp; S/No</th>
+            <th class="cell">Venue</th>
+            <th class="cell">Defense Day.</th>
+            <th class="cell">Student Name</th>
+            <th class="cell">RegNo.</th>
+        </tr>
+    </thead>
+    <tbody>
+        <form action="" method="post">
+            {% csrf_token %}
+            {% if groupings %}
+
+            {% for venue in groupings %}
+                 {% for day in venue %}
+                    {% for d in day.1  %}
+                        <tr>
+                            {% if forloop.counter == 1	 %}
+                                <td rowspan="{{day.1|length}}" class="">
+                                    #
+                                </td>
+                            {% endif %}
+
+                            {% if forloop.counter == 1 %}
+                                <td rowspan="{{day.1|length}}" class="">
+                                    {{ venue.0 }}
+                                </td>
+                            {% endif %}
+
+                            {% if forloop.counter == 1 %}
+                                <td rowspan="{{day.1|length}}" class="">
+                                    Day {{ day.0 }}
+                                </td>
+                            {% endif %}
+
+                            <td>{{d.user_id.get_fullname}}</td>
+                            <td>{{d}}</td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="12">
+                    <div class="jumbotron text-center p-5">
+                        <p style="font-size: 3em">📂</p>
+                        <br />
+                        <p style="font-size: 1em; margin-top: -40px">
+                            No Record Found!
+                        </p>
+                        <p class="text-muted">
+                            No allocation record was retrieved from the input received
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td colspan="12">
+                    <div class="mt-3 mx-auto">
+                        <a href="" class="btn btn-danger btn-block text-white" data-bs-toggle="modal" data-bs-target="#deleteA"><i class="fa fa-recycle"></i> Delete Selected
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            <input type="hidden" name="prog" value="{{prog}}">
+            <input type="hidden" name="sess" value="{{sess}}">
+            <input type="hidden" name="type" value="{{type}}">
+            <div class="modal fade" id="deleteA" style="display: none;" aria-hidden="true">
+                <div class="modal-dialog" id="deleteADiaglog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete Selected Allocation</h5>
+                        <button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete selected allocation?.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="delete" class="btn btn-success btn-block text-white">Delete Selected</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </form>
+    </tbody>
+</table>

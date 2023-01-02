@@ -16,7 +16,7 @@
 				    <div class="col-auto">
 						<h1 class="app-page-title mb-0">
                             <a href="{% url 'auth:department' dept.pk %}" class="btn btn-secodary"><i class="fa fa-arrow-left"></i></a>
-                            ALL {{ dept }} Supervisor
+                             {{ dept }} Dashboard
                         </h1>
 				    </div>
 				    <div class="col-auto">
@@ -37,37 +37,92 @@
 				    </div><!--//col-auto-->
 			    </div><!--//row-->
 
-				<div class="app-card app-card-orders-table shadow-sm pb-1 mb-5">
-					<div class="app-card-header p-3">
-						<div class="row justify-content-between align-items-center">
-							<div class="col-auto">
-								<h4 class="app-card-title">All Supervisors</h4>
-							</div>
-						</div><!--//row-->
-					</div><!--//app-card-header-->
-					<div class="app-card-body">
-						<div class="table-responsive">
-							<table class="table app-table-hover mb-0 text-center">
-								<thead>
+				<div class="col-lg-12 grid-margin stretch-card">
+					<div class="card">
+					  <div class="card-body">
+						<h4 class="card-title text-center">{{dept}} Supervisors</h4>
+						<hr class="w-75 mx-auto">
+						<div class="app-card-body">
+							<div class="table-responsive">
+							  <table class="table app-table-hover mb-0 text-left table-sm table-striped table-bordered" id="table_id">
+								<thead class="table-secondary">
 									<tr>
-										<th class="cell">S/N</th>
+										<th class="cell">#</th>
 										<th class="cell">User ID</th>
 										<th class="cell">Supervisor's Name</th>
 										<th class="cell">Rank ID</th>
 										<th class="cell">Email</th>
 										<th class="cell">Phone</th>
-										<th class="cell">Programme</th>
-										<th class="cell">Active</th>
-										<th class="cell">Action</th>
 									</tr>
 								</thead>
-								<tbody hx-get="{% url 'auth:list_supervisor' dept.dept_id %}" hx-trigger="load, listChanged from:body">
+								<tbody>
+									{% if messages %}
+									<tr id="remove">
+										<td colspan="8">
+										{% include "partials/messages.html" %}
+										</td>
+									</tr>
+									{% endif %}
+
+									{% if object_list.count > 0 %}
+										{% for user in object_list  %}
+										<tr>
+											<td class="cell">{{ forloop.counter }}</td>
+											<td class="cell">{{ user.user_id.username  }}</td>
+											<td class="cell">{{ user.user_id.get_fullname }}</td>
+											<td class="cell">{{ user.rank_id }}</td>
+											<td class="cell">
+												{% if user.user_id.email  %}
+												<a href="mailto:{{ user.user_id.email }}">{{ user.user_id.email|truncatechars:20 }}</a>
+												{% else %}
+												<span class="badge bg-warning">NOT SET</span>
+												{% endif %}
+											</td>
+											<td class="cell">
+												{% if user.user_id.phone  %}
+													<a href="tel:{{ user.user_id.phone }}">{{ user.user_id.phone }}</a>
+												{% else %}
+													<span class="badge bg-warning">NOT SET</span>
+												{% endif %}
+											</td>
+											{% comment %}
+											<td class="cell">{{ user.prog_id }}</td>
+											<td class="cell">
+												<i class="fa
+													{% if user.user_id.is_active %}
+														fa-check text-success
+													{% else %}
+														fa-times text-danger
+													{% endif %}
+												"></i>
+											</td>
+											<td>
+												<button class="btn btn-danger btn-sm text-white" hx-get="{% url 'auth:delete_user' user.user_id.user_id %}" hx-target="#deleteUser">
+													<i class="fa fa-trash "></i> Delete
+												</button>
+											</td>
+											{% endcomment %}
+										</tr>
+										{% endfor %}
+										{% else %}
+									<tr>
+										<td colspan="8">
+											<div class="jumbotron text-center p-5   ">
+												<!-- illustration can be used here too -->
+												<p style="font-size: 5em;">📂</p> <br>
+												<p style="font-size: 2em; margin-top: -40px;">No Supervisor Record Here!</p>
+											</div>
+										</td>
+									</tr>
+									{% endif %}
 								</tbody>
-							</table>
-						</div><!--//table-responsive-->
-					</div><!--//app-card-body-->
-				<!--ND SECTION ENDS-->
-				</div><!--//tab-content-->
+							  </table>
+							</div>
+						</div>
+					  </div>
+					</div>
+				</div>
+
 		    </div><!--//container-fluid-->
 	    </div><!--//app-content-->
 	    {% include 'partials/auth_footer.html' %}

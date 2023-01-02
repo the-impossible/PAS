@@ -48,4 +48,3 @@ def has_updated(func):
             messages.info(request, 'You have to update your profile before proceeding!')
             return redirect('auth:manage_profile', request.user.user_id)
     return wrapper_func
-

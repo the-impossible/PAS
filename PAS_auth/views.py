@@ -18,6 +18,8 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.utils.decorators import method_decorator
+from django.core import serializers
+import pickle
 #Email
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.sites.shortcuts import get_current_site
@@ -56,6 +58,7 @@ from PAS_app.form import (
     MAllocationForm,
     RAllocationForm,
     DepartmentForm,
+    ApproveTopicForm,
 )
 from PAS_auth.form import (
     UserForm,
@@ -66,6 +69,10 @@ from PAS_auth.decorator import *
 
 PASSWORD = '12345678'
 SPLIT = 6
+
+class EnforceAuth(LoginRequiredMixin):
+    login_url = 'auth:login'
+
 # Create your views here.
 class LoginView(View):
     def get(self, request):
@@ -82,7 +89,16 @@ class LoginView(View):
                 if user.is_active:
                     login(request, user)
                     messages.success(request, f'You are now signed in {user}')
-                    return redirect('auth:dashboard')
+                    nxt  = request.GET.get('next', None)
+                    if user.is_super:
+                        try:
+                            request.session['dept_id'] = str(SupervisorProfile.objects.get(user_id=user).dept_id.dept_id)
+                        except ObjectDoesNotExist:
+                            request.session['dept_id'] = None
+
+                    if nxt is None:
+                        return redirect('auth:dashboard')
+                    return redirect(self.request.GET.get('next', None))
                 else:
                     messages.warning(request, 'Account not active contact the administrator')
                     return redirect('auth:login')
@@ -220,7 +236,6 @@ class StudentFilesView(LoginRequiredMixin, View):
             return render(request, 'auth/student_files.html', context={'programmes':self.programmes, 'dept':self.dept , 'form':form})
         else:
             return redirect('auth:list_department')
-
 class DeleteStudentFilesView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -276,8 +291,7 @@ class ListSupervisorFilesView(LoginRequiredMixin, ListView):
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
-class SupervisorFilesView(LoginRequiredMixin, View):
-    login_url = 'auth:login'
+class SupervisorFilesView(EnforceAuth, View):
 
     dept = None
     def check_department(self, dept_id, request):
@@ -322,24 +336,24 @@ class SupervisorFilesView(LoginRequiredMixin, View):
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
-class ManageStudentsView(StudentFilesView):
-    form1 = UserForm()
-    form2 = StudentProfileForm()
-    form3 = MultipleStudentForm()
-    programmes = Programme.objects.all()
+class ManageStudentsView(EnforceAuth, ListView):
+    template_name = "auth/manage_students.html"
 
-    def get(self, request, dept_id):
-        try:
-            dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/manage_students.html', context={'dept':dept, 'programmes':self.programmes, 'form1':self.form1, 'form2':self.form2, 'form3':self.form3})
+    def get_context_data(self, **kwargs):
+        context = super(ManageStudentsView, self).get_context_data(**kwargs)
+        context['form1'] = UserForm()
+        context['form2'] = StudentProfileForm()
+        context['form3'] = MultipleStudentForm()
+        context['programmes'] = Programme.objects.all()
+        context['dept'] = Department.objects.get(dept_id=self.kwargs['dept_id'])
+        context['prog'] = Programme.objects.get(id=self.kwargs['programme_id'])
 
-        except ObjectDoesNotExist:
-            messages.error(request, 'Error Retrieving department!')
-        except ValidationError:
-            messages.error(request, 'Error Retrieving department!')
-        return redirect('auth:list_department')
+        return context
 
-    def post(self, request, dept_id):
+    def get_queryset(self):
+        return StudentProfile.objects.filter(programme_id=self.kwargs['programme_id'], dept_id=self.kwargs['dept_id']).order_by('-pk')
+
+    def post(self, request, programme_id, dept_id):
         form1 = UserForm(request.POST)
         form2 = StudentProfileForm(request.POST)
 
@@ -356,17 +370,25 @@ class ManageStudentsView(StudentFilesView):
                     user_form = form2.save(commit=False)
                     user_form.user_id = user
                     user_form.dept_id = dept
-                    user_form.programme_id = Programme.objects.get(id=request.POST['programme'])
+                    user_form.programme_id = Programme.objects.get(id=programme_id)
                     user_form.session_id = Session.objects.get(id=request.POST['session'])
                     user_form.type_id = StudentType.objects.get(id=request.POST['student_type'])
 
                     user.save()
                     user_form.save()
                     messages.success(request, 'Account Created Successfully!')
-                    return redirect('auth:manage_students', dept_id)
+                    return redirect('auth:manage_students',programme_id, dept_id)
 
                 messages.error(request, 'Error Creating Account Check form for more details!')
-                return render(request, 'auth/manage_students.html', context={'dept':dept, 'programmes':self.programmes, 'form1':form1, 'form2':form2})
+                return render(request, 'auth/manage_students.html',
+                context={
+                    'dept':dept,
+                    'prog':programme_id,
+                    'form1':form1,
+                    'form2':form2,
+                    'form3':form3,
+                    'object_list':self.get_queryset()
+                })
 
             elif 'multiple' in request.POST:
                 form3 = MultipleStudentForm(request.POST,request.FILES)
@@ -380,13 +402,14 @@ class ManageStudentsView(StudentFilesView):
                     objs = []
                     sub_objs = []
 
-                    prog_id = Programme.objects.get(programme_title=data['programme'])
+                    prog_id = Programme.objects.get(id=programme_id)
                     session_id = Session.objects.get(session_title=data['session'])
                     type_id = StudentType.objects.get(type_title=data['student_type'])
                     dept = Department.objects.get(dept_id=dept_id)
 
                     for row in csv_obj:
-                        objs.append(User(username=row[0], firstname=row[1], lastname=row[2], password=make_password(PASSWORD)))
+                        objs.append(User(username=row[0], name=row[1], password=make_password(PASSWORD)))
+
                     created_users = User.objects.bulk_create(objs)
 
                     for user in created_users:
@@ -394,10 +417,19 @@ class ManageStudentsView(StudentFilesView):
                     created_user_profiles = StudentProfile.objects.bulk_create(sub_objs)
 
                     messages.success(request, 'Account Created Successfully!')
-                    return redirect('auth:manage_students', dept_id)
+                    return redirect('auth:manage_students', programme_id, dept_id)
 
             messages.error(request, 'Error Creating Account from file Check form for more details!')
-            return render(request, 'auth/manage_students.html', context={'dept':dept, 'programmes':self.programmes, 'form1':form1, 'form2':form2, 'form3':form3})
+            return render(request, 'auth/manage_students.html',
+            context={
+                'dept':dept,
+                'prog':programme_id,
+                'form1':form1,
+                'form2':form2,
+                'form3':form3,
+                'object_list':self.get_queryset()
+            })
+
 class DeleteUserAccountView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 
@@ -432,7 +464,14 @@ class ManageSupervisorsView(LoginRequiredMixin, View):
         try:
             dept = Department.objects.get(dept_id=dept_id)
             object_list = SupervisorProfile.objects.filter(dept_id=dept_id).order_by('-pk')
-            return render(request, 'auth/manage_supervisors.html', context={'dept':dept, 'form1':self.form1, 'form2':self.form2, 'form3':self.form3, 'object_list':object_list})
+            return render(request, 'auth/manage_supervisors.html',
+            context={
+                'dept':dept,
+                'form1':self.form1,
+                'form2':self.form2,
+                'form3':self.form3,
+                'object_list':object_list
+            })
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -700,7 +739,7 @@ class DepartmentView(LoginRequiredMixin, View):
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/department/department.html', context={'dept':dept})
+            return render(request, 'department/department.html', context={'dept':dept})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -712,7 +751,18 @@ class WhatFileView(View):
     def get(self, request, dept_id):
         try:
             dept = Department.objects.get(dept_id=dept_id)
-            return render(request, 'auth/department/whatfile.html', context={'dept':dept})
+            return render(request, 'department/whatfile.html', context={'dept':dept})
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')
+class WhatProgrammeView(View):
+    def get(self, request, dept_id, type_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            programmes = Programme.objects.all()
+            return render(request, 'department/programme.html', context={'dept':dept, 'programmes':programmes, 'type_id':type_id})
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
         except ValidationError:
@@ -797,14 +847,16 @@ class BatchCreateView(View):
 
         if 'super' in request.POST:
             return redirect('auth:files_super', dept_id)
-
 class ListStudentView(LoginRequiredMixin, ListView):
     login_url = 'auth:login'
     template_name = "partials/files/list_student.html"
+    paginate_by = 50
 
     def get_context_data(self, **kwargs):
         context = super(ListStudentView, self).get_context_data(**kwargs)
         context['programme'] = Programme.objects.all()
+        context['dept_id'] = dept_id=self.kwargs['dept_id']
+        context['prog_id'] = programme_id=self.kwargs['programme_id']
         return context
 
     def get_queryset(self):
@@ -1312,3 +1364,15 @@ class ViewProjectCoordinator(LoginRequiredMixin, View):
 
         return redirect('auth:dashboard')
 
+class ApproveTopicView(View):
+    def get(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            form = ApproveTopicForm()
+            programmes = StudentType.objects.all()
+            return render(request, 'auth/approve_topic.html', context={'dept':dept, 'programmes':programmes, 'form':form})
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')

@@ -1,5 +1,8 @@
-"""import random
+import random
 from pprint import pprint
+
+days = 3
+venues = 3
 
 # GENERATE THE STUDENTS
 students = [f'Student{i}' for i in range(1, 16)]
@@ -33,44 +36,37 @@ for i in range(1, len(groups)+ 1):
 
 pprint(allocation)
 
+# All HND STUDENTS
+from PAS_app.models import (
+    Session,
+    Programme,
+    Department,
+    StudentType
+)
 
-{
-    'Group1': ['lecturer1', ['stud1', 'stud2', 'stud3'] ]
-}
+from PAS_auth.models import (
+    Allocate,
+)
 
+programme = Programme.objects.get(programme_title='HND')
+session = Session.objects.get(session_title='2021/2022')
+dept = Department.objects.get(dept_title='Computer Science')
+type_id = StudentType.objects.get(type_title='Regular')
 
-reg = ['CST20HND0558', 'CST20HND0558', 'CST20HND0558']
-
-for i in reg:
-    print(f'{i[:8]}EV{i[8:]}')
-
-
-from PAS_auth.models import SupervisorProfile
-users = SupervisorProfile.objects.all()
-
-no_details = {
-    'LEC2123':[]
-}
-
-for user in users:
-    if not (user.user_id.phone) or not(user.user_id.email):
-        no_details[f"{user.user_id.username}"] = [user.user_id.username, f"{user.title}{user.user_id.name}"]
-
-"""
-from PAS_auth.models import User
-users = User.objects.filter(is_super=True)
-correct  = []
-with open('no_details.csv', 'r') as file:
-    for line in file.readlines():
-        rows = line.split(',')
-        correct.append([rows[0], f'0{rows[2]}', rows[3]])
+allocation_count = Allocate.objects.filter(sess_id=session, prog_id=programme, dept_id=dept, type_id=type_id).count()
 
 
-for i in correct:
-    print(i)
-    user = User.objects.get(username=i[0])
-    user.phone = i[1]
-    user.email = i[2]
-    user.is_verified = True
-    user.save()
-    print(user)
+programme = Programme.objects.get(programme_title='ND')
+counter = 0
+match_studs_list = list(Allocate.objects.filter(type_id=type_id, dept_id=dept, sess_id=session, prog_id=programme))
+
+while match_studs_list:
+    for stud in match_studs_list:
+        stud_group_members = Allocate.objects.filter(group_id=stud.group_id, type_id=type_id, dept_id=dept, sess_id=session, prog_id=programme)
+
+        for member in stud_group_members:
+            match_studs_list.remove(member)
+
+        counter += 1
+
+print(counter)

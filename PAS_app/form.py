@@ -154,15 +154,16 @@ class StudentProfileForm(forms.ModelForm):
         }
     ))
 
-    programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
-        attrs={
-            'class':'form-control',
-        }
-    ))
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
+    #     attrs={
+    #         'class':'form-control',
+    #     }
+    # ))
 
     class Meta:
         model = StudentProfile
-        fields = ('session', 'programme', 'student_type')
+        # fields = ('session', 'programme', 'student_type')
+        fields = ('session', 'student_type')
 
 class MultipleSuperForm(forms.Form):
     file = forms.FileField(help_text='Select CSV file',widget=forms.FileInput(
@@ -206,11 +207,11 @@ class MultipleStudentForm(forms.Form):
         }
     ))
 
-    programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
-        attrs={
-            'class':'form-control',
-        }
-    ))
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select academic programme", widget=forms.Select(
+    #     attrs={
+    #         'class':'form-control',
+    #     }
+    # ))
 
     student_type = forms.ModelChoiceField(queryset=StudentType.objects.all(), empty_label="(Select Student type)", required=True, help_text="Select either Regular or Evening", widget=forms.Select(
         attrs={
@@ -228,8 +229,8 @@ class MultipleStudentForm(forms.Form):
         handler = FileHandler(csv_obj)
         handler.validate_stud_file()
 
-        return file
 
+        return file
 class SupervisorProfileForm(forms.ModelForm):
 
     rank_id = forms.ModelChoiceField(queryset=SupervisorRank.objects.all(), empty_label="(Select Supervisor Rank)", required=True, help_text="Select either level from the dropdown list", widget=forms.Select(
@@ -413,3 +414,6 @@ class DepartmentForm(forms.ModelForm):
         model = Department
         fields = ('dept_title', 'dept_desc', 'dept_logo')
 
+class ApproveTopicForm(FilesForm):
+    def clean(self):
+        pass

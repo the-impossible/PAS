@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'PAS_auth',
     'PAS_app',
+    'PAS_assessment',
+    'PAS_hallAllocation',
 ]
 
 MIDDLEWARE = [
@@ -110,7 +112,9 @@ STATICFILES_DIRS = [STATIC_DIR,]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'PAS_auth.view.LoginView'
+# LOGIN_URL = 'PAS_auth.view.LoginView'
+LOGIN_URL = 'auth:login'
 
-SESSION_COOKIE_AGE = 1200
+SESSION_COOKIE_AGE = 216000
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
