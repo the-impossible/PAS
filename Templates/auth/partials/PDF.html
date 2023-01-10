@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student to Supervisor Allocation</title>
+    <style>
+        table {
+        border: 1px solid #ccc;
+        border-collapse: collapse;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        table-layout: fixed;
+        }
+
+        table caption {
+        font-size: 1.5em;
+        margin: .5em 0 .75em;
+        }
+
+        table tr {
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        padding: .35em;
+        }
+
+        table th,
+        table td {
+        padding: .625em;
+        text-align: center;
+        }
+
+        table th {
+        font-size: .85em;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row g-4">
+            <div class="app-card-body px-4 col-12">
+                <div class="table-responsive table-bordered">
+                    <h1>Student to Supervisor Allocation</h1>
+                    <table class="table app-table-hover mb-0 text-left caption-top">
+                        <thead>
+                            <tr>
+                                <th class="cell">Venue</th>
+                                <th class="cell">Defense Day.</th>
+                                <th class="cell">Student Name</th>
+                                <th class="cell">RegNo.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% if groupings %}
+                        {% for item in groupings %}
+                        {% for i in item.2 %}
+                        <tr>
+                            {% if forloop.counter == 1 %}
+                                <td rowspan="{{item.2|length}}" class="align-middle">
+                                    <input type="checkbox" data-bs-toggle="tooltip" data-bs-placement="top" title="This deletes the entire group" name="to_delete" class="delete_per_super" value="{{ item.0.super_id }}"> &nbsp; &nbsp;
+                                    {{ forloop.parentloop.counter }}
+                                </td>
+                            {% endif %}
+
+                            {% if forloop.counter == 1 %}
+                                <td rowspan="{{item.2|length}}" class="align-middle">
+                                    {{ item.0.user_id.get_fullname }}
+                                </td>
+                            {% endif %}
+                            {% if forloop.counter == 1 %}
+                                <td rowspan="{{item.2|length}}" class="align-middle">
+                                    {{ item.0.user_id.get_username }}
+                                </td>
+                            {% endif %}
+                            <td>
+                                {{ i.user_id.get_fullname }}
+                            </td>
+                            <td>
+                                {% if item.2|length != 1 %}
+                                    <input type="checkbox" data-bs-toggle="tooltip" data-bs-placement="top" title="This student will be deleted from {{item.1}}" name="to_delete" class="to_delete" value="{{ i.user_id }}">
+                                {% endif %}
+                                {{ i.user_id.username }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

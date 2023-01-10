@@ -12,6 +12,7 @@ six = "*"
 mysqlclient = "*"
 pymysql = "*"
 django-session-timeout = "*"
+xhtml2pdf = "*"
 
 [dev-packages]
 
