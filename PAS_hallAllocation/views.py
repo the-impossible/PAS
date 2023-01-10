@@ -8,6 +8,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from pprint import pprint
 
+from django.template.loader import render_to_string, get_template
+from django.http import HttpResponse
+from io import BytesIO
+from xhtml2pdf import pisa
+
+
 # My app imports
 from PAS_assessment.decorator import validate_department
 from PAS_auth.views import SPLIT
@@ -15,6 +21,8 @@ from PAS_auth.views import SPLIT
 from PAS_auth.models import (
     Programme,
     StudentProfile,
+    Session,
+    StudentType,
     Allocate,
 )
 from PAS_hallAllocation.models import (
@@ -373,6 +381,20 @@ class ManageHallAllocationView(LoginRequiredMixin, View):
 
     def post(self, request, dept_id):
         form = RStudHallAllocationForm(request.POST, dept_id=dept_id)
+
+        if 'print' in request.POST:
+            prog_id = Programme.objects.get(programme_title=request.POST.get('prog'))
+            sess_id = Session.objects.get(session_title=request.POST.get('sess'))
+            type_id = StudentType.objects.get(type_title=request.POST.get('type'))
+            groupings = self.retrieve(prog_id, sess_id, type_id, dept_id)
+
+            # PRINTING
+            pdf = render_to_pdf('hall/partials/PDF.html', {'groupings':groupings})
+            if pdf:
+                pdf['Content-Disposition'] = 'inline; attachment; filename=Hall Allocation.pdf'
+                return HttpResponse(pdf, content_type='application/pdf')
+            return HttpResponse('Something went wrong!')
+
         if form.is_valid():
 
             prog_id = form.cleaned_data.get('prog_id')
@@ -381,8 +403,7 @@ class ManageHallAllocationView(LoginRequiredMixin, View):
 
             groupings = self.retrieve(prog_id, sess_id, type_id, dept_id)
 
-            return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form, 'groupings':groupings})
-        print(form.errors)
+            return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form, 'groupings':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
 
         return render(request, 'hall/manage_hall_allocation.html', context={'dept':dept_id, 'form':form})
 
@@ -410,3 +431,12 @@ class CRAssessorHallAllocationView(LoginRequiredMixin, View):
 
         messages.error(request, 'Failed in allocating accessor to venue')
         return render(request, 'hall/assessor_to_hall.html', context={'dept':dept_id, 'form':form, 'type':self.view_type, 'allocations':allocations})
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode('ISO-8859-1')), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None

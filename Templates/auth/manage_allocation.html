@@ -33,6 +33,15 @@
 									   Retrieve Allocation
 								   </a>
 							   </div>
+							   <div class="col-auto">
+								<form action="" method="post">
+									{% csrf_token %}
+									<input type="hidden" name="prog" value="{{prog}}">
+									<input type="hidden" name="sess" value="{{sess}}">
+									<input type="hidden" name="type" value="{{type}}">
+									<button class="btn app-btn-secondary" name="print"><i class="fa fa-file"></i> Print Allocation</button>
+								</form>
+							</div>
 						   </div><!--//row-->
 					   </div><!--//table-utilities-->
 				   </div><!--//col-auto-->

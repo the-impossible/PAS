@@ -27,11 +27,20 @@
 						<div class="page-utilities">
 						   <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
 							   <div class="col-auto">
-
-								   <a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#retrieveAllocationModal">
-									   <i class="fa fa-download"></i>
-									   Retrieve Allocation
-								   </a>
+									<a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#retrieveAllocationModal">
+										<i class="fa fa-download"></i>
+										Retrieve Allocation
+									</a>
+							   </div>
+							   <div class="col-auto">
+								   <form action="" method="post">
+									   {% csrf_token %}
+									   <input type="hidden" name="prog" value="{{prog}}">
+									   <input type="hidden" name="sess" value="{{sess}}">
+									   <input type="hidden" name="type" value="{{type}}">
+									   <button type="submit" class="btn app-btn-secondary" name="print"><i class="fa fa-file"></i>
+										   Print Allocation</button>
+								   </form>
 							   </div>
 						   </div><!--//row-->
 					   </div><!--//table-utilities-->
@@ -42,7 +51,7 @@
 				<!--//row-->
 
 				<div class="row g-4">
-					<div class="col-12">
+					<div class="col-12" id="content">
 						<div
 							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
 						>
@@ -120,5 +129,5 @@
 			width: 'resolve'
 		});
 	</script>
-</div>
+	</div>
 {% endblock body %}

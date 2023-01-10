@@ -69,6 +69,7 @@ from PAS_auth.decorator import *
 
 PASSWORD = '12345678'
 SPLIT = 6
+from PAS_hallAllocation.views import render_to_pdf
 
 class EnforceAuth(LoginRequiredMixin):
     login_url = 'auth:login'
@@ -1224,9 +1225,21 @@ class ManageAllocationsView(LoginRequiredMixin, View):
 
                 return render(request, 'auth/manage_allocation.html', context={'dept':dept, 'form':self.form, 'groupings':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
             else:
-                prog_id = Programme.objects.get(programme_title=request.POST.get('prog'))
-                sess_id = Session.objects.get(session_title=request.POST.get('sess'))
-                type_id = StudentType.objects.get(type_title=request.POST.get('type'))
+                try:
+                    prog_id = Programme.objects.get(programme_title=request.POST.get('prog'))
+                    sess_id = Session.objects.get(session_title=request.POST.get('sess'))
+                    type_id = StudentType.objects.get(type_title=request.POST.get('type'))
+                except ObjectDoesNotExist:
+                    messages.error(request, 'Error getting information!')
+                    return redirect('auth:manage_allocate', dept_id)
+
+                if 'print' in request.POST:
+                    groupings = self.retrieve(prog_id, sess_id, type_id)
+                    pdf = render_to_pdf('auth/partials/PDF.html', {'groupings':groupings})
+                    if pdf:
+                        pdf['Content-Disposition'] = 'inline; attachment; filename=Student_to_Supervisor_Allocation.pdf'
+                        return HttpResponse(pdf, content_type='application/pdf')
+                    return HttpResponse('Something went wrong!')
 
                 check_list = request.POST.getlist('to_delete')
                 if check_list:
