@@ -47,6 +47,16 @@ class FileHandler:
             if existing_users.exists():
                 raise forms.ValidationError(f'File contains already registered registration numbers! {existing_users[0].username}')
 
+    def validate_topic_upload(self):
+        for col in self.csv_obj:
+            existing_users = User.objects.filter(username=col[0])
+            if len(col) != 2:raise forms.ValidationError('Invalid CSV FILE Format!!')
+            for row in col:
+                if row == '':raise forms.ValidationError('Invalid CSV, Missing Data!!')
+
+            if existing_users.exists():
+                raise forms.ValidationError(f'File contains already registered registration numbers! {existing_users[0].username}')
+
 class FilesForm(forms.ModelForm):
 
     file = forms.FileField(help_text='Select Student CSV file',widget=forms.FileInput(
