@@ -58,7 +58,18 @@
                         </ul>
                     </div>
                 </li><!--//nav-item-->
+                {% endif %}
+
                 {% if request.user.is_super %}
+                <li class="nav-item">
+                    <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
+                    <a class="nav-link" href="{% url 'hall:view_assessment_hall' %}">
+                        <span class="nav-icon">
+                            <i class="fa fa-city" style="font-size: 1.1rem;"></i>
+                        </span>
+                        <span class="nav-link-text">Assessment Venue</span>
+                    </a><!--//nav-link-->
+                </li><!--//nav-item-->
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'assess:what_assess' request.session.dept_id %}">
                         <span class="nav-icon">
@@ -67,10 +78,21 @@
                                 <path fill-rule="evenodd" d="M13.81 4H2.19a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zM2.19 3A2 2 0 0 0 .198 5.181l.637 7A2 2 0 0 0 2.826 14h10.348a2 2 0 0 0 1.991-1.819l.637-7A2 2 0 0 0 13.81 3H2.19z"/>
                             </svg>
                         </span>
-                         <span class="nav-link-text">Assessment</span>
+                         <span class="nav-link-text">Make Assessment</span>
                     </a><!--//nav-link-->
                 </li><!--//nav-item-->
+
                 {% endif %}
+                {% if not request.user.is_superuser and not request.user.is_super %}
+                <li class="nav-item">
+                    <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
+                    <a class="nav-link" href="{% url 'hall:view_venue' %}">
+                        <span class="nav-icon">
+                            <i class="fa fa-city" style="font-size: 1.1rem;"></i>
+                        </span>
+                        <span class="nav-link-text">Defense Venue</span>
+                    </a><!--//nav-link-->
+                </li>
                 {% endif %}
                 {% comment %}
                 <li class="nav-item has-submenu">

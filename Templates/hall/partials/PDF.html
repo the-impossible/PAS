@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,25 +17,25 @@
         }
 
         table caption {
-        font-size: 1.5em;
-        margin: .5em 0 .75em;
+        font-size: 24px;
+        margin: 8px 0 12px;
         }
 
         table tr {
         background-color: #f8f8f8;
         border: 1px solid #ddd;
-        padding: .35em;
+        /* padding: .35em; */
         }
 
         table th,
         table td {
-        padding: .625em;
+        /* padding: .625em; */
         text-align: center;
         }
 
         table th {
-        font-size: .85em;
-        letter-spacing: .1em;
+        font-size: 14px;
+        letter-spacing: 2px;
         text-transform: uppercase;
         }
     </style>
@@ -45,7 +46,7 @@
             <div class="app-card-body px-4 col-12">
                 <div class="table-responsive table-bordered">
                     <h1>Hall Allocation</h1>
-                    <table class="table app-table-hover mb-0 text-left caption-top">
+                    <table class="table app-table-hover mb-0 text-left caption-top" cellpadding="3">
                         <thead>
                             <tr>
                                 <th class="cell">Venue</th>

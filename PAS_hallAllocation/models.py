@@ -51,7 +51,6 @@ class StudHallAllocation(models.Model):
     prog_id = models.ForeignKey(Programme, on_delete=models.CASCADE)
     type_id = models.ForeignKey(StudentType, on_delete=models.CASCADE)
 
-
     def __str__(self):
         return f'{self.stud_id}: {self.stud_id.user_id.get_fullname()}'
 
