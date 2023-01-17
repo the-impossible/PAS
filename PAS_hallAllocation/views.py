@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from pprint import pprint
 
 from django.template.loader import render_to_string, get_template
@@ -21,6 +22,7 @@ from PAS_auth.views import SPLIT
 from PAS_auth.models import (
     Programme,
     StudentProfile,
+    SupervisorProfile,
     Session,
     StudentType,
     Allocate,
@@ -41,6 +43,8 @@ from PAS_hallAllocation.form import (
     MStudHallAllocationForm,
     AssessHallAllocationForm,
 )
+
+from PAS_auth.decorator import *
 
 # Create your views here.
 @method_decorator(validate_department, name="get")
@@ -388,6 +392,8 @@ class ManageHallAllocationView(LoginRequiredMixin, View):
             type_id = StudentType.objects.get(type_title=request.POST.get('type'))
             groupings = self.retrieve(prog_id, sess_id, type_id, dept_id)
 
+            # return render(request, 'hall/partials/PDF.html', context={'dept':dept_id, 'form':form, 'groupings':groupings, 'prog':prog_id, 'sess':sess_id, 'type':type_id})
+
             # PRINTING
             pdf = render_to_pdf('hall/partials/PDF.html', {'groupings':groupings})
             if pdf:
@@ -436,7 +442,53 @@ def render_to_pdf(template_src, context_dict={}):
     template = get_template(template_src)
     html = template.render(context_dict)
     result = BytesIO()
+    # pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result, encoding='UTF-8')
     pdf = pisa.pisaDocument(BytesIO(html.encode('ISO-8859-1')), result)
     if not pdf.err:
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
+
+@method_decorator(has_updated, name="get")
+class CheckHallAllocationView(LoginRequiredMixin, View):
+
+    def get(self, request):
+        try:
+            user = StudentProfile.objects.get(user_id=request.user)
+            allocation = StudHallAllocation.objects.get(stud_id=user)
+            try:
+                assessor = AssessorHallAllocation.objects.get(sess_id=allocation.sess_id, dept_id=allocation.dept_id, type_id=allocation.type_id, prog_id=allocation.prog_id, venue_id=allocation.venue_id)
+            except AssessorHallAllocation.DoesNotExist:
+                messages.info(request, 'You have been allocated but assessor has not been assigned yet!')
+                return render(request, 'hall/view_venue.html', context={'allocation':allocation})
+
+            return render(request, 'hall/view_venue.html', context={'allocation':allocation, 'assessor':assessor})
+        except StudentProfile.DoesNotExist:
+            messages.error(request, 'Profile not found!')
+        except StudHallAllocation.DoesNotExist:
+            messages.info(request, 'You have not been allocated yet!')
+        except ValidationError:
+            messages.error(request, 'User not found!')
+        return redirect('auth:dashboard')
+
+
+@method_decorator(has_updated, name="get")
+class CheckAssessmentHallView(LoginRequiredMixin, View):
+
+    def get(self, request):
+        try:
+            user = SupervisorProfile.objects.get(user_id=request.user)
+            assessor = AssessorHallAllocation.objects.get(
+                Q(chief_assessor=user) |
+                Q(assessor_one=user) |
+                Q(assessor_two=user)
+            )
+            return render(request, 'hall/view_venue.html', context={'assessor':assessor})
+        except SupervisorProfile.DoesNotExist:
+            messages.error(request, 'Profile not found!')
+        except AssessorHallAllocation.DoesNotExist:
+            messages.info(request, 'You are not given any assessor role!')
+            return render(request, 'hall/view_venue.html')
+        except ValidationError:
+            messages.error(request, 'User not found!')
+        return redirect('auth:dashboard')
+
