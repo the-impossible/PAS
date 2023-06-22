@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block title %} Assess Students Seminar {% endblock %}
+{% block title %} Assess Students Project {% endblock %}
 {% block head %}
 {% include "partials/auth_head.html" %}
 {%endblock %}
@@ -28,7 +28,7 @@
 								><i class="fa fa-arrow-left"></i
 							></a>
 							{% endif %}
-							{{ dept }} Seminar Assessment
+							{{ dept }} Project Assessment
 						</h1>
 					</div>
 					<div class="col-auto">
@@ -63,7 +63,7 @@
 								</div>
 							</div>
 							<div class="app-card-body px-4 col-12">
-								<p class="text-center mb-2">Use the form to grade student seminar defence</p>
+								<p class="text-center mb-2">Use the form to grade student project defence</p>
 								<form action="" method="post">
 									<div id="form-errors">{{ form_errors }}</div>
 									{% csrf_token %}
@@ -119,7 +119,7 @@
 												{% else %}
 												<td class=""><a href="{% url 'assess:ud_assess_seminar' dept.pk assessment.pk %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
 												{% endif %}
-												<td class="text-center">{{ assessment.seminar_defense_grade }}</td>
+												<td class="text-center">{{ assessment.project_defense_grade }}</td>
 												<td class="">{{ assessment.assessor_id.user_id }}</td>
 												<td class="">
 

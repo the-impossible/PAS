@@ -70,12 +70,17 @@
 						        </div><!--//row-->
 						    </div><!--//app-card-header-->
 						    <div class="app-card-body px-4">
-							    <div class="intro">This Page is for student project assessment </div>
+							    <div class="intro">This Page is for student project assessment</div>
 						    </div><!--//app-card-body-->
 						    <div class="app-card-footer p-2 mt-auto">
 							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
 						    </div><!--//app-card-footer-->
-                            <a class="app-card-link-mask" href=""></a>
+
+							{% if request.user.is_staff %}
+                            <a class="app-card-link-mask" href="{% url 'assess:programme_selection' dept.pk %}"></a>
+							{% else %}
+                            <a class="app-card-link-mask" href="{% url 'assess:assess_project' request.session.dept_id %}"></a>
+							{% endif %}
 						</div><!--//app-card-->
 				    </div>
                 </div>

@@ -62,11 +62,71 @@ class SeminarAssessmentForm(forms.ModelForm):
             check = check.exclude(pk=self.instance.pk)
 
         if check.exists():
-            raise ValidationError('Assessment already exist for the student try editing!')
+            existing_seminar_grade = check.get(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id).seminar_defense_grade
+
+            if seminar_grade == 0:
+                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
+
+            if existing_seminar_grade > 0:
+                raise ValidationError('Assessment already exist for the student try editing!')
+
 
     class Meta:
         model = Assessment
         fields = ('student_id', 'seminar_defense_grade')
+
+class ProjectAssessmentForm(forms.ModelForm):
+
+    student_id = forms.ModelChoiceField(queryset=StudHallAllocation.objects.all(), empty_label="(Select Student)", help_text="Select Student", required=True, widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    project_defense_grade = forms.CharField(help_text='Enter project defense grade', widget=forms.TextInput(
+        attrs={
+            'class':'form-control',
+            'type':'number'
+        }
+    ))
+
+    def __init__(self, *args, **kwargs):
+        self.assessor = kwargs.pop('assessor', '')
+        super(ProjectAssessmentForm, self).__init__(*args, **kwargs)
+        self.fields['student_id'].queryset=StudHallAllocation.objects.filter(venue_id=self.assessor.venue_id, dept_id=self.assessor.dept_id, prog_id=self.assessor.prog_id, type_id=self.assessor.type_id)
+        self.fields['student_id'].widget.attrs['style'] = 'width:280px;'
+
+    def clean(self):
+        project_grade = int(self.cleaned_data.get('project_defense_grade'))
+        student_id = self.cleaned_data.get('student_id')
+
+        if project_grade > 60:
+            raise ValidationError('Maximum grade is 60, try again!')
+
+        if project_grade < 0:
+            raise ValidationError('Positive grades only, try again!')
+
+        check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
+
+        if self.instance:
+            check = check.exclude(pk=self.instance.pk)
+
+
+        if check.exists():
+
+            existing_project_grade = check.get(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id).project_defense_grade
+
+            if project_grade == 0:
+                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
+
+            if existing_project_grade > 0:
+                raise ValidationError('Assessment already exist for the student try editing!')
+
+
+
+    class Meta:
+        model = Assessment
+        fields = ('student_id', 'project_defense_grade')
 
 
 class ProgrammeTypeSelectionForm(forms.Form):

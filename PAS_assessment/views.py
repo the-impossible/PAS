@@ -30,6 +30,7 @@ from PAS_assessment.form import(
     SeminarAssessmentForm,
     ProgrammeTypeSelectionForm,
     SuperSeminarAssessmentForm,
+    ProjectAssessmentForm,
 )
 
 from PAS_assessment.models import (
@@ -53,7 +54,7 @@ class CRSeminarAssessmentView(LoginRequiredMixin, View):
 
                 form = SeminarAssessmentForm(assessor=assessor)
 
-                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor).order_by('-created')
+                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, seminar_defense_grade__gt=0).order_by('-created')
 
                 return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
             messages.error(request, 'You are not authorized!')
@@ -67,21 +68,31 @@ class CRSeminarAssessmentView(LoginRequiredMixin, View):
             supervisor = SupervisorProfile.objects.get(user_id=request.user)
             assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
 
-            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor).order_by('-created')
+            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, seminar_defense_grade__gt=0).order_by('-created')
 
             form = SeminarAssessmentForm(request.POST, assessor=assessor)
 
             if form.is_valid():
                 grading = form.save(commit=False)
-                grading.assessor_id = supervisor
-                grading.dept_id = assessor.dept_id
-                grading.sess_id = assessor.sess_id
-                grading.prog_id = assessor.prog_id
-                grading.type_id = assessor.type_id
-                grading.save()
+                student_id = grading.student_id
 
-                messages.success(request, f'{grading.student_id} seminar has been graded')
-                return redirect('assess:assess_seminar', dept_id.pk)
+                try:
+                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, student_id=student_id)
+
+                    assessment.seminar_defense_grade = grading.seminar_defense_grade
+                    assessment.save()
+
+                except Assessment.DoesNotExist:
+
+                    grading.assessor_id = supervisor
+                    grading.dept_id = assessor.dept_id
+                    grading.sess_id = assessor.sess_id
+                    grading.prog_id = assessor.prog_id
+                    grading.type_id = assessor.type_id
+                    grading.save()
+
+                    messages.success(request, f'{grading.student_id} seminar has been graded')
+                    return redirect('assess:assess_seminar', dept_id.pk)
 
             return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
 
@@ -230,4 +241,63 @@ class UDSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
 
         return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
 
+# PROJECT
+@method_decorator(is_chief_assessor, name="get")
+@method_decorator(is_chief_assessor, name="post")
+class CRProjectAssessmentView(LoginRequiredMixin, View):
+    def get(self, request, dept_id):
+        try:
+            if not request.user.is_staff:
+                supervisor = SupervisorProfile.objects.get(user_id=request.user)
+                assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
+
+                form = ProjectAssessmentForm(assessor=assessor)
+
+                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
+
+                return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
+
+            messages.error(request, 'You are not authorized!')
+            return redirect('assess:what_assess', dept_id)
+
+        except ObjectDoesNotExist():
+            messages.error(request, 'You are not authorized!')
+            return redirect('assess:what_assess', dept_id)
+
+    def post(self, request, dept_id):
+        if not request.user.is_staff:
+            supervisor = SupervisorProfile.objects.get(user_id=request.user)
+            assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
+
+            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
+
+            form = ProjectAssessmentForm(request.POST, assessor=assessor)
+
+
+            if form.is_valid():
+
+                grading = form.save(commit=False)
+                student_id = grading.student_id
+
+                try:
+                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, student_id=student_id)
+
+                    assessment.project_defense_grade = grading.project_defense_grade
+                    assessment.save()
+
+                except Assessment.DoesNotExist:
+                    grading.assessor_id = supervisor
+                    grading.dept_id = assessor.dept_id
+                    grading.sess_id = assessor.sess_id
+                    grading.prog_id = assessor.prog_id
+                    grading.type_id = assessor.type_id
+                    grading.save()
+
+                messages.success(request, f'{grading.student_id} project defense has been graded')
+                return redirect('assess:assess_project', dept_id.pk)
+
+            return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
+
+        messages.error(request, 'Something went wrong!')
+        return redirect('assess:what_assess', dept_id)
 

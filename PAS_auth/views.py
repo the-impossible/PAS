@@ -190,7 +190,25 @@ class DashboardView(LoginRequiredMixin, View):
     login_url = 'auth:login'
     @method_decorator(has_updated)
     def get(self, request):
-        return render(request, 'auth/dashboard.html')
+
+        context = {}
+
+        if request.user.is_staff:
+            prog_nd = Programme.objects.get(programme_title="ND")
+            prog_hnd = Programme.objects.get(programme_title="HND")
+            dept = Department.objects.all().count()
+            nd = StudentProfile.objects.filter(programme_id=prog_nd).count()
+            hnd = StudentProfile.objects.filter(programme_id=prog_hnd).count()
+            sup = SupervisorProfile.objects.filter().count()
+
+            context = {
+                'dept': dept,
+                'nd': nd,
+                'hnd': hnd,
+                'sup': sup,
+            }
+
+        return render(request, 'auth/dashboard.html', context)
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
