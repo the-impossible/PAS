@@ -100,6 +100,8 @@ class ProjectAssessmentForm(forms.ModelForm):
         project_grade = int(self.cleaned_data.get('project_defense_grade'))
         student_id = self.cleaned_data.get('student_id')
 
+        print(f"rough: {project_grade}")
+
         if project_grade > 60:
             raise ValidationError('Maximum grade is 60, try again!')
 

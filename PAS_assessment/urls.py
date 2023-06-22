@@ -7,6 +7,7 @@ from PAS_assessment.views import (
     CRSuperAssessorSeminarAssessmentView,
 
     CRProjectAssessmentView,
+    UDProjectAssessmentView,
 
     ProgrammeTypeSelectionView,
 
@@ -23,6 +24,7 @@ urlpatterns = [
     path('super_assess_seminar/<str:dept_id>/<str:type_id>/<str:prog_id>/<str:sess_id>', CRSuperAssessorSeminarAssessmentView.as_view(), name='super_assess_seminar'),
     # PROJECT
     path('assess_project/<str:dept_id>', CRProjectAssessmentView.as_view(), name='assess_project'),
+    path('ud_assess_project/<str:dept_id>/<str:assess_id>', UDProjectAssessmentView.as_view(), name='ud_assess_project'),
 
     path('programme_selection/<str:dept_id>', ProgrammeTypeSelectionView.as_view(), name='programme_selection'),
 

@@ -137,9 +137,14 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
                     grading.assessor_id = supervisor
                     grading.save()
                     messages.success(request, f'{grading.student_id} seminar grade has been edited')
+                    return redirect('assess:assess_seminar', dept_id.pk)
+
+                messages.error(request, f'{form.errors.as_text()}')
+                return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
 
             elif 'delete' in request.POST:
-                assessment.delete()
+                assessment.seminar_defense_grade = 0
+                assessment.save()
                 messages.success(request, 'Assessment has been deleted!')
 
             else:
@@ -297,6 +302,65 @@ class CRProjectAssessmentView(LoginRequiredMixin, View):
                 return redirect('assess:assess_project', dept_id.pk)
 
             return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
+
+        messages.error(request, 'Something went wrong!')
+        return redirect('assess:what_assess', dept_id)
+
+
+@method_decorator(is_chief_assessor, name="get")
+@method_decorator(is_chief_assessor, name="post")
+class UDProjectAssessmentView(LoginRequiredMixin, View):
+    view_type = 'edit'
+    def get(self, request, dept_id, assess_id):
+        try:
+            if not request.user.is_staff:
+                supervisor = SupervisorProfile.objects.get(user_id=request.user)
+                assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
+                assessment = Assessment.objects.get(assess_id=assess_id)
+
+                form = ProjectAssessmentForm(assessor=assessor, instance=assessment)
+
+                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
+
+
+                return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments, 'type':self.view_type})
+
+            messages.error(request, 'You are not authorized!')
+            return redirect('assess:what_assess', dept_id)
+        except ObjectDoesNotExist():
+            messages.error(request, 'You are not authorized!')
+            return redirect('assess:what_assess', dept_id)
+
+    def post(self, request, dept_id, assess_id):
+        if not request.user.is_staff:
+            supervisor = SupervisorProfile.objects.get(user_id=request.user)
+            assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
+
+            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
+            assessment = Assessment.objects.get(assess_id=assess_id)
+
+            if 'edit' in request.POST:
+                form = ProjectAssessmentForm(request.POST, assessor=assessor, instance=assessment)
+
+                if form.is_valid():
+                    grading = form.save(commit=False)
+                    grading.assessor_id = supervisor
+                    grading.save()
+                    messages.success(request, f'{grading.student_id} project grade has been edited')
+                    return redirect('assess:assess_project', dept_id.pk)
+
+                messages.error(request, f'{form.errors.as_text()}')
+                return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
+
+            elif 'delete' in request.POST:
+                assessment.project_defense_grade = 0
+                assessment.save()
+                messages.success(request, 'Assessment has been deleted!')
+
+            else:
+                messages.error(request, 'Something went wrong!')
+
+            return redirect('assess:assess_project', dept_id.pk)
 
         messages.error(request, 'Something went wrong!')
         return redirect('assess:what_assess', dept_id)

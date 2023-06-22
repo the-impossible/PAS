@@ -117,7 +117,7 @@
 												{% if request.user.is_staff %}
 												<td class=""><a href="{% url 'assess:ud_super_assess_seminar' dept.pk assessment.prog_id.pk assessment.type_id.pk assessment.sess_id.pk assessment.pk %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
 												{% else %}
-												<td class=""><a href="{% url 'assess:ud_assess_seminar' dept.pk assessment.pk %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
+												<td class=""><a href="{% url 'assess:ud_assess_project' dept.pk assessment.pk %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
 												{% endif %}
 												<td class="text-center">{{ assessment.project_defense_grade }}</td>
 												<td class="">{{ assessment.assessor_id.user_id }}</td>
@@ -126,7 +126,7 @@
 													{% if request.user.is_staff %}
 													<form action="{% url 'assess:ud_super_assess_seminar' dept.pk assessment.prog_id.pk assessment.type_id.pk assessment.sess_id.pk assessment.pk %}" method="post">
 													{% else %}
-													<form action="{% url 'assess:ud_assess_seminar' dept.pk assessment.pk %}" method="post">
+													<form action="{% url 'assess:ud_assess_project' dept.pk assessment.pk %}" method="post">
 													{% endif %}
 														{% csrf_token %}
 														<button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
