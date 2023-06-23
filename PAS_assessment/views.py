@@ -28,6 +28,7 @@ from PAS_auth.models import (
 
 from PAS_assessment.form import(
     SeminarAssessmentForm,
+    SuperProjectAssessmentForm,
     ProgrammeTypeSelectionForm,
     SuperSeminarAssessmentForm,
     ProjectAssessmentForm,
@@ -41,6 +42,7 @@ from PAS_assessment.models import (
 @method_decorator(is_chief_assessor, name="get")
 class WhatAssessmentView(LoginRequiredMixin, View):
     def get(self, request, dept_id):
+
         return render(request, 'assess/what_assess.html', context={'dept':dept_id})
 
 @method_decorator(is_chief_assessor, name="get")
@@ -58,10 +60,10 @@ class CRSeminarAssessmentView(LoginRequiredMixin, View):
 
                 return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
             messages.error(request, 'You are not authorized!')
-            return redirect('assess:what_assess', dept_id)
-        except ObjectDoesNotExist():
+            return redirect('assess:what_assess', dept_id.dept_id)
+        except Assessment.DoesNotExist:
             messages.error(request, 'You are not authorized!')
-            return redirect('assess:what_assess', dept_id)
+            return redirect('assess:what_assess', dept_id.dept_id)
 
     def post(self, request, dept_id):
         if not request.user.is_staff:
@@ -97,7 +99,7 @@ class CRSeminarAssessmentView(LoginRequiredMixin, View):
             return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
 
         messages.error(request, 'Something went wrong!')
-        return redirect('assess:what_assess', dept_id)
+        return redirect('assess:what_assess', dept_id.dept_id)
 
 @method_decorator(is_chief_assessor, name="get")
 @method_decorator(is_chief_assessor, name="post")
@@ -158,19 +160,34 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
 @method_decorator(is_super_assessor, name="get")
 @method_decorator(is_super_assessor, name="post")
 class ProgrammeTypeSelectionView(LoginRequiredMixin, View):
+
     programmes = Programme.objects.all()
     form = ProgrammeTypeSelectionForm()
-    def get(self, request, dept_id):
-        return render(request, 'assess/seminar_selection.html', context={'dept':dept_id, 'programmes':self.programmes, 'form':self.form})
 
-    def post(self, request, dept_id):
+    def get(self, request, dept_id, grade_type):
+
+        if grade_type == 's' or grade_type == 'p':
+            return render(request, 'assess/seminar_selection.html', context={'dept':dept_id, 'programmes':self.programmes, 'form':self.form, 'grade_type':'seminar'})
+
+        messages.error(request, 'Invalid assessment selection')
+
+        return redirect('assess:what_assess', dept_id.dept_id)
+
+
+    def post(self, request, dept_id, grade_type):
         form = ProgrammeTypeSelectionForm(request.POST)
 
         if form.is_valid():
             prog_id = Programme.objects.get(programme_title=request.POST['prog_id'])
-            return redirect(to='assess:super_assess_seminar', dept_id=dept_id.pk, type_id=form.cleaned_data['student_type'].pk, prog_id=prog_id.pk, sess_id=form.cleaned_data['session'].pk)
+
+            if grade_type == 's':
+                return redirect(to='assess:super_assess_seminar', dept_id=dept_id.pk, type_id=form.cleaned_data['student_type'].pk, prog_id=prog_id.pk, sess_id=form.cleaned_data['session'].pk)
+
+            if grade_type == 'p':
+                return redirect(to='assess:super_assess_project', dept_id=dept_id.pk, type_id=form.cleaned_data['student_type'].pk, prog_id=prog_id.pk, sess_id=form.cleaned_data['session'].pk)
 
         messages.error(request, 'Form not valid')
+        print('LETS SEE')
         return render(request, 'assess/seminar_selection.html', context={'dept':dept_id, 'programmes':self.programmes, 'form':form})
 
 @method_decorator(is_super_assessor, name="get")
@@ -178,33 +195,95 @@ class ProgrammeTypeSelectionView(LoginRequiredMixin, View):
 class CRSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
     def get(self, request, dept_id, type_id, prog_id, sess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
+        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, seminar_defense_grade__gt=0).order_by('-created')
 
         form = SuperSeminarAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
         return render(request, 'assess/cr_seminar.html', context={'dept':department_id, 'form':form, 'assessments':assessments})
 
     def post(self, request, dept_id, type_id, prog_id, sess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
+        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, seminar_defense_grade__gt=0).order_by('-created')
         form = SuperSeminarAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
 
         if form.is_valid():
             grading = form.save(commit=False)
+            student_id = grading.student_id
+
             if request.user.is_superuser:
                 super_id = assessments.latest('created').assessor_id
             else:
                 super_id = SupervisorProfile.objects.get(user_id=request.user)
-            grading.assessor_id = super_id
-            grading.dept_id = dept_id
-            grading.sess_id = Session.objects.get(id=sess_id)
-            grading.prog_id = Programme.objects.get(id=prog_id)
-            grading.type_id = StudentType.objects.get(id=type_id)
-            grading.save()
+                assessor = super_id
 
-            messages.success(request, f'{grading.student_id} seminar has been graded')
-            return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
+                try:
+                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=type_id, prog_id=prog_id, sess_id=sess_id, student_id=student_id)
 
+                    assessment.seminar_defense_grade = grading.seminar_defense_grade
+                    assessment.save()
+
+                except Assessment.DoesNotExist:
+
+                    grading.assessor_id = super_id
+                    grading.dept_id = dept_id
+                    grading.sess_id = Session.objects.get(id=sess_id)
+                    grading.prog_id = Programme.objects.get(id=prog_id)
+                    grading.type_id = StudentType.objects.get(id=type_id)
+                    grading.save()
+
+                    messages.success(request, f'{grading.student_id} seminar has been graded')
+                    return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
+
+
+        messages.error(request, f'{form.errors.as_text()}')
         return render(request, 'assess/cr_seminar.html', context={'dept':department_id, 'form':form, 'assessments':assessments})
+
+@method_decorator(is_super_assessor, name="get")
+@method_decorator(is_super_assessor, name="post")
+class CRSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
+    def get(self, request, dept_id, type_id, prog_id, sess_id):
+        department_id = dept_id
+        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
+
+        form = SuperProjectAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
+        return render(request, 'assess/cr_project.html', context={'dept':department_id, 'form':form, 'assessments':assessments})
+
+    def post(self, request, dept_id, type_id, prog_id, sess_id):
+        department_id = dept_id
+        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
+        form = SuperProjectAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
+
+        if form.is_valid():
+            grading = form.save(commit=False)
+            student_id = grading.student_id
+
+            if request.user.is_superuser:
+                super_id = assessments.latest('created').assessor_id
+            else:
+                super_id = SupervisorProfile.objects.get(user_id=request.user)
+                assessor = super_id
+
+                try:
+                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=type_id, prog_id=prog_id, sess_id=sess_id, student_id=student_id)
+
+                    assessment.project_defense_grade = grading.project_defense_grade
+                    assessment.save()
+
+                except Assessment.DoesNotExist:
+
+                    grading.assessor_id = super_id
+                    grading.dept_id = dept_id
+                    grading.sess_id = Session.objects.get(id=sess_id)
+                    grading.prog_id = Programme.objects.get(id=prog_id)
+                    grading.type_id = StudentType.objects.get(id=type_id)
+                    grading.save()
+
+                    messages.success(request, f'{grading.student_id} project defense has been graded')
+                    return redirect('assess:super_assess_project', department_id.pk, type_id, prog_id, sess_id)
+
+
+        messages.error(request, f'{form.errors.as_text()}')
+        return render(request, 'assess/cr_project.html', context={'dept':department_id, 'form':form, 'assessments':assessments})
+
 
 @method_decorator(is_super_assessor, name="get")
 @method_decorator(is_super_assessor, name="post")
@@ -238,13 +317,55 @@ class UDSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
                 messages.success(request, f'{grading.student_id} seminar grade has been edited')
 
         elif 'delete' in request.POST:
-            assessment.delete()
+            assessment.seminar_defense_grade = 0
+            assessment.save()
             messages.success(request, f'Seminar assessment deleted!')
 
         else:
             messages.warning(request, f'Something went wrong!')
 
         return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
+
+@method_decorator(is_super_assessor, name="get")
+@method_decorator(is_super_assessor, name="post")
+class UDSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
+    view_type = 'edit'
+    def get(self, request, dept_id, type_id, prog_id, sess_id, assess_id):
+        department_id = dept_id
+        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
+        assessment = Assessment.objects.get(assess_id=assess_id)
+
+        form = SuperProjectAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, instance=assessment)
+
+        return render(request, 'assess/cr_project.html', context={'dept':department_id, 'form':form, 'assessments':assessments, 'type':self.view_type})
+
+    def post(self, request, dept_id, type_id, prog_id, sess_id, assess_id):
+        department_id = dept_id
+        assessment = Assessment.objects.get(assess_id=assess_id)
+
+        if 'edit' in request.POST:
+            form = SuperProjectAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, instance=assessment)
+
+            if form.is_valid():
+                grading = form.save(commit=False)
+                if request.user.is_superuser:
+                    super_id = assessment.assessor_id
+                else:
+                    super_id = SupervisorProfile.objects.get(user_id=request.user)
+                grading.assessor_id = super_id
+                grading.save()
+
+                messages.success(request, f'{grading.student_id} project defense grade has been edited')
+
+        elif 'delete' in request.POST:
+            assessment.project_defense_grade = 0
+            assessment.save()
+            messages.success(request, f'Seminar assessment deleted!')
+
+        else:
+            messages.warning(request, f'Something went wrong!')
+
+        return redirect('assess:super_assess_project', department_id.pk, type_id, prog_id, sess_id)
 
 # PROJECT
 @method_decorator(is_chief_assessor, name="get")

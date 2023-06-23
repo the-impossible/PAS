@@ -17,7 +17,7 @@
 						<h1 class="app-page-title mb-0">
 							{% if request.user.is_staff %}
 							<a
-								href="{% url 'assess:programme_selection' dept.pk %}"
+								href="{% url 'assess:programme_selection' dept.pk 's' %}"
 								class="btn btn-secodary"
 								><i class="fa fa-arrow-left"></i
 							></a>

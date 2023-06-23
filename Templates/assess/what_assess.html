@@ -48,7 +48,7 @@
 							   <!-- <a class="btn app-btn-secondary" href="#">Create New</a> -->
 						    </div><!--//app-card-footer-->
 							{% if request.user.is_staff %}
-                            <a class="app-card-link-mask" href="{% url 'assess:programme_selection' dept.pk %}"></a>
+                            <a class="app-card-link-mask" href="{% url 'assess:programme_selection' dept.pk 's' %}"></a>
 							{% else %}
                             <a class="app-card-link-mask" href="{% url 'assess:assess_seminar' request.session.dept_id %}"></a>
 							{% endif %}
@@ -77,7 +77,7 @@
 						    </div><!--//app-card-footer-->
 
 							{% if request.user.is_staff %}
-                            <a class="app-card-link-mask" href="{% url 'assess:programme_selection' dept.pk %}"></a>
+                            <a class="app-card-link-mask" href="{% url 'assess:programme_selection' dept.pk 'p' %}"></a>
 							{% else %}
                             <a class="app-card-link-mask" href="{% url 'assess:assess_project' request.session.dept_id %}"></a>
 							{% endif %}
