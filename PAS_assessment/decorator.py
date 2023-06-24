@@ -71,3 +71,21 @@ def is_super_assessor(func):
         return redirect('auth:dashboard')
 
     return wrapper_func
+
+# For validating that the user is a supervisor
+def is_super(func):
+    def wrapper_func(request, *args, **kwargs):
+        try:
+            kwargs['dept_id'] = Department.objects.get(dept_id=kwargs['dept_id'])
+            user = User.objects.get(username=request.user).is_super
+
+            if user:
+                return func(request, *args, **kwargs)
+
+        except ObjectDoesNotExist: pass
+        except ValidationError: pass
+
+        messages.error(request, 'You are not authorized to make assessment!')
+        return redirect('auth:dashboard')
+
+    return wrapper_func

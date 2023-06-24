@@ -29,6 +29,7 @@
                         <span class="nav-link-text">Departments</span>
                     </a><!--//nav-link-->
                 </li><!--//nav-item-->
+
                 {% endif %}
                 {% if not request.user.is_superuser %}
                 <li class="nav-item has-submenu">
@@ -58,6 +59,8 @@
                         </ul>
                     </div>
                 </li><!--//nav-item-->
+
+
                 {% endif %}
 
                 {% if request.user.is_super %}
@@ -81,7 +84,14 @@
                          <span class="nav-link-text">Make Assessment</span>
                     </a><!--//nav-link-->
                 </li><!--//nav-item-->
-
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'assess:grade_student' %}">
+                        <span class="nav-icon">
+                            <i class="fa fa-list-alt" style="font-size: 1.1rem;"></i>
+                        </span>
+                        <span class="nav-link-text">Grade Student</span>
+                    </a><!--//nav-link-->
+                </li>
                 {% endif %}
                 {% if not request.user.is_superuser and not request.user.is_super %}
                 <li class="nav-item">

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Assess Students Seminar {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+	{% include "partials/auth_nav.html" %}
+
+	<div class="app-wrapper">
+		<div class="app-content pt-3 p-md-3 p-lg-4">
+			<div class="container-xl">
+				<div class="row g-3 mb-4 align-items-center justify-content-between">
+					<div class="col-auto">
+						<h1 class="app-page-title mb-0">
+							{% if request.user.is_staff %}
+							<a
+								href="{% url 'assess:programme_selection' dept.pk 's' %}"
+								class="btn btn-secodary"
+								><i class="fa fa-arrow-left"></i
+							></a>
+							{% else %}
+							<a
+								href="{% url 'assess:what_assess' dept.pk %}"
+								class="btn btn-secodary"
+								><i class="fa fa-arrow-left"></i
+							></a>
+							{% endif %}
+							{{ dept }} Seminar Assessment
+						</h1>
+					</div>
+					<div class="col-auto">
+						<div class="page-utilities">
+							<div
+								class="row g-2 justify-content-start justify-content-md-end align-items-center"
+							>
+								<div class="col-auto">
+
+								</div>
+							</div>
+							<!--//row-->
+						</div>
+						<!--//table-utilities-->
+					</div>
+					<!--//col-auto-->
+					{% include "partials/messages.html" %}
+				</div>
+				<div class="row g-4">
+					<div class="col-md-4 col-lg-4 col-sm-12 ">
+						<div class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm">
+							<div class="app-card-header p-3 border-bottom-0">
+								<div class="row align-items-center gx-3">
+									<div class="col-auto">
+										<div class="app-icon-holder icon-holder-mono">
+											<i class="fa fa-medal" style="margin-top: 3px"></i>
+										</div>
+									</div>
+									<div class="col-auto">
+										<h4 class="app-card-title">{{ type | title }} Assessment</h4>
+									</div>
+								</div>
+							</div>
+							<div class="app-card-body px-4 col-12">
+								<p class="text-center mb-2">Use the form to grade student seminar defence</p>
+								<form action="" method="post">
+									<div id="form-errors">{{ form_errors }}</div>
+									{% csrf_token %}
+									{{ form|crispy }}
+									<div class="d-grid gap-2">
+										<button type="submit" name="{{ type }}" class="btn btn-success text-white mt-4">{{ type | title }} Assess</button>
+									</div>
+								</form>
+							</div>
+							<div class="app-card-footer p-4 mt-auto"></div>
+						</div>
+					</div>
+					<div class="col-md-8 col-lg-8 col-sm-12 ">
+						<div
+							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
+						>
+							<div class="app-card-header p-3 border-bottom-0">
+								<div class="row align-items-center gx-3">
+									<div class="col-auto">
+										<div class="app-icon-holder icon-holder-mono">
+											<i class="fa fa-list-alt" style="margin-top: 3px"></i>
+										</div>
+										<!--//icon-holder-->
+									</div>
+									<!--//col-->
+									<div class="col-auto">
+										<h4 class="app-card-title">{{assessor.venue_id}} Assessment Details</h4>
+									</div>
+									<!--//col-->
+								</div>
+								<!--//row-->
+							</div>
+							<!--//app-card-header-->
+							<div class="app-card-body px-4 col-12">
+								<div class="table-responsive table-bordered">
+									<table class="table app-table-hover mb-0 text-left table-sm" id="table_id">
+										<thead class="text-left">
+											<tr>
+												<th class="cell">S/No</th>
+												<th class="cell">Student</th>
+												<th class="cell">Grade</th>
+												<th class="cell">Grade by</th>
+												<th class="cell">Action</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% if assessments %}
+											{% for assessment in assessments %}
+											<tr>
+												<td class="">{{ forloop.counter }}</td>
+												{% if request.user.is_staff %}
+												<td class=""><a href="{% url 'assess:ud_super_assess_seminar' dept.pk assessment.prog_id.pk assessment.type_id.pk assessment.sess_id.pk assessment.pk %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
+												{% else %}
+												<td class=""><a href="{% url 'assess:ud_assess_seminar' dept.pk assessment.pk %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
+												{% endif %}
+												<td class="text-center">{{ assessment.seminar_defense_grade }}</td>
+												<td class="">{{ assessment.assessor_id.user_id }}</td>
+												<td class="">
+
+													{% if request.user.is_staff %}
+													<form action="{% url 'assess:ud_super_assess_seminar' dept.pk assessment.prog_id.pk assessment.type_id.pk assessment.sess_id.pk assessment.pk %}" method="post">
+													{% else %}
+													<form action="{% url 'assess:ud_assess_seminar' dept.pk assessment.pk %}" method="post">
+													{% endif %}
+														{% csrf_token %}
+														<button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
+													</form>
+												</td>
+											</tr>
+											{% endfor %}
+											{% else %}
+											<tr>
+												<td colspan="12">
+													<div class="jumbotron text-center p-5">
+														<p style="font-size: 3em">📂</p>
+														<br />
+														<p style="font-size: 1em; margin-top: -40px">
+															No Assessment Record!
+														</p>
+														<p class="text-muted">
+															Assessments records will be displayed here if found
+														</p>
+													</div>
+												</td>
+											</tr>
+											{% endif %}
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<!--//app-card-body-->
+							<div class="app-card-footer p-4 mt-auto"></div>
+							<!--//app-card-footer-->
+						</div>
+						<!--//app-card-->
+					</div>
+				</div>
+			</div>
+		</div>
+		{% include 'partials/auth_footer.html' %}
+	</div>
+	<!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+	<script>
+		$('.searchable').select2()
+	</script>
+</div>
+
+{% endblock body %}
