@@ -276,13 +276,11 @@ class SupervisorAssessmentForm(forms.ModelForm):
         group_nums = Allocate.objects.filter(super_id=self.assessor).values_list('group_id', flat=True).distinct()
 
         if self.prog == 'nd':
-            allocations_nd = Allocate.objects.filter(super_id=self.assessor, prog_id=Programme.objects.get(programme_title='ND'))
-            # StudHallAllocation.objects.filter(dept_id=self.dept_id, prog_id=self.prog_id, type_id=self.type_id)
+            supervisors_allocation = Allocate.objects.filter(super_id=self.assessor, prog_id=Programme.objects.get(programme_title='ND')).values('stud_id')
+            student_profiles = StudentProfile.objects.filter(stud_id__in=supervisors_allocation)
+            student_hall = StudHallAllocation.objects.filter(stud_id__in=student_profiles)
 
-            # allocations = [StudentProfile.objects.get(stud_id=allocation['stud_id']).stud_id for allocation in allocations_nd]
-            # qs = StudentProfile.objects.filter(stud_id__in=allocations)
-
-            self.fields['student_id'].queryset=allocations_nd
+            self.fields['student_id'].queryset=student_hall
         elif self.prog == 'hnd':
 
             supervisors_allocation = Allocate.objects.filter(super_id=self.assessor, prog_id=Programme.objects.get(programme_title='HND')).values('stud_id')
@@ -318,9 +316,11 @@ class SupervisorAssessmentForm(forms.ModelForm):
 
             if existing_supervisor_grade > 0:
                 raise ValidationError('Assessment already exist for the student try editing!')
+        else:
+            if supervisor_grade == 0:
+                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
 
     class Meta:
         model = Assessment
         fields = ('student_id', 'supervisor_grade')
-
 

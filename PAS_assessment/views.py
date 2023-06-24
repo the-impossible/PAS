@@ -576,58 +576,58 @@ class GradeStudentView(LoginRequiredMixin, View):
             allocation_hnd = Allocate.objects.filter(super_id=assessor, prog_id=Programme.objects.get(programme_title='HND')).values('stud_id')
             assessments_hnd = Assessment.objects.filter(prog_id=Programme.objects.get(programme_title='HND'), assessor_id=assessor, supervisor_grade__gt=0).order_by('-created')
 
-            print(f'assessments_hnd: {assessments_hnd}')
-
-            return render(request, 'assess/grade_students.html', context={'programmes':self.programmes, 'form1':form1, 'form2':form2, 'assessments_nd':assessments_nd, 'assessments_hnd':assessments_hnd, 'allocation_nd':allocation_nd, 'allocation_hnd':allocation_hnd})
+            return render(request, 'assess/grade_students.html', context={'programmes':self.programmes, 'form1':form1, 'form2':SupervisorAssessmentForm(assessor=assessor, programme='hnd'), 'assessments_nd':assessments_nd, 'assessments_hnd':assessments_hnd, 'allocation_nd':allocation_nd, 'allocation_hnd':allocation_hnd})
 
         except SupervisorProfile.DoesNotExist:
             messages.success(request, 'Unable to get your account profile')
             return redirect('auth:dashboard')
 
     def post(self, request):
+
+        assessor = SupervisorProfile.objects.get(user_id=request.user)
+
+        allocation_nd = Allocate.objects.filter(super_id=assessor, prog_id=Programme.objects.get(programme_title='ND'))
+        assessments_nd = Assessment.objects.filter(prog_id=Programme.objects.get(programme_title='ND'), assessor_id=assessor, supervisor_grade__gt=0).order_by('-created')
+
+        allocation_hnd = Allocate.objects.filter(super_id=assessor, prog_id=Programme.objects.get(programme_title='HND')).values('stud_id')
+        assessments_hnd = Assessment.objects.filter(prog_id=Programme.objects.get(programme_title='HND'), assessor_id=assessor, supervisor_grade__gt=0).order_by('-created')
         try:
 
-            assessor = SupervisorProfile.objects.get(user_id=request.user)
             form1 = SupervisorAssessmentForm(request.POST, assessor=assessor, programme='nd')
             form2 = SupervisorAssessmentForm(request.POST, assessor=assessor, programme='hnd')
 
-
             if 'ND' in request.POST:
-                print('am in the request ND')
+                form1 = SupervisorAssessmentForm(request.POST, assessor=assessor, programme='nd')
 
                 if form1.is_valid():
 
-                    pass
+                    grading = form1.save(commit=False)
+                    student_id = grading.student_id
 
-                    # grading = form.save(commit=False)
-                    # student_id = grading.student_id
+                    try:
+                        assessment = Assessment.objects.get(student_id=student_id)
 
-                    # try:
+                        assessment.supervisor_grade = grading.supervisor_grade
+                        assessment.save()
 
-                    #     print(f'STUDE: {student_id}')
-                    #     print(f'STUDENT: {StudentProfile.objects.get(user_id=student_id)}')
+                    except Assessment.DoesNotExist:
 
-                    #     pass
+                        grading.assessor_id = assessor
+                        grading.dept_id = student_id.dept_id
+                        grading.sess_id = student_id.sess_id
+                        grading.prog_id = student_id.prog_id
+                        grading.type_id = student_id.type_id
+                        grading.save()
+                        messages.success(request, f'{grading.student_id} has been graded')
+                        return redirect('assess:grade_student')
 
-                        # StudentProfile.objects.get(user_id=student_id)
+                messages.error(request, f'{form1.errors.as_text()}')
+                return render(request, 'assess/grade_students.html', context={'programmes':self.programmes, 'form1':form1, 'form2':SupervisorAssessmentForm(assessor=assessor, programme='hnd'), 'assessments_nd':assessments_nd, 'assessments_hnd':assessments_hnd, 'allocation_nd':allocation_nd, 'allocation_hnd':allocation_hnd})
 
-                        # assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, student_id=student_id)
-
-                        # assessment.project_defense_grade = grading.project_defense_grade
-                        # assessment.save()
-
-                    # except Assessment.DoesNotExist:
-                    #     grading.assessor_id = supervisor
-                    #     grading.dept_id = assessor.dept_id
-                    #     grading.sess_id = assessor.sess_id
-                    #     grading.prog_id = assessor.prog_id
-                    #     grading.type_id = assessor.type_id
-                    #     grading.save()
-
-                    # messages.success(request, f'{grading.student_id} project defense has been graded')
-                    # return redirect('assess:assess_project', dept_id.pk)
 
             if 'HND' in request.POST:
+                form2 = SupervisorAssessmentForm(request.POST, assessor=assessor, programme='hnd')
+
 
                 if form2.is_valid():
 
@@ -653,13 +653,15 @@ class GradeStudentView(LoginRequiredMixin, View):
 
 
                 messages.error(request, f'{form2.errors.as_text()}')
+                return render(request, 'assess/grade_students.html', context={'programmes':self.programmes, 'form1':SupervisorAssessmentForm(assessor=assessor, programme='hnd'), 'form2':form2, 'assessments_nd':assessments_nd, 'assessments_hnd':assessments_hnd, 'allocation_nd':allocation_nd, 'allocation_hnd':allocation_hnd})
 
-            assessments_nd = Allocate.objects.filter(super_id=assessor, prog_id=Programme.objects.get(programme_title='ND'))
-            assessments_hnd = Allocate.objects.filter(super_id=assessor, prog_id=Programme.objects.get(programme_title='HND')).values('stud_id')
+            messages.error(request, f'Unable to process request')
+            return redirect('assess:grade_student')
 
 
-            return render(request, 'assess/grade_students.html', context={'programmes':self.programmes, 'form1':form1, 'form2':form2, 'assessments_nd':assessments_nd, 'assessments_hnd':assessments_hnd})
+
 
         except SupervisorProfile.DoesNotExist:
             messages.success(request, 'Unable to fetch your account profile')
             return redirect('auth:dashboard')
+

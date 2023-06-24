@@ -22,7 +22,8 @@
 
                 {% if prog.programme_title == 'ND' %}
                 {{ form1|crispy }}
-                {% else %}
+
+                {% elif prog.programme_title == 'HND' %}
                 {{ form2|crispy }}
 
                 {% endif %}
@@ -69,35 +70,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if assessments_nd %}
+
+                        {% if prog.programme_title == "ND" %}
+                            {% if assessments_nd %}
                             {% for assessment in assessments_nd %}
-                                <tr>
-                                    <td class="">{{ forloop.counter }}</td>
-                                    {% if request.user.is_staff %}
-                                    <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
-                                    {% else %}
-                                    <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
-                                    {% endif %}
-                                    <td class="text-center">{{ assessment.seminar_defense_grade }}</td>
-                                    <td class="">{{ assessment.assessor_id.user_id }}</td>
-                                    <td class="">
-
-                                        {% if request.user.is_staff %}
-                                        <form action="" method="post">
-                                        {% else %}
-                                        <form action="" method="post">
-                                        {% endif %}
-                                            {% csrf_token %}
-                                            <button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-
-                        {% if assessments_hnd %}
-
-                            {% for assessment in assessments_hnd %}
                                 <tr>
                                     <td class="">{{ forloop.counter }}</td>
                                     {% if request.user.is_staff %}
@@ -120,8 +96,7 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-
-                        {% else %}
+                            {% else %}
                             <tr>
                                 <td colspan="12">
                                     <div class="jumbotron text-center p-5">
@@ -136,6 +111,49 @@
                                     </div>
                                 </td>
                             </tr>
+                        {% endif %}
+                        {% elif prog.programme_title == "HND" %}
+
+                            {% if assessments_hnd %}
+                                {% for assessment in assessments_hnd %}
+                                    <tr>
+                                        <td class="">{{ forloop.counter }}</td>
+                                        {% if request.user.is_staff %}
+                                        <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
+                                        {% else %}
+                                        <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
+                                        {% endif %}
+                                        <td class="text-center">{{ assessment.supervisor_grade }}</td>
+                                        <td class="">{{ assessment.assessor_id.user_id }}</td>
+                                        <td class="">
+
+                                            {% if request.user.is_staff %}
+                                            <form action="" method="post">
+                                            {% else %}
+                                            <form action="" method="post">
+                                            {% endif %}
+                                                {% csrf_token %}
+                                                <button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="12">
+                                        <div class="jumbotron text-center p-5">
+                                            <p style="font-size: 3em">📂</p>
+                                            <br />
+                                            <p style="font-size: 1em; margin-top: -40px">
+                                                No Assessment Record!
+                                            </p>
+                                            <p class="text-muted">
+                                                Assessments records will be displayed here if found
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         {% endif %}
                     </tbody>
                 </table>
