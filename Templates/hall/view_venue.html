@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} View Defense Venue {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">Defense Venue</h1>
+				    </div>
+					{% include "partials/messages.html" %}
+			    </div><!--//row-->
+				<div class="row g-4 mb-4">
+				    <div class="col-6 col-lg-3">
+					    <div class="app-card app-card-stat shadow-sm h-100">
+						    <div class="app-card-body p-3 p-lg-4">
+							    <h4 class="stats-type mb-1">Defense Venue</h4>
+								{% if request.user.is_super %}
+							    <h5 class="text-dark">{% if assessor %} {{ assessor.venue_id }} {% else %} Not Set {% endif %}</h5>
+								{% else %}
+							    <h5 class="text-dark">{% if allocation %} {{ allocation.venue_id }} {% else %} Not Set {% endif %}</h5>
+								{% endif %}
+						    </div><!--//app-card-body-->
+						    <a class="app-card-link-mask" href="#"></a>
+					    </div><!--//app-card-->
+				    </div>
+
+					{% if not request.user.is_super %}
+					<div class="col-6 col-lg-3">
+					    <div class="app-card app-card-stat shadow-sm h-100">
+						    <div class="app-card-body p-3 p-lg-4">
+							    <h4 class="stats-type mb-1">Defense Day</h4>
+							    <h5 class="text-dark py-2">{% if allocation %} DAY {{ allocation.day_num }} {% else %} Not Set {% endif %}</h5>
+						    </div><!--//app-card-body-->
+						    <a class="app-card-link-mask" href="#"></a>
+					    </div><!--//app-card-->
+				    </div>
+					{% endif %}
+
+				<div class="app-card app-card-accordion shadow-sm mb-4">
+					<div class="app-card-header p-4 pb-2 border-0">
+					   <h4 class="app-card-title">Assessors</h4>
+					</div><!--//app-card-header-->
+					<div class="app-card-body p-4 pt-0">
+						<div class="row g-4">
+							{% if assessor %}
+								<div class="col-sm-12 col-md-3 col-xl-3 col-xxl-2">
+									<div class="app-card app-card-doc shadow-sm h-100">
+										<div class="app-card-thumb-holder p-3">
+											<span class="">
+												<img src="{{ assessor.chief_assessor.user_id.pic.url }}" alt="" style="border-radius: 50%; height: 80px; width: 80px;">
+											</span>
+											<a class="app-card-link-mask" href="#file-link"></a>
+										</div>
+										<div class="app-card-body p-3 has-card-actions text-center">
+											<h4 class="app-doc-title mb-0"><a href="#file-link">{{ assessor.chief_assessor.user_id.get_fullname }}</a></h4>
+											<div class="app-doc-meta">
+												<ul class="list-unstyled mb-0">
+													<li><span class="text-muted">Role:</span> Chief Assessor</li>
+												</ul>
+											</div><!--//app-doc-meta-->
+										</div>
+									</div><!--//app-card-->
+								</div>
+
+								<div class="col-sm-12 col-md-3 col-xl-3 col-xxl-2">
+									<div class="app-card app-card-doc shadow-sm h-100">
+										<div class="app-card-thumb-holder p-3">
+											<span class="">
+												<img src="{{ assessor.assessor_one.user_id.pic.url }}" alt="" style="border-radius: 50%; height: 80px; width: 80px;">
+											</span>
+											<a class="app-card-link-mask" href="#file-link"></a>
+										</div>
+										<div class="app-card-body p-3 has-card-actions text-center">
+											<h4 class="app-doc-title mb-0"><a href="#file-link">{{ assessor.assessor_one.user_id.get_fullname }}</a></h4>
+											<div class="app-doc-meta">
+												<ul class="list-unstyled mb-0">
+													<li><span class="text-muted">Role:</span> Assessor One</li>
+												</ul>
+											</div><!--//app-doc-meta-->
+										</div><!--//app-card-body-->
+									</div><!--//app-card-->
+								</div>
+
+								<div class="col-sm-12 col-md-3 col-xl-3 col-xxl-2">
+									<div class="app-card app-card-doc shadow-sm h-100">
+										<div class="app-card-thumb-holder p-3">
+											<span class="">
+												<img src="{{ assessor.assessor_two.user_id.pic.url }}" alt="" style="border-radius: 50%; height: 80px; width: 80px;">
+											</span>
+											<a class="app-card-link-mask" href="#file-link"></a>
+										</div>
+										<div class="app-card-body p-3 has-card-actions text-center">
+											<h4 class="app-doc-title mb-0"><a href="#file-link">{{ assessor.assessor_two.user_id.get_fullname }}</a></h4>
+											<div class="app-doc-meta">
+												<ul class="list-unstyled mb-0">
+													<li><span class="text-muted">Role:</span> Assessor Two</li>
+												</ul>
+											</div><!--//app-doc-meta-->
+										</div><!--//app-card-body-->
+									</div><!--//app-card-->
+								</div>
+
+							{% else %}
+							<div class="jumbotron text-center bg-dark">
+								<p style="font-size: 3em;"><i class="fa fa-users"></i></p>
+
+								{% if request.user.is_super %}
+								<p style="font-size: 1.2em;">Assessment Role not Assigned to you!</p>
+								{% else %}
+								<p style="font-size: 1.2em;">Assessor are yet to be Assigned to your Venue!</p>
+								{% endif %}
+
+							</div>
+						</div><!--//col-->
+						{% endif %}
+					</div><!--//app-card-body-->
+				</div><!--//app-card-->
+            </div>
+        </div>
+    </div>
+	{% include 'partials/auth_footer.html' %}
+	<!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+{% endblock body %}

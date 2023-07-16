@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %} Dashboard
+{% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+			    <h1 class="app-page-title">Overview</h1>
+
+				{% include "partials/messages.html" %}
+				{% if request.user.is_staff %}
+			    <div class="row g-4 mb-4">
+				    <div class="col-6 col-lg-3">
+					    <div class="app-card app-card-stat shadow-sm h-100">
+						    <div class="app-card-body p-3 p-lg-4">
+							    <h4 class="stats-type mb-1">Total Department</h4>
+							    <div class="stats-figure">{{dept}}</div>
+							    <div class="stats-meta text-dark">
+									DEPARTMENT
+								</div>
+						    </div><!--//app-card-body-->
+						    <a class="app-card-link-mask" href="#"></a>
+					    </div><!--//app-card-->
+				    </div><!--//col-->
+
+				    <div class="col-6 col-lg-3">
+					    <div class="app-card app-card-stat shadow-sm h-100">
+						    <div class="app-card-body p-3 p-lg-4">
+							    <h4 class="stats-type mb-1">Registered Students</h4>
+							    <div class="stats-figure">{{nd}}</div>
+							    <div class="stats-meta text-dark"> ND
+								</div>
+						    </div><!--//app-card-body-->
+						    <a class="app-card-link-mask" href="#"></a>
+					    </div><!--//app-card-->
+				    </div><!--//col-->
+				    <div class="col-6 col-lg-3">
+					    <div class="app-card app-card-stat shadow-sm h-100">
+						    <div class="app-card-body p-3 p-lg-4">
+							    <h4 class="stats-type mb-1">Registered Students</h4>
+							    <div class="stats-figure">{{hnd}}</div>
+							    <div class="stats-meta">HND</div>
+						    </div><!--//app-card-body-->
+						    <a class="app-card-link-mask" href="#"></a>
+					    </div><!--//app-card-->
+				    </div><!--//col-->
+				    <div class="col-6 col-lg-3">
+					    <div class="app-card app-card-stat shadow-sm h-100">
+						    <div class="app-card-body p-3 p-lg-4">
+							    <h4 class="stats-type mb-1">Registered Supervisors</h4>
+							    <div class="stats-figure">{{sup}}</div>
+							    <div class="stats-meta">ALL</div>
+						    </div><!--//app-card-body-->
+						    <a class="app-card-link-mask" href="#"></a>
+					    </div><!--//app-card-->
+				    </div><!--//col-->
+			    </div><!--//row-->
+
+				{% else %}
+				<div class="app-card  alert-dismissible shadow-sm mb-4 border-left-decoration" role="">
+				    <div class="inner">
+					    <div class="app-card-body p-3 p-lg-4">
+						    <h4 class="mb-3">Welcome, {{ user.get_fullname }}!</h4>
+						    <div class="row gx-5 gy-3">
+								{% if request.user.is_super %}
+						        <div class="col-12 col-lg-9">
+							        <div>This is your Shiny dashboard. Click to view students allocated to you</div>
+							    </div><!--//col-->
+							    <div class="col-12 col-lg-3">
+								    <a class="btn app-btn-primary " href="{% url 'auth:assigned_students' %}" style="font-size: 120%;">
+                                    <i class="fa fa-id-badge"></i> View Students</a>
+							    </div><!--//col-->
+								{% else %}
+						        <div class="col-12 col-lg-9">
+							        <div>This is your Shiny dashboard. Click to view your allocated supervisor</div>
+							    </div><!--//col-->
+							    <div class="col-12 col-lg-3">
+								    <a class="btn app-btn-primary " href="{% url 'auth:assigned_supervisors' %}" style="font-size: 120%;">
+                                        <i class="fa fa-id-badge"></i> View Supervisor</a>
+							    </div><!--//col-->
+								{% endif %}
+						    </div><!--//row-->
+					    </div><!--//app-card-body-->
+				    </div><!--//inner-->
+			    </div><!--//app-card-->
+				{% endif %}
+
+		    </div><!--//container-fluid-->
+	    </div><!--//app-content-->
+    </div><!--//app-wrapper-->
+    <!-- Javascript -->
+</div>
+{% include 'partials/auth_footer.html' %}
+{% include "partials/auth_script.html" %}
+{% endblock body %}

@@ -1,0 +1,75 @@
+{% load crispy_forms_tags %}
+{% if messages %}
+<tr id="remove">
+    <td colspan="8">
+    {% include "partials/messages.html" %}
+    </td>
+</tr>
+{% endif %}
+
+{% if object_list.count > 0 %}
+    {% for user in object_list  %}
+    <tr>
+        <td class="cell">{{ forloop.counter }}</td>
+        <td class="cell">{{ user.user_id.username  }}</td>
+        <td class="cell">{{ user.user_id.get_fullname }}</td>
+        <td class="cell">{{ user.rank_id }}</td>
+        <td class="cell">
+            {% if user.user_id.email  %}
+            <a href="mailto:{{ user.user_id.email }}">{{ user.user_id.email }}</a>
+
+            {% else %}
+            <span class="badge bg-warning">NOT SET</span>
+            {% endif %}
+        </td>
+        <td class="cell">
+            {% if user.user_id.phone  %}
+                <a href="tel:{{ user.user_id.phone }}">{{ user.user_id.phone }}</a>
+            {% else %}
+                <span class="badge bg-warning">NOT SET</span>
+            {% endif %}
+        </td>
+        <td class="cell">{{ user.prog_id }}</td>
+        <td class="cell">
+            <i class="fa
+                {% if user.user_id.is_active %}
+                    fa-check text-success
+                {% else %}
+                    fa-times text-danger
+                {% endif %}
+            "></i>
+        </td>
+        <td>
+            <button class="btn btn-danger btn-sm text-white" hx-get="{% url 'auth:delete_user' user.user_id.user_id %}" hx-target="#deleteUser">
+                <i class="fa fa-trash "></i> Delete
+            </button>
+        </td>
+    </tr>
+    {% endfor %}
+    {% else %}
+<tr>
+    <td colspan="8">
+        <div class="jumbotron text-center p-5   ">
+            <!-- illustration can be used here too -->
+            <p style="font-size: 5em;">📂</p> <br>
+            <p style="font-size: 2em; margin-top: -40px;">No Supervisor Record Here!</p>
+        </div>
+    </td>
+</tr>
+{% endif %}
+
+
+
+<script>
+    window.setTimeout(function() {
+        $(".alert").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+
+        $("#remove").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+
+    }, 2000);
+</script>
+

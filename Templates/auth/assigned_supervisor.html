@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} View Assigned Supervisor {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">View Assigned Supervisor</h1>
+				    </div>
+			    </div><!--//row-->
+
+                <div class="app-card app-card-accordion shadow-sm mb-4">
+				    <div class="app-card-header p-4 pb-2  border-0">
+				       <h4 class="app-card-title">Supervisor</h4>
+				    </div><!--//app-card-header-->
+				    <div class="app-card-body p-4 pt-0">
+						<div class="row g-4">
+							{% if allocation %}
+							<div class="col-sm-12 col-md-4 col-xl-3 col-xxl-2">
+								<div class="app-card app-card-doc shadow-sm h-100">
+									<div class="app-card-thumb-holder p-3">
+										<span class="">
+											<img src="{{ allocation.super_id.user_id.pic.url }}" alt="" style="border-radius: 50%; height: 80px; width: 80px;">
+										</span>
+										<a class="app-card-link-mask" href="#file-link"></a>
+									</div>
+									<div class="app-card-body p-3 has-card-actions">
+										<div class="app-doc-meta">
+											<ul class="list-unstyled mb-0">
+												<li><span class="text-muted">Lecturer Name:</span> {{allocation.super_id.user_id.get_fullname }}</li>
+												<li><span class="text-muted">Phone:</span> {{allocation.super_id.user_id.phone}}</li>
+											</ul>
+										</div><!--//app-doc-meta-->
+									</div><!--//app-card-body-->
+								</div><!--//app-card-->
+								{% else %}
+								<div class="jumbotron text-center bg-dark">
+									<p style="font-size: 3em;">📂</p>
+									<p style="font-size: 1.2em;">No Allocation yet!</p>
+								</div>
+							</div><!--//col-->
+							{% endif %}
+						</div>
+						<div class="row g-4">
+							{% if stud.programme_id.programme_title == "ND" %}
+							<div class="app-card-header p-4 pb-2  border-0">
+								<h4 class="app-card-title">{{allocation.group_id}} Members</h4>
+							 </div><!--//app-card-header-->
+							 {% for member in group_members %}
+							 <div class="col-sm-12 col-md-6 col-lg-3">
+								<div class="app-card app-card-doc shadow-sm h-100">
+									<div class="app-card-thumb-holder p-3">
+										<span class="">
+											<img src="{{ member.stud_id.user_id.pic.url }}" alt="" style="border-radius: 50%; height: 80px; width: 80px;">
+										</span>
+										<a class="app-card-link-mask" href="#file-link"></a>
+									</div>
+									<div class="app-card-body p-3 has-card-actions">
+										<div class="app-doc-meta">
+											<ul class="list-unstyled mb-0">
+												<li><span class="text-muted">Full Name:</span> {{member.stud_id.user_id.get_fullname }}</li>
+												<li><span class="text-muted">Reg No:</span> {{member.stud_id.user_id.username }}</li>
+												<li><span class="text-muted">Phone:</span> {{member.stud_id.user_id.phone}}</li>
+												<li><span class="text-muted">Category:</span> {{member.type_id}}</li>
+											</ul>
+										</div><!--//app-doc-meta-->
+									</div><!--//app-card-body-->
+
+								</div><!--//app-card-->
+							</div><!--//col-->
+							{% endfor %}
+							{% else %}
+							{% endif %}
+						</div>
+				    </div><!--//app-card-body-->
+				</div><!--//app-card-->
+
+            </div>
+        </div>
+        {% include 'partials/auth_footer.html' %}
+    </div>
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+
+{% endblock body %}

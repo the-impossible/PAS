@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Student to Venues {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+	{% include "partials/auth_nav.html" %}
+
+	<div class="app-wrapper">
+		<div class="app-content pt-3 p-md-3 p-lg-4">
+			<div class="container-xl">
+				<div class="row g-3 mb-4 align-items-center justify-content-between">
+					<div class="col-auto">
+						<h1 class="app-page-title mb-0">
+							<a
+								href="{% url 'hall:dashboard' dept.pk %}"
+								class="btn btn-secodary"
+								><i class="fa fa-arrow-left"></i
+							></a>
+							{{ dept }} venue allocation
+						</h1>
+					</div>
+					<div class="col-auto">
+						<div class="page-utilities">
+							<div
+								class="row g-2 justify-content-start justify-content-md-end align-items-center"
+							>
+								<div class="col-auto">
+									<a class="btn app-btn-secondary btn-sm" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#autoAllocationModal">
+										<i class="fa fa-share-alt"></i>
+										Auto Allocation
+									</a>
+									<a
+										class="btn app-btn-secondary btn-sm"
+										href="#"
+										data-bs-toggle="modal"
+										data-bs-target="#allocateS"
+										style="cursor: pointer"
+										><i class="fa fa-share-alt"></i> Manual Allocation</a
+									>
+									<a class="btn app-btn-secondary btn-sm" href="{% url 'hall:manage_hall_allocation' dept.dept_id %}"
+										><i class="fa fa-eye"></i> View All Allocation</a
+									>
+								</div>
+							</div>
+							<!--//row-->
+						</div>
+						<!--//table-utilities-->
+					</div>
+					<!--//col-auto-->
+					{% include "partials/messages.html" %}
+				</div>
+				<!--//row-->
+
+				<div class="row g-4">
+					<div class="col-12">
+						<div
+							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
+						>
+							<div class="app-card-header p-3 border-bottom-0">
+								<div class="row align-items-center gx-3">
+									<div class="col-auto">
+										<div class="app-icon-holder icon-holder-mono">
+											<i class="fa fa-share-alt" style="margin-top: 3px"></i>
+										</div>
+										<!--//icon-holder-->
+									</div>
+									<!--//col-->
+									<div class="col-auto">
+										<h4 class="app-card-title">Allocate Summary</h4>
+									</div>
+									<!--//col-->
+								</div>
+								<!--//row-->
+							</div>
+							<!--//app-card-header-->
+							<div class="app-card-body px-4 col-12">
+								<div class="table-responsive table-bordered">
+									{% include 'hall/partials/display_stud_allocation.html' %}
+								</div>
+							</div>
+							<!--//app-card-body-->
+							<div class="app-card-footer p-4 mt-auto"></div>
+							<!--//app-card-footer-->
+						</div>
+						<!--//app-card-->
+					</div>
+					<!--//col-->
+				</div>
+				<!--//row-->
+			</div>
+
+			<div
+				class="modal fade" id="allocateS" style="display: none" aria-hidden="true">
+				<div class="modal-dialog" id="changeCDialog" role="document" hx-target="this">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Manual Allocation</h5>
+							<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"> <span>×</span> </button>
+						</div>
+						<form method="post">
+							<div class="modal-body">
+								<p>Fill the form to Manually assign students to Venues.</p>
+								<div id="form-errors">{{ form2_errors }}</div>
+								<div class="row">
+									<div class="col-6">{{ form2.day_num|as_crispy_field }}</div>
+									<div class="col-6">{{ form2.stud_id|as_crispy_field }}</div>
+								</div>
+								<div class="row">
+									<div class="col-12">{{ form2.venue_id|as_crispy_field }}</div>
+								</div>
+								{% csrf_token %}
+							</div>
+							<div class="modal-footer">
+								<button class="btn btn-secondary" type="button" data-bs-dismiss="modal"> Cancel </button>
+								<button type="submit" name="mAllocate" class="btn btn-success btn-block text-white"> Allocate </button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal fade" id="autoAllocationModal" style="display: none;" aria-hidden="true">
+				<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Auto Allocation</h5>
+							<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+							</button>
+						</div>
+						<form method="post">
+							<div class="modal-body">
+								<p class="text-center">
+									This section allocates students to defense venue based on the
+									state of the form.
+								</p>
+								<div id="form-errors">{{ form_errors }}</div>
+								{% csrf_token %}
+								{{ form|crispy }}
+							</div>
+							<div class="modal-footer">
+								<button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+								<button type="submit" name="authA" class="btn btn-primary text-white"> <i class="fa fa-share-alt"></i> Allocate </button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% include 'partials/auth_footer.html' %}
+	</div>
+	<!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+	<script>
+		$('.searchable').select2({
+			dropdownParent: $('#allocateS'),
+			width: 'resolve',
+		})
+	</script>
+</div>
+
+{% endblock body %}

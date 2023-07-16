@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Students
+{% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+						<h1 class="app-page-title mb-0">
+                            <a href="{% url 'auth:what_prog' dept.dept_id 'students' %}" class="btn btn-secodary"><i class="fa fa-arrow-left"></i></a>
+                            Programme selection
+                        </h1>
+				    </div>
+				    <div class="col-auto">
+					     <div class="page-utilities">
+						    <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
+							    <div class="col-auto">
+								    <a class="btn app-btn-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+									    <i class="fa fa-plus"></i>
+									    Add Student
+									</a>
+                                    <a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#addStudentMultipleModal">
+									    <i class="fa fa-upload"></i>
+									    Add From File
+									</a>
+							    </div>
+						    </div><!--//row-->
+					    </div><!--//table-utilities-->
+				    </div><!--//col-auto-->
+			    </div><!--//row-->
+				{% include "partials/messages.html" %}
+				<div class="col-lg-12 grid-margin stretch-card">
+					<div class="card">
+					  <div class="card-body">
+						<h4 class="card-title text-center">{{dept}} {{prog.programme_description}} Students</h4>
+						<p class="card-description text-center">
+						  use the table to edit, view and delete
+						</p>
+						<hr class="w-75 mx-auto">
+						<div class="app-card-body">
+							<div class="table-responsive">
+							  <table class="table app-table-hover mb-0 text-left table-sm table-bordered" id="table_id">
+								<thead class="">
+								  <tr>
+									<th>#</th>
+									<th class="cell">Student Name</th>
+									<th class="cell">Reg No.</th>
+									<th class="cell">Email</th>
+									<th class="cell">Phone</th>
+									<th class="cell">Session</th>
+									<th class="cell">Type</th>
+									<th class="cell">Programme</th>
+								  </tr>
+								</thead>
+								<tbody>
+									{% if object_list.count > 0 %}
+										{% for user in object_list  %}
+										<tr>
+											<td class="cell">{{ forloop.counter }}</td>
+											<td class="cell text-left"><a href="#">{{ user.user_id.get_fullname|title }}</a></td>
+											<td class="cell"><span class="truncate">{{ user }}</span></td>
+											<td class="cell">{% if user.user_id.email  %}{{ user.user_id.email|truncatechars:20 }} {% else %}
+												<span class="badge bg-warning"> NOT SET</span>{% endif %}
+											</td>
+											<td class="cell">
+												{% if user.user_id.phone  %}
+													{{ user.user_id.phone }}
+												{% else %}
+													<span class="badge bg-warning">NOT SET</span>
+												{% endif %}
+											</td>
+											<td class="cell">{{ user.session_id }}</td>
+											<td class="cell">{{ user.type_id }}</td>
+											<td class="cell">{{ user.programme_id }}</td>
+											{% comment %}
+											<td class="cell">
+												{% if user.user_id.is_active %}
+													<i class="fa fa-check text-success"></i>
+												{% else %}
+													<i class="fa fa-times text-danger"></i>
+												{% endif %}
+											</td>
+											<td class="cell">
+												<a class="btn btn-sm text-white btn-danger" hx-get="{% url 'auth:delete_user' user.user_id.user_id %}" hx-target="#deleteUser"><i class="fa fa-trash"></i> Delete</a>
+											</td>
+											{% endcomment %}
+										</tr>
+										{% endfor %}
+									{% else %}
+									<tr>
+										<td colspan="12">
+											<div class="jumbotron text-center p-5">
+												<!-- illustration can be used here too -->
+												<p style="font-size: 5em;">📂</p> <br>
+												<p style="font-size: 2em; margin-top: -40px;">No Student Record Here!</p>
+											</div>
+										</td>
+									</tr>
+									{% endif %}
+								</tbody>
+							  </table>
+							</div>
+						</div>
+					  </div>
+					</div>
+				</div>
+	    	</div>
+		</div>
+	    {% include 'partials/auth_footer.html' %}
+		{% include "partials/modal_logout.html" %}
+    </div><!--//app-wrapper-->
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+
+<div class="modal fade" id="addStudentModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add Student</h5>
+				<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+				</button>
+			</div>
+			<form method="post">
+				<div class="modal-body">
+					<p>Fill the form below to create a student account.</p>
+					<div id='form-errors'>{{ form_errors }}</div>
+					<div class="row">
+						<div class="col-6">
+							{{ form1.username|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form1.name|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form1.phone|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form1.email|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form2.session|as_crispy_field }}
+						</div>
+						<div class="col-6">
+							{{ form2.student_type|as_crispy_field }}
+						</div>
+					</div>
+					{% csrf_token %}
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+					<button type="submit" name="single" class="btn btn-success btn-block text-white">Create Account</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="addStudentMultipleModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add student from FILE</h5>
+				<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+				</button>
+			</div>
+			<form method="post" enctype="multipart/form-data">
+				<div class="modal-body">
+					<p>Fill the form below to create multiple student account.</p>
+					<div id='form-errors'>{{ form_errors }}</div>
+					{{ form3|crispy }}
+					{% csrf_token %}
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+					<button type="submit" name="multiple" class="btn btn-success btn-block text-white">Create Account</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="deleteUserModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog" id="deleteUser" role="document" hx-target="this">
+
+
+	</div>
+</div>
+<script>
+	var modal = new bootstrap.Modal(document.getElementById('deleteUserModal'))
+	htmx.on('htmx:afterSwap', (e) => {
+		if (e.detail.target.id === 'deleteUser'){
+		modal.show();
+	  }
+	})
+
+	htmx.on('htmx:beforeSwap', (e) => {
+	  if (e.detail.target.id === 'deleteUser' && !e.detail.xhr.response){
+		modal.hide();
+		}
+	})
+
+</script>
+{% endblock body %}

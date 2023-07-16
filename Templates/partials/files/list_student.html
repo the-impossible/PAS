@@ -1,0 +1,50 @@
+{% load crispy_forms_tags %}
+{% if messages %}
+<tr id="remove">
+    <td colspan="12">
+    {% include "partials/messages.html" %}
+    </td>
+</tr>
+{% endif %}
+{% if object_list.count > 0 %}
+    {% for user in object_list  %}
+        <tr>
+            <td class="cell">{{ forloop.counter }}</td>
+            <td class="cell"><a href="#">{{ user.user_id.get_fullname|title }}</a></td>
+            <td class="cell"><span class="truncate">{{ user }}</span></td>
+            <td class="cell">{% if user.user_id.email  %}{{ user.user_id.email }}{% else %}
+                <span class="badge bg-warning"> NOT SET</span>{% endif %}
+            </td>
+            <td class="cell">
+                {% if user.user_id.phone  %}
+                    {{ user.user_id.phone }}
+                {% else %}
+                    <span class="badge bg-warning">NOT SET</span>
+                {% endif %}
+            </td>
+            <td class="cell">{{ user.session_id }}</td>
+            <td class="cell">{{ user.type_id }}</td>
+            <td class="cell">{{ user.programme_id }}</td>
+            <td class="cell">
+                {% if user.user_id.is_active %}
+                    <i class="fa fa-check text-success"></i>
+                {% else %}
+                    <i class="fa fa-times text-danger"></i>
+                {% endif %}
+            </td>
+            <td class="cell">
+                <a class="btn btn-sm text-white btn-danger" hx-get="{% url 'auth:delete_user' user.user_id.user_id %}" hx-target="#deleteUser"><i class="fa fa-trash"></i> Delete</a>
+            </td>
+        </tr>
+    {% endfor %}
+{% else %}
+<tr>
+    <td colspan="12">
+        <div class="jumbotron text-center p-5   ">
+            <!-- illustration can be used here too -->
+            <p style="font-size: 5em;">📂</p> <br>
+            <p style="font-size: 2em; margin-top: -40px;">No Student Record Here!</p>
+        </div>
+    </td>
+</tr>
+{% endif %}
