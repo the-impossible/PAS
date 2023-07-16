@@ -59,6 +59,8 @@ from PAS_auth.views import (
 
     ApproveTopicView,
 
+    AllGradingView,
+
 )
 
 app_name = 'auth'
@@ -135,6 +137,7 @@ urlpatterns = [
 
     # Approved Topics
     path('approve_topics/<str:dept_id>', ApproveTopicView.as_view(), name='approve_topics'),
-
+    # Retrieve grading
+    path('grading/<str:dept_id>', AllGradingView.as_view(), name='grading'),
 
 ]

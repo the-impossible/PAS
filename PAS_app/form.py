@@ -23,6 +23,11 @@ from PAS_auth.models import (
     Allocate,
 )
 
+from PAS_assessment.models import (
+    Assessment,
+
+)
+
 class FileHandler:
     def __init__(self, obj):
         self.csv_obj = obj
@@ -427,3 +432,35 @@ class DepartmentForm(forms.ModelForm):
 class ApproveTopicForm(FilesForm):
     def clean(self):
         pass
+
+
+class RGradingForm(forms.ModelForm):
+
+    GRADE_TYPE =(
+        ("seminar", "Seminar Grade"),
+        ("project", "Project Grade"),
+    )
+
+    which_grade = forms.ChoiceField(choices=GRADE_TYPE)
+
+    sess_id = forms.ModelChoiceField(queryset=Session.objects.all(), empty_label="(Select Session)", help_text="Select Academic Session", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    prog_id = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", help_text="Select Student", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    type_id = forms.ModelChoiceField(queryset=StudentType.objects.all(), empty_label="(Select Student Category)", help_text="Select Student Category", widget=forms.Select(
+        attrs={
+            'class':'form-control searchable',
+        }
+    ))
+
+    class Meta:
+        model = Assessment
+        fields = ('sess_id', 'prog_id', 'type_id')

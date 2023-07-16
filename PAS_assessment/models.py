@@ -36,6 +36,9 @@ class Assessment(models.Model):
     def current_grade(self):
         return self.seminar_defense_grade + self.project_defense_grade + self.supervisor_grade
 
+    def total_defense_grade(self):
+        return self.project_defense_grade + self.supervisor_grade
+
     def __str__(self):
         return f'{self.student_id} - {self.current_grade}'
 

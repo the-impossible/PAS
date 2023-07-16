@@ -33,7 +33,11 @@
 									   Retrieve Allocation
 								   </a>
 							   </div>
+
 							   <div class="col-auto">
+								<button class="btn app-btn-secondary" name="print" id="print"> <i class="fa fa-file" ></i> Print Allocation</button>
+						 </div>
+							   {% comment %} <div class="col-auto">
 								<form action="" method="post">
 									{% csrf_token %}
 									<input type="hidden" name="prog" value="{{prog}}">
@@ -41,7 +45,7 @@
 									<input type="hidden" name="type" value="{{type}}">
 									<button class="btn app-btn-secondary" name="print"><i class="fa fa-file"></i> Print Allocation</button>
 								</form>
-							</div>
+							</div> {% endcomment %}
 						   </div><!--//row-->
 					   </div><!--//table-utilities-->
 				   </div><!--//col-auto-->
@@ -51,7 +55,7 @@
 				<!--//row-->
 
 				<div class="row g-4">
-					<div class="col-12">
+					<div class="col-12" id="content">
 						<div
 							class="app-card app-card-basic d-flex flex-column align-items-start shadow-sm"
 						>
