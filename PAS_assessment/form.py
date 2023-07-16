@@ -103,17 +103,22 @@ class ProjectAssessmentForm(forms.ModelForm):
         project_grade = int(self.cleaned_data.get('project_defense_grade'))
         student_id = self.cleaned_data.get('student_id')
 
-        if project_grade > 60:
-            raise ValidationError('Maximum grade is 60, try again!')
+        if project_grade > 50:
+            raise ValidationError('Maximum grade is 50, try again!')
 
         if project_grade < 0:
             raise ValidationError('Positive grades only, try again!')
 
         check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
 
-        if self.instance:
-            check = check.exclude(pk=self.instance.pk)
+        print(f"check: {check}")
 
+        if self.instance:
+            print("self instance")
+            check = check.exclude(pk=self.instance.pk)
+            print("self exclude")
+
+        print(f"self {check.exists()}")
 
         if check.exists():
 
@@ -226,8 +231,8 @@ class SuperProjectAssessmentForm(forms.ModelForm):
         project_grade = int(self.cleaned_data.get('project_defense_grade'))
         student_id = self.cleaned_data.get('student_id')
 
-        if project_grade > 100:
-            raise ValidationError('Maximum grade is 100, try again!')
+        if project_grade > 50:
+            raise ValidationError('Maximum grade is 50, try again!')
 
         if project_grade < 0:
             raise ValidationError('Positive grades only, try again!')
@@ -273,11 +278,9 @@ class SupervisorAssessmentForm(forms.ModelForm):
 
         super(SupervisorAssessmentForm, self).__init__(*args, **kwargs)
 
-        group_nums = Allocate.objects.filter(super_id=self.assessor).values_list('group_id', flat=True).distinct()
-
         if self.prog == 'nd':
             supervisors_allocation = Allocate.objects.filter(super_id=self.assessor, prog_id=Programme.objects.get(programme_title='ND')).values('stud_id')
-            student_profiles = StudentProfile.objects.filter(stud_id__in=supervisors_allocation)
+            student_profiles = StudentProfile.objects.filter(stud_id__in=supervisors_allocation).values('stud_id')
             student_hall = StudHallAllocation.objects.filter(stud_id__in=student_profiles)
 
             self.fields['student_id'].queryset=student_hall
@@ -295,8 +298,8 @@ class SupervisorAssessmentForm(forms.ModelForm):
         supervisor_grade = int(self.cleaned_data.get('supervisor_grade'))
         student_id = self.cleaned_data.get('student_id')
 
-        if supervisor_grade > 40:
-            raise ValidationError('Maximum grade is 40, try again!')
+        if supervisor_grade > 50:
+            raise ValidationError('Maximum grade is 50, try again!')
 
         if supervisor_grade < 0:
             raise ValidationError('Positive grades only, try again!')

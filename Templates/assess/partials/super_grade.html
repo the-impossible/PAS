@@ -22,15 +22,20 @@
 
                 {% if prog.programme_title == 'ND' %}
                 {{ form1|crispy }}
-
-                {% elif prog.programme_title == 'HND' %}
-                {{ form2|crispy }}
-
-                {% endif %}
-
+                <input type="hidden" name="edit">
                 <div class="d-grid gap-2">
                     <button type="submit" name="{{ prog.programme_title }}" class="btn btn-success text-white mt-4">{{ type | title }} Assess</button>
                 </div>
+
+                {% elif prog.programme_title == 'HND' %}
+                {{ form2|crispy }}
+                <input type="hidden" name="edit">
+                <div class="d-grid gap-2">
+                    <button type="submit" name="{{ prog.programme_title }}" class="btn btn-success text-white mt-4">{{ type | title }} Assess</button>
+                </div>
+
+                {% endif %}
+
             </form>
         </div>
         <div class="app-card-footer p-4 mt-auto"></div>
@@ -76,11 +81,7 @@
                             {% for assessment in assessments_nd %}
                                 <tr>
                                     <td class="">{{ forloop.counter }}</td>
-                                    {% if request.user.is_staff %}
-                                    <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
-                                    {% else %}
-                                    <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
-                                    {% endif %}
+                                    <td class=""><a href="{% url 'assess:ud_grade_student' assessment.pk '1' %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
                                     <td class="text-center">{{ assessment.supervisor_grade }}</td>
                                     <td class="">{{ assessment.assessor_id.user_id }}</td>
                                     <td class="">
@@ -88,7 +89,7 @@
                                         {% if request.user.is_staff %}
                                         <form action="" method="post">
                                         {% else %}
-                                        <form action="" method="post">
+                                        <form action="{% url 'assess:ud_grade_student' assessment.pk '1' %}" method="post">
                                         {% endif %}
                                             {% csrf_token %}
                                             <button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>
@@ -118,19 +119,18 @@
                                 {% for assessment in assessments_hnd %}
                                     <tr>
                                         <td class="">{{ forloop.counter }}</td>
-                                        {% if request.user.is_staff %}
-                                        <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
-                                        {% else %}
-                                        <td class=""><a href=""> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
-                                        {% endif %}
+
+                                        <td class=""><a href="{% url 'assess:ud_grade_student' assessment.pk '2' %} "> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
+
                                         <td class="text-center">{{ assessment.supervisor_grade }}</td>
-                                        <td class="">{{ assessment.assessor_id.user_id }}</td>
+
+                                        <td class="">{{ assessment.supervisor.user_id }}</td>
                                         <td class="">
 
                                             {% if request.user.is_staff %}
-                                            <form action="" method="post">
+                                                <form action="" method="post">
                                             {% else %}
-                                            <form action="" method="post">
+                                                <form action="{% url 'assess:ud_grade_student' assessment.pk '1' %}" method="post">
                                             {% endif %}
                                                 {% csrf_token %}
                                                 <button type="submit" name="delete" class="btn btn-danger btn-sm text-white"><i class="fa fa-trash"></i> </button>

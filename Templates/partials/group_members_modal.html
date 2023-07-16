@@ -6,7 +6,14 @@
         </button>
     </div>
     <div class="modal-body">
+
+        {% if group_id %}
         <p class="text-center">Below are the members of {{group_id}} for your supervision</p>
+        {% else %}
+        <p class="text-center">Below are the students under your supervision</p>
+
+        {% endif %}
+
         <div class="row g-4">
         {% if members %}
             {% for member in members %}

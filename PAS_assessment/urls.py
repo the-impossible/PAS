@@ -17,6 +17,7 @@ from PAS_assessment.views import (
     UDSuperAssessorSeminarAssessmentView,
 
     GradeStudentView,
+    UDGradeStudentView,
 )
 
 app_name = 'assess'
@@ -41,6 +42,7 @@ urlpatterns = [
     path('ud_super_assess_project/<str:dept_id>/<str:prog_id>/<str:type_id>/<str:sess_id>/<str:assess_id>', UDSuperAssessorProjectAssessmentView.as_view(), name='ud_super_assess_project'),
 
     path('grade_student', GradeStudentView.as_view(), name='grade_student'),
+    path('ud_grade_student/<str:assess_id>/<str:type_id>', UDGradeStudentView.as_view(), name='ud_grade_student'),
 
 
 ]
