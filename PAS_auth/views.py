@@ -59,10 +59,14 @@ from PAS_app.form import (
     RAllocationForm,
     DepartmentForm,
     ApproveTopicForm,
+    RGradingForm,
 )
 from PAS_auth.form import (
     UserForm,
     UpdateProfileForm,
+)
+from PAS_assessment.models import (
+    Assessment,
 )
 
 from PAS_auth.decorator import *
@@ -190,7 +194,25 @@ class DashboardView(LoginRequiredMixin, View):
     login_url = 'auth:login'
     @method_decorator(has_updated)
     def get(self, request):
-        return render(request, 'auth/dashboard.html')
+
+        context = {}
+
+        if request.user.is_staff:
+            prog_nd = Programme.objects.get(programme_title="ND")
+            prog_hnd = Programme.objects.get(programme_title="HND")
+            dept = Department.objects.all().count()
+            nd = StudentProfile.objects.filter(programme_id=prog_nd).count()
+            hnd = StudentProfile.objects.filter(programme_id=prog_hnd).count()
+            sup = SupervisorProfile.objects.filter().count()
+
+            context = {
+                'dept': dept,
+                'nd': nd,
+                'hnd': hnd,
+                'sup': sup,
+            }
+
+        return render(request, 'auth/dashboard.html', context)
 
 @method_decorator(is_staff, name="get")
 @method_decorator(is_staff, name='post')
@@ -1389,3 +1411,49 @@ class ApproveTopicView(View):
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')
+
+@method_decorator(is_staff, name="get")
+class AllGradingView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+    view_type = "seminar"
+    form = RGradingForm()
+
+    def get(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+            return render(request, 'auth/all_grading.html', context={'dept':dept, 'form':self.form})
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')
+
+    def post(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+
+            form = RGradingForm(request.POST)
+
+            if form.is_valid():
+
+                prog_id = form.cleaned_data.get('prog_id')
+                sess_id = form.cleaned_data.get('sess_id')
+                type_id = form.cleaned_data.get('type_id')
+                which_grade = form.cleaned_data.get('which_grade')
+
+                assessment = Assessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id)
+
+                if which_grade == 'seminar':
+                    self.view_type = 'seminar'
+
+                elif which_grade == 'project':
+                    self.view_type = 'project'
+
+            return render(request, 'auth/all_grading.html', context={'dept':dept, 'form':self.form, 'assessment':assessment, 'view_type':self.view_type, 'type':type_id, 'prog':prog_id})
+
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')
+

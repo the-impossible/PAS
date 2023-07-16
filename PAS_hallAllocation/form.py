@@ -99,7 +99,7 @@ class StudHallAllocationForm(forms.ModelForm):
             'class':'form-control',
         }
     ))
-
+    
     prog_id = forms.ModelChoiceField(queryset=Programme.objects.all(), empty_label="(Select Programme)", required=True, help_text="Select Programme", widget=forms.Select(
         attrs={
             'class':'form-control',
