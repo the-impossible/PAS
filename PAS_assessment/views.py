@@ -128,9 +128,10 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
 
                 form = SeminarAssessmentForm(assessor=assessor, instance=assessment)
 
-                assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor).order_by('-created')
+                assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id).order_by('-created')
 
                 return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments, 'type':self.view_type})
+
             messages.error(request, 'You are not authorized!')
             return redirect('assess:what_assess', dept_id)
         except ObjectDoesNotExist():
@@ -142,7 +143,8 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
             supervisor = SupervisorProfile.objects.get(user_id=request.user)
             assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
 
-            assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor).order_by('-created')
+            assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id).order_by('-created')
+
             assessment = SeminarAssessment.objects.get(assess_id=assess_id)
 
             if 'edit' in request.POST:
@@ -228,7 +230,7 @@ class CRSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
                 super_id = assessments.latest('created').assessor_id
             else:
                 super_id = SupervisorProfile.objects.get(user_id=request.user)
-            
+
             assessor = super_id
 
             try:
@@ -259,14 +261,14 @@ class CRSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
 class CRSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
     def get(self, request, dept_id, type_id, prog_id, sess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
+        assessments = ProjectAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
 
         form = SuperProjectAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
         return render(request, 'assess/cr_project.html', context={'dept':department_id, 'form':form, 'assessments':assessments})
 
     def post(self, request, dept_id, type_id, prog_id, sess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
+        assessments = ProjectAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
         form = SuperProjectAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
 
         if form.is_valid():
@@ -277,25 +279,31 @@ class CRSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
                 super_id = assessments.latest('created').assessor_id
             else:
                 super_id = SupervisorProfile.objects.get(user_id=request.user)
-                assessor = super_id
 
-                try:
-                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=type_id, prog_id=prog_id, sess_id=sess_id, student_id=student_id)
+            assessor = super_id
 
-                    assessment.project_defense_grade = grading.project_defense_grade
-                    assessment.save()
+            try:
+                assessment = ProjectAssessment.objects.get(dept_id=assessor.dept_id, type_id=type_id, prog_id=prog_id, sess_id=sess_id, student_id=student_id)
 
-                except Assessment.DoesNotExist:
+                assessment.project_defense_grade = grading.project_defense_grade
+                assessment.save()
 
-                    grading.assessor_id = super_id
-                    grading.dept_id = dept_id
-                    grading.sess_id = Session.objects.get(id=sess_id)
-                    grading.prog_id = Programme.objects.get(id=prog_id)
-                    grading.type_id = StudentType.objects.get(id=type_id)
-                    grading.save()
+            except ProjectAssessment.DoesNotExist:
 
-                    messages.success(request, f'{grading.student_id} project defense has been graded')
-                    return redirect('assess:super_assess_project', department_id.pk, type_id, prog_id, sess_id)
+                print('got here3')
+                print(f'super: {super_id}')
+                print(f'venue: {grading.student_id.venue_id}')
+
+                grading.assessor_id = super_id
+                grading.venue = grading.student_id.venue_id
+                grading.dept_id = dept_id
+                grading.sess_id = Session.objects.get(id=sess_id)
+                grading.prog_id = Programme.objects.get(id=prog_id)
+                grading.type_id = StudentType.objects.get(id=type_id)
+                grading.save()
+
+                messages.success(request, f'{grading.student_id} project defense has been graded')
+                return redirect('assess:super_assess_project', department_id.pk, type_id, prog_id, sess_id)
 
 
         messages.error(request, f'{form.errors.as_text()}')
@@ -308,8 +316,9 @@ class UDSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
     view_type = 'edit'
     def get(self, request, dept_id, type_id, prog_id, sess_id, assess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
-        assessment = Assessment.objects.get(assess_id=assess_id)
+
+        assessments = SeminarAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
+        assessment = SeminarAssessment.objects.get(assess_id=assess_id)
 
         form = SuperSeminarAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, instance=assessment)
 
@@ -317,7 +326,9 @@ class UDSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
 
     def post(self, request, dept_id, type_id, prog_id, sess_id, assess_id):
         department_id = dept_id
-        assessment = Assessment.objects.get(assess_id=assess_id)
+        assessment = SeminarAssessment.objects.get(assess_id=assess_id)
+
+        assessments = SeminarAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
 
         if 'edit' in request.POST:
             form = SuperSeminarAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, instance=assessment)
@@ -333,9 +344,14 @@ class UDSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
 
                 messages.success(request, f'{grading.student_id} seminar grade has been edited')
 
+                return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
+
+            messages.error(request, f'{form.errors.as_text()}')
+
+            return render(request, 'assess/cr_seminar.html', context={'dept':department_id, 'form':form, 'assessments':assessments, 'type':self.view_type})
+
         elif 'delete' in request.POST:
-            assessment.seminar_defense_grade = 0
-            assessment.save()
+            assessment.delete()
             messages.success(request, f'Seminar assessment deleted!')
 
         else:
@@ -349,8 +365,8 @@ class UDSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
     view_type = 'edit'
     def get(self, request, dept_id, type_id, prog_id, sess_id, assess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
-        assessment = Assessment.objects.get(assess_id=assess_id)
+        assessments = ProjectAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
+        assessment = ProjectAssessment.objects.get(assess_id=assess_id)
 
         form = SuperProjectAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, instance=assessment)
 
@@ -358,7 +374,8 @@ class UDSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
 
     def post(self, request, dept_id, type_id, prog_id, sess_id, assess_id):
         department_id = dept_id
-        assessment = Assessment.objects.get(assess_id=assess_id)
+        assessments = ProjectAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, project_defense_grade__gt=0).order_by('-created')
+        assessment = ProjectAssessment.objects.get(assess_id=assess_id)
 
         if 'edit' in request.POST:
             form = SuperProjectAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, instance=assessment)
@@ -374,10 +391,19 @@ class UDSuperAssessorProjectAssessmentView(LoginRequiredMixin, View):
 
                 messages.success(request, f'{grading.student_id} project defense grade has been edited')
 
+                return redirect('assess:super_assess_project', department_id.pk, type_id, prog_id, sess_id)
+
+            messages.error(request, f'{form.errors.as_text()}')
+
+            return render(request, 'assess/cr_project.html', context={'dept':department_id, 'form':form, 'assessments':assessments, 'type':self.view_type})
+
         elif 'delete' in request.POST:
-            assessment.project_defense_grade = 0
-            assessment.save()
-            messages.success(request, f'Seminar assessment deleted!')
+            if assessment.supervisor_grade > 0:
+                assessment.project_defense_grade = 0
+                assessment.save()
+            else:
+                assessment.delete()
+            messages.success(request, f'Project assessment deleted!')
 
         else:
             messages.warning(request, f'Something went wrong!')
@@ -396,9 +422,7 @@ class CRProjectAssessmentView(LoginRequiredMixin, View):
 
                 form = ProjectAssessmentForm(assessor=assessor)
 
-                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
-
-                print(assessments)
+                assessments = ProjectAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id, project_defense_grade__gt=0).order_by('-created')
 
                 return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
 
@@ -414,7 +438,7 @@ class CRProjectAssessmentView(LoginRequiredMixin, View):
             supervisor = SupervisorProfile.objects.get(user_id=request.user)
             assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
 
-            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
+            assessments = ProjectAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id, project_defense_grade__gt=0).order_by('-created')
 
             form = ProjectAssessmentForm(request.POST, assessor=assessor)
 
@@ -425,14 +449,15 @@ class CRProjectAssessmentView(LoginRequiredMixin, View):
                 student_id = grading.student_id
 
                 try:
-                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, student_id=student_id)
+                    assessment = ProjectAssessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id, student_id=student_id)
 
                     assessment.project_defense_grade = grading.project_defense_grade
                     assessment.assessor_id = supervisor
                     assessment.save()
 
-                except Assessment.DoesNotExist:
+                except ProjectAssessment.DoesNotExist:
                     grading.assessor_id = supervisor
+                    grading.venue = assessor.venue_id
                     grading.dept_id = assessor.dept_id
                     grading.sess_id = assessor.sess_id
                     grading.prog_id = assessor.prog_id
@@ -457,11 +482,11 @@ class UDProjectAssessmentView(LoginRequiredMixin, View):
             if not request.user.is_staff:
                 supervisor = SupervisorProfile.objects.get(user_id=request.user)
                 assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
-                assessment = Assessment.objects.get(assess_id=assess_id)
+                assessment = ProjectAssessment.objects.get(assess_id=assess_id)
 
                 form = ProjectAssessmentForm(assessor=assessor, instance=assessment)
 
-                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
+                assessments = ProjectAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id, project_defense_grade__gt=0).order_by('-created')
 
 
                 return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments, 'type':self.view_type})
@@ -479,8 +504,9 @@ class UDProjectAssessmentView(LoginRequiredMixin, View):
             supervisor = SupervisorProfile.objects.get(user_id=request.user)
             assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
 
-            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, project_defense_grade__gt=0).order_by('-created')
-            assessment = Assessment.objects.get(assess_id=assess_id)
+            assessments = ProjectAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id,  venue=assessor.venue_id, project_defense_grade__gt=0).order_by('-created')
+
+            assessment = ProjectAssessment.objects.get(assess_id=assess_id)
 
             if 'edit' in request.POST:
                 form = ProjectAssessmentForm(request.POST, assessor=assessor, instance=assessment)
@@ -496,8 +522,11 @@ class UDProjectAssessmentView(LoginRequiredMixin, View):
                 return render(request, 'assess/cr_project.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
 
             elif 'delete' in request.POST:
-                assessment.project_defense_grade = 0
-                assessment.save()
+                if assessment.supervisor_grade > 0:
+                    assessment.project_defense_grade = 0
+                    assessment.save()
+                else:
+                    assessment.delete()
                 messages.success(request, 'Assessment has been deleted!')
 
             else:

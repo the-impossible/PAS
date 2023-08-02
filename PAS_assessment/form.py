@@ -58,8 +58,8 @@ class SeminarAssessmentForm(forms.ModelForm):
         if seminar_grade > 100:
             raise ValidationError('Maximum grade is 100, try again!')
 
-        if seminar_grade < 0:
-            raise ValidationError('Positive grades only, try again!')
+        if seminar_grade < 1:
+            raise ValidationError('Grades should be greater than zero')
 
         check = SeminarAssessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
 
@@ -72,7 +72,7 @@ class SeminarAssessmentForm(forms.ModelForm):
             # if seminar_grade == 0:
             #     raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
 
-            if existing_seminar_grade > 0:
+            if existing_seminar_grade >= 0:
                 raise ValidationError('Assessment already exist for the student try editing!')
 
 
@@ -108,8 +108,8 @@ class ProjectAssessmentForm(forms.ModelForm):
         if project_grade > 50:
             raise ValidationError('Maximum grade is 50, try again!')
 
-        if project_grade < 0:
-            raise ValidationError('Positive grades only, try again!')
+        if project_grade < 1:
+            raise ValidationError('Grades should be greater than zero')
 
         check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
 
@@ -120,13 +120,10 @@ class ProjectAssessmentForm(forms.ModelForm):
 
             existing_project_grade = check.get(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id).project_defense_grade
 
-            if project_grade == 0:
-                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
-
             if existing_project_grade > 0:
                 raise ValidationError('Assessment already exist for the student try editing!')
     class Meta:
-        model = Assessment
+        model = ProjectAssessment
         fields = ('student_id', 'project_defense_grade')
 
 
@@ -177,8 +174,8 @@ class SuperSeminarAssessmentForm(forms.ModelForm):
         if seminar_grade > 100:
             raise ValidationError('Maximum grade is 100, try again!')
 
-        if seminar_grade < 0:
-            raise ValidationError('Positive grades only, try again!')
+        if seminar_grade < 1:
+            raise ValidationError('Grades should be greater than zero')
 
         check = SeminarAssessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id)
 
@@ -188,10 +185,10 @@ class SuperSeminarAssessmentForm(forms.ModelForm):
         if check.exists():
             existing_seminar_grade = check.get(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id).seminar_defense_grade
 
-            if seminar_grade == 0:
-                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
+            # if seminar_grade == 0:
+            #     raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
 
-            if existing_seminar_grade > 0:
+            if existing_seminar_grade >= 0:
                 raise ValidationError('Assessment already exist for the student try editing!')
 
     class Meta:
@@ -225,15 +222,17 @@ class SuperProjectAssessmentForm(forms.ModelForm):
 
     def clean(self):
         project_grade = int(self.cleaned_data.get('project_defense_grade'))
+
+        print(f"STUDENT_GRADE: {project_grade}")
         student_id = self.cleaned_data.get('student_id')
 
         if project_grade > 50:
             raise ValidationError('Maximum grade is 50, try again!')
 
-        if project_grade < 0:
-            raise ValidationError('Positive grades only, try again!')
+        if project_grade < 1:
+            raise ValidationError('Grades should be greater than zero')
 
-        check = Assessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id)
+        check = ProjectAssessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id)
 
         if self.instance:
             check = check.exclude(pk=self.instance.pk)
@@ -241,14 +240,12 @@ class SuperProjectAssessmentForm(forms.ModelForm):
         if check.exists():
             existing_project_grade = check.get(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id).project_defense_grade
 
-            if project_grade == 0:
-                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
 
             if existing_project_grade > 0:
                 raise ValidationError('Assessment already exist for the student try editing!')
 
     class Meta:
-        model = Assessment
+        model = ProjectAssessment
         fields = ('student_id', 'project_defense_grade')
 
 
@@ -297,8 +294,8 @@ class SupervisorAssessmentForm(forms.ModelForm):
         if supervisor_grade > 50:
             raise ValidationError('Maximum grade is 50, try again!')
 
-        if supervisor_grade < 0:
-            raise ValidationError('Positive grades only, try again!')
+        if supervisor_grade < 1:
+            raise ValidationError('Grades should be greater than zero')
 
         check = Assessment.objects.filter(student_id=student_id)
 
