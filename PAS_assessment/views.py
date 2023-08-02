@@ -34,15 +34,18 @@ from PAS_auth.models import (
 
 from PAS_assessment.form import(
     SeminarAssessmentForm,
+    ProjectAssessmentForm,
+
+    SupervisorAssessmentForm,
     SuperProjectAssessmentForm,
     ProgrammeTypeSelectionForm,
     SuperSeminarAssessmentForm,
-    ProjectAssessmentForm,
-    SupervisorAssessmentForm,
 )
 
 from PAS_assessment.models import (
     Assessment,
+    SeminarAssessment,
+    ProjectAssessment,
 )
 
 # Create your views here.
@@ -63,14 +66,14 @@ class CRSeminarAssessmentView(LoginRequiredMixin, View):
 
                 form = SeminarAssessmentForm(assessor=assessor)
 
-                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, seminar_defense_grade__gt=0).order_by('-created')
-
-                print(f"assessments {assessments}")
+                assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id).order_by('-created')
 
                 return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
+
             messages.error(request, 'You are not authorized!')
             return redirect('assess:what_assess', dept_id.dept_id)
-        except Assessment.DoesNotExist:
+
+        except SeminarAssessment.DoesNotExist:
             messages.error(request, 'You are not authorized!')
             return redirect('assess:what_assess', dept_id.dept_id)
 
@@ -79,24 +82,25 @@ class CRSeminarAssessmentView(LoginRequiredMixin, View):
             supervisor = SupervisorProfile.objects.get(user_id=request.user)
             assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
 
-            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, seminar_defense_grade__gt=0).order_by('-created')
+            assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id).order_by('-created')
 
             form = SeminarAssessmentForm(request.POST, assessor=assessor)
 
             if form.is_valid():
                 grading = form.save(commit=False)
-                student_id = grading.student_id
+                student = grading.student_id
 
                 try:
-                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, student_id=student_id)
+                    assessment = SeminarAssessment.objects.get(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, venue=assessor.venue_id, student_id=student)
 
                     assessment.assessor_id = supervisor
                     assessment.seminar_defense_grade = grading.seminar_defense_grade
                     assessment.save()
 
-                except Assessment.DoesNotExist:
+                except SeminarAssessment.DoesNotExist:
 
                     grading.assessor_id = supervisor
+                    grading.venue = assessor.venue_id
                     grading.dept_id = assessor.dept_id
                     grading.sess_id = assessor.sess_id
                     grading.prog_id = assessor.prog_id
@@ -120,11 +124,11 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
             if not request.user.is_staff:
                 supervisor = SupervisorProfile.objects.get(user_id=request.user)
                 assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
-                assessment = Assessment.objects.get(assess_id=assess_id)
+                assessment = SeminarAssessment.objects.get(assess_id=assess_id)
 
                 form = SeminarAssessmentForm(assessor=assessor, instance=assessment)
 
-                assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, seminar_defense_grade__gt=0).order_by('-created')
+                assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor).order_by('-created')
 
                 return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments, 'type':self.view_type})
             messages.error(request, 'You are not authorized!')
@@ -138,8 +142,8 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
             supervisor = SupervisorProfile.objects.get(user_id=request.user)
             assessor = AssessorHallAllocation.objects.get(chief_assessor=supervisor)
 
-            assessments = Assessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor, seminar_defense_grade__gt=0).order_by('-created')
-            assessment = Assessment.objects.get(assess_id=assess_id)
+            assessments = SeminarAssessment.objects.filter(dept_id=assessor.dept_id, type_id=assessor.type_id, prog_id=assessor.prog_id, sess_id=assessor.sess_id, assessor_id=assessor.chief_assessor).order_by('-created')
+            assessment = SeminarAssessment.objects.get(assess_id=assess_id)
 
             if 'edit' in request.POST:
                 form = SeminarAssessmentForm(request.POST, assessor=assessor, instance=assessment)
@@ -152,11 +156,10 @@ class UDSeminarAssessmentView(LoginRequiredMixin, View):
                     return redirect('assess:assess_seminar', dept_id.pk)
 
                 messages.error(request, f'{form.errors.as_text()}')
-                return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments})
+                return render(request, 'assess/cr_seminar.html', context={'form':form, 'dept':dept_id, 'assessor':assessor, 'assessments':assessments, 'type':self.view_type})
 
             elif 'delete' in request.POST:
-                assessment.seminar_defense_grade = 0
-                assessment.save()
+                assessment.delete()
                 messages.success(request, 'Assessment has been deleted!')
 
             else:
@@ -205,14 +208,16 @@ class ProgrammeTypeSelectionView(LoginRequiredMixin, View):
 class CRSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
     def get(self, request, dept_id, type_id, prog_id, sess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, seminar_defense_grade__gt=0).order_by('-created')
+
+        assessments = SeminarAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
 
         form = SuperSeminarAssessmentForm(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
         return render(request, 'assess/cr_seminar.html', context={'dept':department_id, 'form':form, 'assessments':assessments})
 
     def post(self, request, dept_id, type_id, prog_id, sess_id):
         department_id = dept_id
-        assessments = Assessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id, seminar_defense_grade__gt=0).order_by('-created')
+
+        assessments = SeminarAssessment.objects.filter(dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id).order_by('-created')
         form = SuperSeminarAssessmentForm(request.POST, dept_id=department_id.pk, type_id=type_id, prog_id=prog_id, sess_id=sess_id)
 
         if form.is_valid():
@@ -223,25 +228,27 @@ class CRSuperAssessorSeminarAssessmentView(LoginRequiredMixin, View):
                 super_id = assessments.latest('created').assessor_id
             else:
                 super_id = SupervisorProfile.objects.get(user_id=request.user)
-                assessor = super_id
+            
+            assessor = super_id
 
-                try:
-                    assessment = Assessment.objects.get(dept_id=assessor.dept_id, type_id=type_id, prog_id=prog_id, sess_id=sess_id, student_id=student_id)
+            try:
+                assessment = SeminarAssessment.objects.get(dept_id=assessor.dept_id, type_id=type_id, prog_id=prog_id, sess_id=sess_id, student_id=student_id)
 
-                    assessment.seminar_defense_grade = grading.seminar_defense_grade
-                    assessment.save()
+                assessment.seminar_defense_grade = grading.seminar_defense_grade
+                assessment.save()
 
-                except Assessment.DoesNotExist:
+            except SeminarAssessment.DoesNotExist:
 
-                    grading.assessor_id = super_id
-                    grading.dept_id = dept_id
-                    grading.sess_id = Session.objects.get(id=sess_id)
-                    grading.prog_id = Programme.objects.get(id=prog_id)
-                    grading.type_id = StudentType.objects.get(id=type_id)
-                    grading.save()
+                grading.assessor_id = super_id
+                grading.venue = grading.student_id.venue_id
+                grading.dept_id = dept_id
+                grading.sess_id = Session.objects.get(id=sess_id)
+                grading.prog_id = Programme.objects.get(id=prog_id)
+                grading.type_id = StudentType.objects.get(id=type_id)
+                grading.save()
 
-                    messages.success(request, f'{grading.student_id} seminar has been graded')
-                    return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
+                messages.success(request, f'{grading.student_id} seminar has been graded')
+                return redirect('assess:super_assess_seminar', department_id.pk, type_id, prog_id, sess_id)
 
 
         messages.error(request, f'{form.errors.as_text()}')

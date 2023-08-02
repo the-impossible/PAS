@@ -24,7 +24,9 @@ from PAS_auth.models import (
 )
 
 from PAS_assessment.models import (
-    Assessment
+    Assessment,
+    SeminarAssessment,
+    ProjectAssessment,
 )
 
 
@@ -46,7 +48,7 @@ class SeminarAssessmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.assessor = kwargs.pop('assessor', '')
         super(SeminarAssessmentForm, self).__init__(*args, **kwargs)
-        self.fields['student_id'].queryset=StudHallAllocation.objects.filter(venue_id=self.assessor.venue_id, dept_id=self.assessor.dept_id, prog_id=self.assessor.prog_id, type_id=self.assessor.type_id)
+        self.fields['student_id'].queryset=StudHallAllocation.objects.filter(venue_id=self.assessor.venue_id, dept_id=self.assessor.dept_id, prog_id=self.assessor.prog_id, type_id=self.assessor.type_id, sess_id=self.assessor.sess_id)
         self.fields['student_id'].widget.attrs['style'] = 'width:280px;'
 
     def clean(self):
@@ -59,7 +61,7 @@ class SeminarAssessmentForm(forms.ModelForm):
         if seminar_grade < 0:
             raise ValidationError('Positive grades only, try again!')
 
-        check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
+        check = SeminarAssessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
 
         if self.instance:
             check = check.exclude(pk=self.instance.pk)
@@ -67,15 +69,15 @@ class SeminarAssessmentForm(forms.ModelForm):
         if check.exists():
             existing_seminar_grade = check.get(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id).seminar_defense_grade
 
-            if seminar_grade == 0:
-                raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
+            # if seminar_grade == 0:
+            #     raise ValidationError("Default grade is zero, simply don't grade if grade is zero")
 
             if existing_seminar_grade > 0:
                 raise ValidationError('Assessment already exist for the student try editing!')
 
 
     class Meta:
-        model = Assessment
+        model = SeminarAssessment
         fields = ('student_id', 'seminar_defense_grade')
 
 class ProjectAssessmentForm(forms.ModelForm):
@@ -96,7 +98,7 @@ class ProjectAssessmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.assessor = kwargs.pop('assessor', '')
         super(ProjectAssessmentForm, self).__init__(*args, **kwargs)
-        self.fields['student_id'].queryset=StudHallAllocation.objects.filter(venue_id=self.assessor.venue_id, dept_id=self.assessor.dept_id, prog_id=self.assessor.prog_id, type_id=self.assessor.type_id)
+        self.fields['student_id'].queryset=StudHallAllocation.objects.filter(venue_id=self.assessor.venue_id, dept_id=self.assessor.dept_id, prog_id=self.assessor.prog_id, type_id=self.assessor.type_id, sess_id=self.assessor.sess_id)
         self.fields['student_id'].widget.attrs['style'] = 'width:280px;'
 
     def clean(self):
@@ -111,14 +113,8 @@ class ProjectAssessmentForm(forms.ModelForm):
 
         check = Assessment.objects.filter(student_id=student_id, dept_id=self.assessor.dept_id, type_id=self.assessor.type_id, prog_id=self.assessor.prog_id, sess_id=self.assessor.sess_id)
 
-        print(f"check: {check}")
-
         if self.instance:
-            print("self instance")
             check = check.exclude(pk=self.instance.pk)
-            print("self exclude")
-
-        print(f"self {check.exists()}")
 
         if check.exists():
 
@@ -184,7 +180,7 @@ class SuperSeminarAssessmentForm(forms.ModelForm):
         if seminar_grade < 0:
             raise ValidationError('Positive grades only, try again!')
 
-        check = Assessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id)
+        check = SeminarAssessment.objects.filter(student_id=student_id, dept_id=self.dept_id, type_id=self.type_id, prog_id=self.prog_id, sess_id=self.sess_id)
 
         if self.instance:
             check = check.exclude(pk=self.instance.pk)
@@ -199,7 +195,7 @@ class SuperSeminarAssessmentForm(forms.ModelForm):
                 raise ValidationError('Assessment already exist for the student try editing!')
 
     class Meta:
-        model = Assessment
+        model = SeminarAssessment
         fields = ('student_id', 'seminar_defense_grade')
 
 class SuperProjectAssessmentForm(forms.ModelForm):
