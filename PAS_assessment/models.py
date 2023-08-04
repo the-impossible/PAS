@@ -79,7 +79,7 @@ class SeminarAssessment(models.Model):
 
 class ProjectAssessment(models.Model):
     assess_id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
-    
+
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, null=True, blank=True)
 
     student_id = models.ForeignKey(StudHallAllocation, on_delete=models.CASCADE)

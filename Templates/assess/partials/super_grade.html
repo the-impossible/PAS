@@ -83,7 +83,7 @@
                                     <td class="">{{ forloop.counter }}</td>
                                     <td class=""><a href="{% url 'assess:ud_grade_student' assessment.pk '1' %}"> {{ assessment.student_id.stud_id.user_id }} | {{ assessment.student_id.stud_id.user_id.get_fullname }}</a></td>
                                     <td class="text-center">{{ assessment.supervisor_grade }}</td>
-                                    <td class="">{{ assessment.assessor_id.user_id }}</td>
+                                    <td class="">{{ assessment.supervisor.user_id.get_fullname }}</td>
                                     <td class="">
 
                                         {% if request.user.is_staff %}
@@ -124,7 +124,7 @@
 
                                         <td class="text-center">{{ assessment.supervisor_grade }}</td>
 
-                                        <td class="">{{ assessment.supervisor.user_id }}</td>
+                                        <td class="">{{ assessment.supervisor.user_id.get_fullname }}</td>
                                         <td class="">
 
                                             {% if request.user.is_staff %}

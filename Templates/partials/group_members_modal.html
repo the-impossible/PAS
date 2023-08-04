@@ -1,16 +1,16 @@
 {% load crispy_forms_tags %}
 <div class="modal-content">
     <div class="modal-header">
-        <h5 class="modal-title">{{group_id}} members</h5>
+        <h5 class="modal-title">Group {{group_id}} members</h5>
         <button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
         </button>
     </div>
     <div class="modal-body">
 
         {% if group_id %}
-        <p class="text-center">Below are the members of {{group_id}} for your supervision</p>
+        <p class="text-center">Below are the members of group {{group_id}} for your supervision</p>
         {% else %}
-        <p class="text-center">Below are the students under your supervision</p>
+        <p class="text-center">Below are the students for your supervision</p>
 
         {% endif %}
 
