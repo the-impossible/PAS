@@ -67,6 +67,8 @@ from PAS_auth.form import (
 )
 from PAS_assessment.models import (
     Assessment,
+    ProjectAssessment,
+    SeminarAssessment,
 )
 
 from PAS_auth.decorator import *
@@ -1441,13 +1443,13 @@ class AllGradingView(LoginRequiredMixin, View):
                 type_id = form.cleaned_data.get('type_id')
                 which_grade = form.cleaned_data.get('which_grade')
 
-                assessment = Assessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id)
-
                 if which_grade == 'seminar':
                     self.view_type = 'seminar'
+                    assessment = SeminarAssessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id)
 
                 elif which_grade == 'project':
                     self.view_type = 'project'
+                    assessment = ProjectAssessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id)
 
             return render(request, 'auth/all_grading.html', context={'dept':dept, 'form':self.form, 'assessment':assessment, 'view_type':self.view_type, 'type':type_id, 'prog':prog_id})
 
