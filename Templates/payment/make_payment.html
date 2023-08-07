@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Make Payment {% endblock %}
+{% block head %}
+{% include "partials/auth_head.html" %}
+{%endblock %}
+{% block body %}
+<div class="app">
+    {% include "partials/auth_nav.html" %}
+
+    <div class="app-wrapper">
+	    <div class="app-content pt-3 p-md-3 p-lg-4">
+		    <div class="container-xl">
+
+			    <div class="row g-3 mb-4 align-items-center justify-content-between">
+				    <div class="col-auto">
+			            <h1 class="app-page-title mb-0">Project Fee Options</h1>
+				    </div>
+			    </div><!--//row-->
+
+                <div class="app-card app-card-accordion shadow-sm mb-4">
+				    <div class="app-card-header p-4 pb-2  border-0">
+				       <h4 class="app-card-title">Payment Breakdown</h4>
+				    </div><!--//app-card-header-->
+				    <div class="app-card-body p-4 pt-0">
+					    
+				    </div><!--//app-card-body-->
+				</div><!--//app-card-->
+
+            </div>
+        </div>
+        {% include 'partials/auth_footer.html' %}
+    </div>
+    <!-- Javascript -->
+	{% include "partials/auth_script.html" %}
+</div>
+{% endblock %}

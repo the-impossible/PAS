@@ -4,7 +4,6 @@ from django.views import View
 from django.core.files.storage import default_storage
 import csv, io, codecs, random, os
 from pprint import pprint
-from django.views.generic import ListView
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
@@ -20,6 +19,7 @@ from django.db import IntegrityError
 from django.utils.decorators import method_decorator
 from django.core import serializers
 import pickle
+from django.db.models import Q
 #Email
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.sites.shortcuts import get_current_site
@@ -1445,11 +1445,11 @@ class AllGradingView(LoginRequiredMixin, View):
 
                 if which_grade == 'seminar':
                     self.view_type = 'seminar'
-                    assessment = SeminarAssessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id)
+                    assessment = SeminarAssessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id, seminar_defense_grade__gt=0)
 
                 elif which_grade == 'project':
                     self.view_type = 'project'
-                    assessment = ProjectAssessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id)
+                    assessment = ProjectAssessment.objects.filter(Q(project_defense_grade__gt=0) | Q(supervisor_grade__gt=0),prog_id=prog_id, sess_id=sess_id, type_id=type_id)
 
             return render(request, 'auth/all_grading.html', context={'dept':dept, 'form':self.form, 'assessment':assessment, 'view_type':self.view_type, 'type':type_id, 'prog':prog_id})
 

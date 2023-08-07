@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'PAS_app',
     'PAS_assessment',
     'PAS_hallAllocation',
+    'PAS_payment',
 ]
 
 MIDDLEWARE = [
