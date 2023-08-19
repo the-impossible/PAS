@@ -27,15 +27,19 @@
 						<div class="page-utilities">
 						   <div class="row g-2 justify-content-start justify-content-md-end align-items-center">
 							   <div class="col-auto">
-
 								   <a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#retrieveAllocationModal">
 									   <i class="fa fa-download"></i>
-									   Retrieve Allocation
+									   Retrieve Grading
 								   </a>
 							   </div>
 							   <div class="col-auto">
 								   <button class="btn app-btn-secondary" name="print" id="print"> <i class="fa fa-file" ></i> Print Allocation</button>
 							</div>
+							   <div class="col-auto">
+								   <a class="btn app-btn-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#exportExcel">
+									<i class="fa fa-file"></i> Export Excel
+									</a>
+								</div>
 						   </div><!--//row-->
 					   </div><!--//table-utilities-->
 				   </div><!--//col-auto-->
@@ -143,6 +147,7 @@
 		</div>
 		{% include 'partials/auth_footer.html' %}
 	</div>
+
 	<div class="modal fade" id="retrieveAllocationModal" style="display: none;" aria-hidden="true">
 		<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
 			<div class="modal-content">
@@ -164,6 +169,29 @@
 			</div>
 		</div>
 	</div>
+
+	<div class="modal fade" id="exportExcel" style="display: none;" aria-hidden="true">
+		<div class="modal-dialog" id="uploadDialog" role="document" hx-target="this">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Export Grading</h5>
+					<button type="button" class="close btn btn-secondary" data-bs-dismiss="modal"><span>×</span>
+					</button>
+				</div>
+				<form method="post" action="{% url 'auth:export_excel' dept.pk %}">
+					<div class="modal-body">
+						{% csrf_token %}
+						{{ form|crispy }}
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" name="authR" class="btn btn-primary text-white"> <i class="fa fa-angle-double-down"></i> Export </button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
 	<!-- Javascript -->
 	{% include "partials/auth_script.html" %}
 

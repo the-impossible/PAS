@@ -25,6 +25,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.sites.shortcuts import get_current_site
 from PAS_auth.utils import EmailThread, email_activation_token, Email
 from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
+import xlwt
 
 # My App imports
 from PAS_app.models import (
@@ -1455,6 +1456,88 @@ class AllGradingView(LoginRequiredMixin, View):
 
         except ObjectDoesNotExist:
             messages.error(request, 'Error Retrieving department!')
+        except ValidationError:
+            messages.error(request, 'Error Retrieving department!')
+        return redirect('auth:list_department')
+
+@method_decorator(is_staff, name="post")
+class ExportAsExcelView(LoginRequiredMixin, View):
+    login_url = 'auth:login'
+
+    form = RGradingForm()
+
+    def post(self, request, dept_id):
+        try:
+            dept = Department.objects.get(dept_id=dept_id)
+
+            form = RGradingForm(request.POST)
+
+            if form.is_valid():
+
+                prog_id = form.cleaned_data.get('prog_id')
+                sess_id = form.cleaned_data.get('sess_id')
+                type_id = form.cleaned_data.get('type_id')
+                which_grade = form.cleaned_data.get('which_grade')
+
+                # content-type of response
+                response = HttpResponse(content_type="application/ms-excel")
+
+                #decide file name
+                response['Content-Disposition'] = f'attachment; filename="{sess_id}-{str(prog_id).lower()}-{str(which_grade).lower()}.xls"'
+
+                # Create a new Excel workbook and add a sheet
+                wb = xlwt.Workbook(encoding='utf-8')
+                ws = wb.add_sheet(f'{str(prog_id).lower()}_{str(which_grade).lower()}')
+
+                # Define column headers
+                columns = ['SNO', 'REGNO', 'NAME', 'C/WORK 40%', 'EXAM 100%', 'EXAM 60%', 'TOTAL = 100% (40% + 60%)']
+
+                # Write column headers to the sheet
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+
+                for col_num, column_title in enumerate(columns):
+                    ws.write(0, col_num, column_title, font_style)
+
+                # Initialize the row number
+                row_num = 1
+
+                # Fetch assessment data based on the 'which_grade' parameter
+                if which_grade == 'seminar':
+                    # Iterate through assessment data and write to the sheet
+                    assessments = SeminarAssessment.objects.filter(prog_id=prog_id, sess_id=sess_id, type_id=type_id, seminar_defense_grade__gt=0, dept_id=dept)
+
+                    for assessment in assessments:
+
+                        ws.write(row_num, 0, row_num)  # SNO
+                        ws.write(row_num, 1, assessment.student_id.stud_id.user_id.username)  # REGNO
+                        ws.write(row_num, 2, assessment.student_id.stud_id.user_id.get_fullname())  # NAME
+                        ws.write(row_num, 3, assessment.seminar_defense_grade)  # C/WORK 40%
+                        ws.write(row_num, 4, 0)  # EXAM 100%
+                        ws.write(row_num, 5, 0)  # EXAM 60%
+                        ws.write(row_num, 6, assessment.current_grade)  # TOTAL = 100%
+                        row_num += 1
+
+                elif which_grade == 'project':
+                    assessments = ProjectAssessment.objects.filter(Q(project_defense_grade__gt=0) | Q(supervisor_grade__gt=0), prog_id=prog_id, sess_id=sess_id, type_id=type_id)
+
+                    # Iterate through assessment data and write to the sheet
+                    for assessment in assessments:
+                        ws.write(row_num, 0, row_num)  # SNO
+                        ws.write(row_num, 1, assessment.student_id.stud_id.user_id.username)  # REGNO
+                        ws.write(row_num, 2, assessment.student_id.stud_id.user_id.get_fullname())  # NAME
+                        ws.write(row_num, 3, assessment.project_defense_grade)  # C/WORK 40%
+                        ws.write(row_num, 4, assessment.supervisor_grade)  # C/WORK 40%
+                        ws.write(row_num, 5, 0)  # EXAM 60%
+                        ws.write(row_num, 6, assessment.current_grade)  # TOTAL = 100%
+                        row_num += 1
+
+                # Save the workbook to the response
+                wb.save(response)
+                return response
+
+        except ObjectDoesNotExist:
+            messages.error(request, 'Error Exporting to Excel!')
         except ValidationError:
             messages.error(request, 'Error Retrieving department!')
         return redirect('auth:list_department')

@@ -22,9 +22,59 @@
                 <div class="app-card app-card-accordion shadow-sm mb-4">
 				    <div class="app-card-header p-4 pb-2  border-0">
 				       <h4 class="app-card-title">Payment Breakdown</h4>
+					   <hr>
 				    </div><!--//app-card-header-->
 				    <div class="app-card-body p-4 pt-0">
-					    
+						<div class="row">
+							<div class="col-md-4">
+								REG NO: {{request.user.username}}
+							</div>
+							<div class="col-md-4">
+								NAME: {{request.user.get_fullname}}
+							</div>
+							<div class="col-md-4">
+								EMAIL: {{request.user.email}}
+							</div>
+						</div>
+						<hr>
+
+					    <div class="table-responsive">
+							<table class="table app-table-hover mb-0 text-left table-sm table-striped table-bordered">
+							  <thead class="">
+								<tr>
+								  <th>#</th>
+								  <th class="cell">Items</th>
+								  <th class="cell">Amount</th>
+								</tr>
+							  </thead>
+							  <tbody>
+								{% if object_list %}
+									{% for object in object_list  %}
+									<tr>
+									<td class="cell">{{ forloop.counter }}</td>
+									<td class="cell">{{ object.item }}</td>
+									<td class="cell">{{ object.amount }}</td>
+									</tr>
+									{% endfor %}
+								{% else %}
+								<tr>
+									<td colspan="12">
+										<div class="jumbotron text-center p-5">
+											<!-- illustration can be used here too -->
+											<p style="font-size: 5em;">📂</p> <br>
+											<p style="font-size: 2em; margin-top: -40px;">No Breakdown Record Here!</p>
+										</div>
+									</td>
+								</tr>
+								{% endif %}
+							  </tbody>
+							</table>
+						  </div>
+
+						<div class="row">
+							
+						</div>
+
 				    </div><!--//app-card-body-->
 				</div><!--//app-card-->
 

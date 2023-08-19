@@ -60,6 +60,7 @@ from PAS_auth.views import (
     ApproveTopicView,
 
     AllGradingView,
+    ExportAsExcelView,
 
 )
 
@@ -139,5 +140,6 @@ urlpatterns = [
     path('approve_topics/<str:dept_id>', ApproveTopicView.as_view(), name='approve_topics'),
     # Retrieve grading
     path('grading/<str:dept_id>', AllGradingView.as_view(), name='grading'),
+    path('export_excel/<str:dept_id>', ExportAsExcelView.as_view(), name='export_excel'),
 
 ]
