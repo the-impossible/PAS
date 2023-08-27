@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block title %} Make Payment {% endblock %}
+{% block title %} My Payments {% endblock %}
 {% block head %}
 {% include "partials/auth_head.html" %}
 {%endblock %}
@@ -15,17 +15,19 @@
 
 			    <div class="row g-3 mb-4 align-items-center justify-content-between">
 				    <div class="col-auto">
-			            <h1 class="app-page-title mb-0">Project Fee Options</h1>
+			            <h1 class="app-page-title mb-0">Project Payments</h1>
 				    </div>
 			    </div><!--//row-->
 				{% include "partials/messages.html" %}
 
                 <div class="app-card app-card-accordion shadow-sm mb-4">
 				    <div class="app-card-header p-4 pb-2  border-0">
-				       <h4 class="app-card-title">Payment Breakdown</h4>
+				       <h4 class="app-card-title">Payment History</h4>
 					   <hr>
 				    </div><!--//app-card-header-->
 				    <div class="app-card-body p-4 pt-0">
+						{% if not request.user.is_staff %}
+
 						<div class="row">
 							<div class="col-md-4">
 								REG NO: {{request.user.username}}
@@ -38,42 +40,56 @@
 							</div>
 						</div>
 						<hr>
+						{% endif %}
 
 					    <div class="table-responsive">
-							<table class="table app-table-hover mb-0 text-left table-sm table-striped table-bordered">
-							  <thead class="">
-								<tr>
+							<table class="table app-table-hover mb-0 text-left table-sm table-striped table-bordered" id="table_id">
+							  <thead class="text-center">
+								<tr class="cell text-center">
 								  <th>#</th>
-								  <th class="cell">Items</th>
-								  <th class="cell">Amount</th>
+
+								  {% if request.user.is_staff %}
+								  <th class="cell text-center">Name</th>
+								  {% endif %}
+
+								  <th class="cell text-center">Description</th>
+								  <th class="cell text-center">Amount</th>
+								  <th class="cell text-center">Status</th>
+								  <th class="cell text-center">Date Paid</th>
+								  <th class="cell text-center">Action</th>
 								</tr>
 							  </thead>
 							  <tbody>
 								{% if object_list %}
 									{% for object in object_list  %}
-									<tr>
+									<tr class="cell text-center">
 										<td class="cell">{{ forloop.counter }}</td>
-										<td class="cell">{{ object.item }}</td>
+
+										{% if request.user.is_staff %}
+
+										<td class="cell">{{ object.student.get_fullname }}</td>
+										{% endif %}
+
+										<td class="cell">{{ object.description }}</td>
 										<td class="cell">{{ object.amount }}</td>
-									</tr>
-									{% endfor %}
-									<tr>
-										<td></td>
-										<td><h5>Total</h5></td>
-										<td><h5>₦{{total}}</h5></td>
-									</tr>
-									<tr>
-										<td colspan="3" class="text-center">
-											<a href="{% url 'payment:initialize_payment' %}" class="btn btn-success btn-lg text-center text-white">Make Payment</a>
+										<td class="cell">{{ object.status }}</td>
+										<td class="cell">{{ object.date_created }}</td>
+										<td class="cell">
+											{% if object.status == 'success' %}
+											<a href="" class="btn btn-success btn-sm text-center text-white">Print</a>
+											{% elif object.status == 'pending' %}
+											<a href="{% url 'payment:re_verify_payment' object.pk %}" class="btn btn-warning btn-sm text-center text-white">Re-Query</a>
+											{% endif %}
 										</td>
 									</tr>
+									{% endfor %}
 								{% else %}
 								<tr>
 									<td colspan="12">
 										<div class="jumbotron text-center p-5">
 											<!-- illustration can be used here too -->
 											<p style="font-size: 5em;">📂</p> <br>
-											<p style="font-size: 2em; margin-top: -40px;">No Breakdown Record Here!</p>
+											<p style="font-size: 2em; margin-top: -40px;">No Payment Record Here!</p>
 										</div>
 									</td>
 								</tr>

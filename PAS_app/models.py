@@ -10,6 +10,7 @@ import uuid
 class Session(models.Model):
     session_title = models.CharField(max_length=9, unique=True)
     session_description = models.CharField(max_length=100, blank=True, null=True)
+    is_current = models.BooleanField(default=False)
 
     def __str__(self):
         return self.session_title

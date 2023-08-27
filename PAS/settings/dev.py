@@ -22,3 +22,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 # Media files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'Static')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Payment
+FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST-e672b2daaef9cf281cd6746822ff46c5-X"
+HTTP = 'http://'

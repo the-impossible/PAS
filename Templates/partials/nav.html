@@ -15,9 +15,13 @@
         <div class="navbar-nav ms-auto py-0">
             <a href="{% url 'app:home' %}" class="nav-item nav-link active">Home</a>
         </div>
-        <button type="button" class="btn text-secondary ms-3" data-bs-toggle="modal" data-bs-target="#searchModal">
+
+        <button type="button" class="btn text-secondary  ms-3 px-3" data-bs-toggle="modal" data-bs-target="#searchModal">
             <i class="fa fa-search"></i>
         </button>
-        <a href="{% url 'auth:login' %}" class="btn btn-primary text-light rounded-pill py-2 px-4 ms-3">Login</a>
+
+        <a href="https://content.kadpolypms.ng/" class="btn btn-primary rounded-pill text-light">Blog</a>
+
+        <a href="{% url 'auth:login' %}" class="btn btn-primary text-light rounded-pill py-2 ms-3">Login</a>
     </div>
 </nav>

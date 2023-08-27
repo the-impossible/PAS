@@ -45,6 +45,7 @@ from PAS_hallAllocation.form import (
 )
 
 from PAS_auth.decorator import *
+from PAS_payment.decorator import *
 
 # Create your views here.
 @method_decorator(validate_department, name="get")
@@ -449,6 +450,7 @@ def render_to_pdf(template_src, context_dict={}):
     return None
 
 @method_decorator(has_updated, name="get")
+@method_decorator(has_paid, name="get")
 class CheckHallAllocationView(LoginRequiredMixin, View):
 
     def get(self, request):

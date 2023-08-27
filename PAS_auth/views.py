@@ -73,6 +73,7 @@ from PAS_assessment.models import (
 )
 
 from PAS_auth.decorator import *
+from PAS_payment.decorator import *
 
 PASSWORD = '12345678'
 SPLIT = 6
@@ -605,29 +606,29 @@ class ManageProfileView(LoginRequiredMixin, View):
                     fullname = user.get_fullname()
 
                     # Send an email if old email is not same as new email
-                    # if email != old_email:
-                    #     user.is_verified = False
 
-                    #     count, created = EmailSendCount.objects.get_or_create(user=user)
-                    #     count.resetCount
-                    #     count.save()
+                    if email != old_email:
+                        user.is_verified = False
 
-                    #     current_site = get_current_site(request).domain
-                    #     user_details = {
-                    #         'fullname':fullname,
-                    #         'email': email,
-                    #         'domain':current_site,
-                    #         'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
-                    #         'token': email_activation_token.make_token(user),
-                    #     }
-                    #     user.save()
+                        count, created = EmailSendCount.objects.get_or_create(user=user)
+                        count.resetCount
+                        count.save()
 
-                    #     messages.success(request, 'Profile updated!')
-                    #     # return redirect('auth:resend_email')0
-                    # else:
-                    user.is_verified = True
-                    user.save()
-                    messages.success(request, 'Profile updated!')
+                        current_site = get_current_site(request).domain
+                        user_details = {
+                            'fullname':fullname,
+                            'email': email,
+                            'domain':current_site,
+                            'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
+                            'token': email_activation_token.make_token(user),
+                        }
+                        user.save()
+
+                        return redirect('auth:resend_email')
+                    else:
+                        user.is_verified = True
+                        user.save()
+                        messages.success(request, 'Profile updated!')
 
                     return redirect('auth:manage_profile', user.user_id)
                 messages.error(request, 'Error updating profile')
@@ -1311,6 +1312,7 @@ class AssignedStudentView(LoginRequiredMixin, View):
             return redirect('auth:dashboard')
 
 @method_decorator(has_updated, name="get")
+@method_decorator(has_paid, name="get")
 class AssignedSupervisorView(LoginRequiredMixin, View):
     login_url = 'auth:login'
 

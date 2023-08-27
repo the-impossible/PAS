@@ -26,3 +26,8 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 # Media files
 STATIC_ROOT = '/home/kadpmhmu/public_html/static'
 MEDIA_ROOT = '/home/kadpmhmu/public_html/media'
+
+# Payment
+FLUTTERWAVE_SECRET_KEY = config("FLUTTERWAVE_SECRET_KEY")
+
+HTTP = 'https://'

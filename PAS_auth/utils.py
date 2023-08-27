@@ -10,6 +10,7 @@ from django.template.loader import get_template #used for getting html template
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from six import text_type
 from django.contrib import messages #for sending messages
+from django.conf import settings
 
 # My App imports
 
@@ -39,7 +40,6 @@ email_activation_token = AppTokenGenerator()
 
 class Mailer(View):
 
-    http = 'https://'
 
     def send(self, user_details, which):
         reset = 'Reset Your PROJECT Manager Account Password'
@@ -47,7 +47,7 @@ class Mailer(View):
 
         if which == 'reset':
             link = reverse('auth:complete_reset_password', kwargs={'uidb64':user_details['uid'], 'token':user_details['token']})
-            activation_url = self.http+user_details['domain']+link
+            activation_url = settings.HTTP+user_details['domain']+link
             activation_path = 'auth/verify_email.html'
             receiver = [user_details['email']]
             email_subject = reset
@@ -57,7 +57,7 @@ class Mailer(View):
 
         elif which == 'verify':
             link = reverse('auth:verify', kwargs={'uidb64':user_details['uid'], 'token':user_details['token']})
-            activation_url = self.http+user_details['domain']+link
+            activation_url = settings.HTTP+user_details['domain']+link
             activation_path = 'auth/verify_email.html'
             receiver = [user_details['email']]
             email_subject = activate

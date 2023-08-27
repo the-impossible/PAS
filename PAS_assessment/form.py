@@ -38,7 +38,7 @@ class SeminarAssessmentForm(forms.ModelForm):
         }
     ))
 
-    seminar_defense_grade = forms.CharField(help_text='Enter seminar defense grade', widget=forms.TextInput(
+    seminar_defense_grade = forms.CharField(help_text='Enter seminar defense grade Max is 100', widget=forms.TextInput(
         attrs={
             'class':'form-control',
             'type':'number'
@@ -88,7 +88,7 @@ class ProjectAssessmentForm(forms.ModelForm):
         }
     ))
 
-    project_defense_grade = forms.CharField(help_text='Enter project defense grade', widget=forms.TextInput(
+    project_defense_grade = forms.CharField(help_text='Enter project defense grade Max is 50', widget=forms.TextInput(
         attrs={
             'class':'form-control',
             'type':'number'
@@ -150,7 +150,7 @@ class SuperSeminarAssessmentForm(forms.ModelForm):
         }
     ))
 
-    seminar_defense_grade = forms.CharField(help_text='Enter seminar defense grade', widget=forms.TextInput(
+    seminar_defense_grade = forms.CharField(help_text='Enter seminar defense grade Max is 100', widget=forms.TextInput(
         attrs={
             'class':'form-control',
             'type':'number'
@@ -203,7 +203,7 @@ class SuperProjectAssessmentForm(forms.ModelForm):
         }
     ))
 
-    project_defense_grade = forms.CharField(help_text='Enter project defense grade', widget=forms.TextInput(
+    project_defense_grade = forms.CharField(help_text='Enter project defense grade Max is 50', widget=forms.TextInput(
         attrs={
             'class':'form-control',
             'type':'number'
@@ -256,7 +256,7 @@ class SupervisorAssessmentForm(forms.ModelForm):
         }
     ))
 
-    supervisor_grade = forms.CharField(help_text='Enter supervisor grade', widget=forms.TextInput(
+    supervisor_grade = forms.CharField(help_text='Enter supervisor grade Max is 50', widget=forms.TextInput(
         attrs={
             'class':'form-control',
             'type':'number'
@@ -323,7 +323,7 @@ class SuperSupervisorAssessmentForm(forms.ModelForm):
         }
     ))
 
-    supervisor_grade = forms.CharField(help_text='Enter supervisor grade', widget=forms.TextInput(
+    supervisor_grade = forms.CharField(help_text='Enter supervisor grade Max is 50', widget=forms.TextInput(
         attrs={
             'class':'form-control',
             'type':'number'
