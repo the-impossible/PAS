@@ -12,7 +12,7 @@ from pprint import pprint
 from django.template.loader import render_to_string, get_template
 from django.http import HttpResponse
 from io import BytesIO
-from xhtml2pdf import pisa
+# from xhtml2pdf import pisa
 
 
 # My app imports

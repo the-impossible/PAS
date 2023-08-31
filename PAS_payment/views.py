@@ -57,7 +57,7 @@ class GetPaymentLink(LoginRequiredMixin, View):
 
         data = {
             "tx_ref": str(generate_transaction_reference()),
-            "amount": str(get_total()),  # Adjust the amount as needed
+            "amount": str(get_total() + 100),  # Adjust the amount as needed
             "currency": "NGN",  # Currency code
             "redirect_url": "https://kadpolypms.ng/payment/verify_payment",  # Redirect URL after payment
             "meta": {
@@ -69,9 +69,10 @@ class GetPaymentLink(LoginRequiredMixin, View):
                 'phone': request.user.phone,
                 'name': request.user.get_fullname(),
             },
-            "customization":{
+            "customizations":{
                 'title':"PMS Payment",
                 'logo':"https://kadpolypms.ng/static/img/comlogo.png",
+                'description':'Departmental project fee'
             },
             # Add other required parameters here
             "payment_options": "card, ussd, banktransfer",
@@ -94,7 +95,7 @@ class GetPaymentLink(LoginRequiredMixin, View):
 
                 # create a payment invoice
                 session = Session.objects.filter(is_current=True).first()
-                Payments.objects.create(amount=data['amount'], tx_ref=data['tx_ref'], student=request.user, status='pending', description="Project Fee", session=session)
+                Payments.objects.create(amount=get_total(), tx_ref=data['tx_ref'], student=request.user, status='pending', description="Project Fee", session=session)
 
                 return redirect(flutterwave_data['data']['link'])
             else:
@@ -132,6 +133,9 @@ class VerifyPayment(LoginRequiredMixin, View):
         else:
             messages.error(request, f'Transaction Failed!!')
 
+        if request.user.is_staff:
+            return redirect('payment:verify_payments')
+
         return redirect('payment:my_payments')
 
 class ReVerifyPayment(LoginRequiredMixin, View):
@@ -145,6 +149,9 @@ class ReVerifyPayment(LoginRequiredMixin, View):
         except Payments.DoesNotExist:
             messages.error(request, f'Failed to Re-query Transaction')
 
+        if request.user.is_staff:
+            return redirect('payment:verify_payments')
+
         return redirect('payment:my_payments')
 
 
@@ -156,10 +163,8 @@ def verify_payment(request, tx_ref, transaction_id, fresh=True):
         if fresh:
             transaction_details.transaction_id=transaction_id
             # Define your API endpoint
-            print("got here1")
             flutterwave_endpoint = f"https://api.flutterwave.com/v3/transactions/{transaction_id}/verify"
         else:
-            print("got here2")
             flutterwave_endpoint = f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={transaction_details.tx_ref}"
 
         # Set your Flutterwave API secret key

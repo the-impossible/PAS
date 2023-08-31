@@ -76,7 +76,7 @@ from PAS_auth.decorator import *
 from PAS_payment.decorator import *
 
 PASSWORD = '12345678'
-SPLIT = 6
+SPLIT = 3
 from PAS_hallAllocation.views import render_to_pdf
 
 class EnforceAuth(LoginRequiredMixin):
@@ -1012,9 +1012,16 @@ class AllocateView(View):
                     # GET STUDENTS AND SUPERVISOR
                     match_studs = StudentProfile.objects.filter(programme_id=prog_id, session_id=sess_id, type_id=type_id)
                     if prog_id.programme_title == 'ND':
-                        match_super = SupervisorProfile.objects.filter(dept_id=dept_id, super_nd=True)
+                        if stud_type == type_id:
+                            match_super = SupervisorProfile.objects.filter(dept_id=dept_id, super_nd=True, Ev_capacity__gt=0)
+                        else:
+                            match_super = SupervisorProfile.objects.filter(dept_id=dept_id, super_nd=True, RG_capacity__gt=0)
+
                     else:
-                        match_super = SupervisorProfile.objects.filter(dept_id=dept_id, prog_id=prog_id)
+                        if stud_type == type_id:
+                            match_super = SupervisorProfile.objects.filter(dept_id=dept_id, prog_id=prog_id, Ev_capacity__gt=0)
+                        else:
+                            match_super = SupervisorProfile.objects.filter(dept_id=dept_id, prog_id=prog_id, RG_capacity__gt=0)
 
                     # DETERMINE IF ALLOCATION FOR THAT SESSION AND DEPT EXISTS
                     allocation_exists = Allocate.objects.filter(dept_id=dept, sess_id=sess_id, prog_id=prog_id, type_id=type_id).exists()
@@ -1150,7 +1157,7 @@ class AllocateView(View):
                         group_occupied = Allocate.objects.filter(group_id=group_id, prog_id=stud_type.programme_id)
                         if group_occupied:
                             if stud_type.programme_id.programme_title == 'ND':
-                                if group_occupied and len(group_occupied) == 3:
+                                if group_occupied and len(group_occupied) == SPLIT:
 
                                     to_try = Allocate.objects.filter(sess_id=sess_id, prog_id=stud_type.programme_id, dept_id=dept_id).order_by('group_id').last()
 
@@ -1302,10 +1309,13 @@ class AssignedStudentView(LoginRequiredMixin, View):
     categories = StudentType.objects.all()
     def get(self, request):
         try:
+            current_session = Session.objects.filter(is_current=True).first()
+            print(f"current_session: {current_session}")
             super_id = SupervisorProfile.objects.get(user_id=request.user)
-            group_nums = Allocate.objects.filter(super_id=super_id).values_list('group_id', flat=True).distinct()
+            group_nums = Allocate.objects.filter(super_id=super_id, sess_id=current_session).values_list('group_id', flat=True).distinct()
+            print(group_nums)
             allocations_nd = [Groups.objects.get(id=i) for i in group_nums]
-            allocations_hnd = Allocate.objects.filter(super_id=super_id, prog_id=Programme.objects.get(programme_title='HND'))
+            allocations_hnd = Allocate.objects.filter(super_id=super_id, prog_id=Programme.objects.get(programme_title='HND'), sess_id=current_session)
             return render(request, 'auth/assigned_students.html', context={'programmes':self.programmes, 'categories':self.categories, 'allocations_nd':allocations_nd, 'allocations_hnd':allocations_hnd})
         except SupervisorProfile.DoesNotExist:
             messages.success(request, 'Unable to get your account profile')
@@ -1318,9 +1328,10 @@ class AssignedSupervisorView(LoginRequiredMixin, View):
 
     def get(self, request):
         try:
+            current_session = Session.objects.filter(is_current=True).first()
             stud_id = StudentProfile.objects.get(user_id=request.user)
             allocation = Allocate.objects.get(stud_id=stud_id)
-            group_members = Allocate.objects.filter(group_id=allocation.group_id, prog_id=stud_id.programme_id)
+            group_members = Allocate.objects.filter(group_id=allocation.group_id, prog_id=stud_id.programme_id, sess_id=current_session)
             return render(request, 'auth/assigned_supervisor.html', context={'allocation':allocation, 'stud':stud_id, 'group_members':group_members})
 
         except StudentProfile.DoesNotExist:
@@ -1338,9 +1349,10 @@ class DisplayGroupMembersView(LoginRequiredMixin, View):
 
     def get(self, request, group_id, prog_id, type_id):
         try:
+            current_session = Session.objects.filter(is_current=True).first()
             super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
             #Filter all the groups by prog, group_id and type
-            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id, group_id=group_id)
+            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id, group_id=group_id, sess_id=current_session)
 
             return render(request, 'partials/group_members_modal.html', context={'members':members, 'group_id':group_id})
         except:
@@ -1352,10 +1364,11 @@ class DisplayMembersView(LoginRequiredMixin, View):
 
     def get(self, request, prog_id, type_id):
         try:
+            current_session = Session.objects.filter(is_current=True).first()
             super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
 
             #Filter all the groups by prog, group_id and type
-            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id)
+            members = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id, sess_id=current_session)
             return render(request, 'partials/group_members_modal.html', context={'members':members})
         except:
             messages.error(request, 'Unable to fetch group members')
@@ -1366,8 +1379,9 @@ class DisplayGroupsView(LoginRequiredMixin, View):
 
     def get(self, request, prog_id, type_id):
         try:
+            current_session = Session.objects.filter(is_current=True).first()
             super_id = SupervisorProfile.objects.get(user_id=request.user) #GET the logged in staff
-            group_nums = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id).values_list('group_id', flat=True).distinct() #Filter all the groups by prog and type
+            group_nums = Allocate.objects.filter(super_id=super_id, prog_id=prog_id, type_id=type_id, sess_id=current_session).values_list('group_id', flat=True).distinct() #Filter all the groups by prog and type
 
             groups = [Groups.objects.get(id=i) for i in group_nums]
             prog_id = Programme.objects.get(id=prog_id)
