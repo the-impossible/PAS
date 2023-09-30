@@ -29,10 +29,17 @@ def double_payment(func):
         session = Session.objects.filter(is_current=True).first()
         payment = Payments.objects.filter(student=request.user, status="success", session=session).exists()
 
-        if not payment:
-            return func(request, *args, **kwargs)
-        else:
+        if payment:
             messages.warning(request, 'You have an existing payment record!!')
             return redirect('auth:dashboard')
+        else:
+            payment = Payments.objects.filter(student=request.user, status="pending", session=session).exists()
+
+            if not payment:
+
+                return func(request, *args, **kwargs)
+            else:
+                messages.warning(request, 'You have pending transaction, kindly re-query pending transaction')
+                return redirect('payment:my_payments')
 
     return wrapper_func
